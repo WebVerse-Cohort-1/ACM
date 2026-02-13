@@ -248,7 +248,7 @@ const Navbar = () => {
                 {isOpen ? '✕' : '☰'}
             </button>
 
-            <div className={`fixed inset-0 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-40 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 bg-black backdrop-blur-3xl flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-[200] ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                  {navItems.map((item) => (
                     <Link 
                         key={item.name} 
@@ -526,8 +526,8 @@ const FusionGallery = () => {
         // Z-Spacing: 1200px per item + Offset so first item is visible but background
         z: i * 1200 + 650, 
         // Drift Scatter (Background State)
-        x: (Math.random() - 0.5) * 150, // vw relative
-        y: (Math.random() - 0.5) * 100, // vh relative
+        x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 40 : 150), // Reduced X spread on mobile
+        y: (Math.random() - 0.5) * (window.innerWidth < 768 ? 40 : 100), // Reduced Y spread on mobile
         rotation: (Math.random() - 0.5) * 45,
         title: `EVENT_LOG_${i < 9 ? '0' : ''}${i + 1}`,
         desc: "Secure data node accessed. Decrypting visual archives...",
@@ -664,10 +664,10 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
     return (
         <div 
-            className="absolute top-1/2 left-1/2 w-[90vw] md:w-[900px] h-[60vh] md:h-[70vh] transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform flex items-center justify-center p-4"
+            className="absolute top-1/2 left-1/2 w-[95vw] md:w-[900px] h-[50vh] md:h-[70vh] transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform flex items-center justify-center p-2 md:p-4"
             style={style}
         >
-            <div className={`w-full h-full bg-black/90 border ${isActive ? 'border-acm-cyan' : 'border-white/10'} backdrop-blur-2xl rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]`}>
+            <div className={`w-full h-full bg-black/90 border ${isActive ? 'border-acm-cyan' : 'border-white/10'} backdrop-blur-2xl rounded-2xl md:rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]`}>
                 
                 {/* Carousel Area */}
                 <div className="relative flex-1 bg-gradient-to-b from-gray-900 to-black overflow-hidden group">
@@ -682,7 +682,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                             <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-40 mix-blend-screen`}></div>
                             
                             {/* Simulated Image */}
-                             <div className="relative z-10 text-center space-y-4">
+                             <div className="relative z-10 text-center space-y-2 md:space-y-4">
                                 <h3 className="text-4xl md:text-8xl font-black text-white/5 select-none tracking-tighter">
                                     IMAGE_0{i+1}
                                 </h3>
@@ -695,23 +695,23 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                         <>
                             <button 
                                 onClick={prevSlide}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
+                                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
                             >
                                 ←
                             </button>
                             <button 
                                 onClick={nextSlide}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
+                                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
                             >
                                 →
                             </button>
                             
                             {/* Indicators */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+                            <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
                                 {item.slides.map((_, i) => (
                                     <div 
                                         key={i} 
-                                        className={`w-12 h-1 rounded-full transition-all ${i === slide ? 'bg-acm-cyan' : 'bg-white/20'}`} 
+                                        className={`w-8 md:w-12 h-1 rounded-full transition-all ${i === slide ? 'bg-acm-cyan' : 'bg-white/20'}`} 
                                     />
                                 ))}
                             </div>
@@ -720,16 +720,16 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                 </div>
 
                 {/* Footer / Caption */}
-                <div className="h-32 bg-black/40 border-t border-white/10 p-8 flex items-center justify-between z-20">
+                <div className="h-24 md:h-32 bg-black/40 border-t border-white/10 p-4 md:p-8 flex items-center justify-between z-20">
                     <div>
-                        <h2 className={`text-3xl font-bold text-white mb-2 ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-100`}>
+                        <h2 className={`text-xl md:text-3xl font-bold text-white mb-1 md:mb-2 ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-100`}>
                             {item.title}
                         </h2>
-                        <p className={`text-gray-400 font-mono text-xs ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-200`}>
+                        <p className={`text-gray-400 font-mono text-[10px] md:text-xs line-clamp-1 ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-200`}>
                             {item.desc}
                         </p>
                     </div>
-                     <div className={`font-mono text-5xl font-bold text-white/5 ${isActive ? 'scale-100 text-acm-cyan/20' : 'scale-50'} transition-all duration-500`}>
+                     <div className={`font-mono text-3xl md:text-5xl font-bold text-white/5 ${isActive ? 'scale-100 text-acm-cyan/20' : 'scale-50'} transition-all duration-500`}>
                         {item.id < 9 ? `0${item.id+1}` : item.id+1}
                     </div>
                 </div>
@@ -750,7 +750,7 @@ const Contact = () => (
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
 
         <div className="w-full max-w-5xl relative z-10 perspective-1000">
-            <TiltCard className="bg-black/90 border border-acm-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group">
+            <TiltCard className="bg-black/90 border border-acm-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-50"></div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 bg-acm-cyan/5 rounded-tl-full pointer-events-none"></div>
