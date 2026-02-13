@@ -248,7 +248,7 @@ const Navbar = () => {
                 {isOpen ? '✕' : '☰'}
             </button>
 
-            <div className={`fixed inset-0 bg-black backdrop-blur-3xl flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-[200] ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-[9999] ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                  {navItems.map((item) => (
                     <Link 
                         key={item.name} 
@@ -636,7 +636,9 @@ const FusionCard = ({ item, isActive, rawZ }) => {
         }
         : {
             transform: `translate3d(-50%, -50%, 0) translate3d(${item.x}vw, ${item.y}vh, ${rawZ}px) scale(0.6) rotate(${item.rotation}deg)`,
-            opacity: Math.max(0.3, (rawZ + 3000) / 3500), // Min 0.3 opacity to avoid black screen
+            // Mobile: Hide background items completely to avoid mess
+            // Desktop: Show background items with low opacity
+            opacity: window.innerWidth < 768 && !isActive ? 0 : Math.max(0.3, (rawZ + 3000) / 3500), 
             zIndex: 0,
             filter: 'blur(4px) grayscale(100%)'
         };

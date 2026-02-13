@@ -12,6 +12,17 @@ export function renderHome() {
                 </span>
                 <h1 class="text-5xl md:text-7xl font-heading font-bold mb-6 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 to-acm-cyan drop-shadow-lg">
                     Innovate. <br/> Collaborate. <br/> Excel.
+                    ID_07
+                    PROJECT
+                    ID_08
+                    PROJECT
+                    ID_09
+                    PROJECT
+                    ID_10
+                    PROJECT
+                    ID_11
+                    PROJECT
+                    
                 </h1>
                 <p class="text-gray-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
                     Join the premier computing community at Thakur Shyamnarayan Engineering College. 
