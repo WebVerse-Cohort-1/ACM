@@ -31,7 +31,6 @@ const CustomCursor = () => {
 };
 
 // --- MAGNETIC BUTTON ---
-// --- MAGNETIC BUTTON ---
 const MagneticButton = ({ children, className, onClick, as: Component = 'button', ...props }) => {
     const btnRef = useRef(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -61,6 +60,71 @@ const MagneticButton = ({ children, className, onClick, as: Component = 'button'
     );
 };
 
+// --- TILT CARD WRAPPER ---
+const TiltCard = ({ children, className = "" }) => {
+    const cardRef = useRef(null);
+    const [gyro, setGyro] = useState({ x: 0, y: 0 });
+    const [glow, setGlow] = useState("50% 50%");
+
+    useEffect(() => {
+        const handleOrientation = (e) => {
+            if (e.beta !== null && e.gamma !== null) {
+                setGyro({
+                    x: (e.gamma / 20),
+                    y: (e.beta - 45) / 20
+                });
+            }
+        };
+        window.addEventListener('deviceorientation', handleOrientation);
+        return () => window.removeEventListener('deviceorientation', handleOrientation);
+    }, []);
+
+    const handleMouseMove = (e) => {
+        const card = cardRef.current;
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        const xPct = (e.clientX - rect.left) / rect.width;
+        const yPct = (e.clientY - rect.top) / rect.height;
+        
+        setGlow(`${xPct * 100}% ${yPct * 100}%`);
+        
+        if (window.innerWidth >= 1024) {
+            const x = xPct - 0.5;
+            const y = yPct - 0.5;
+            card.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale3d(1.02, 1.02, 1.02)`;
+        }
+    };
+
+    const handleMouseLeave = () => {
+        if (!cardRef.current) return;
+        cardRef.current.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)`;
+        setGlow("50% 50%");
+    };
+
+    const gyroStyle = window.innerWidth < 1024 ? {
+        transform: `perspective(1000px) rotateY(${gyro.x * 10}deg) rotateX(${-gyro.y * 10}deg)`,
+        transition: 'transform 0.1s ease-out'
+    } : {};
+
+    return (
+        <div 
+            ref={cardRef}
+            className={`transition-all duration-300 ease-out group relative ${className}`} 
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={gyroStyle}
+        >
+            <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
+                <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
+                    style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
+                />
+                {children}
+            </div>
+        </div>
+    );
+};
+
 // --- THREE.JS NEURAL FLOW BACKGROUND ---
 const NeuralFlow = () => {
     const mountRef = useRef(null);
@@ -75,61 +139,56 @@ const NeuralFlow = () => {
         camera.position.z = 30;
         camera.position.y = 10;
 
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !isMobile }); // Performance: Disable antialias on mobile
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Rule 4: Limit pixel ratio
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         mount.appendChild(renderer.domElement);
 
-        // --- WAVE PARTICLES ---
-        const particleCount = isMobile ? 120 : 2000; // Rule 4: Reduce load on mobile
+        // --- WAVE PARTICLES (Restored High Fidelity) ---
+        const particleCount = 2000; // Restored to laptop volume
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
-        const scales = new Float32Array(particleCount);
+        const randomness = new Float32Array(particleCount);
 
         for (let i = 0; i < particleCount; i++) {
             positions[i * 3] = (Math.random() - 0.5) * 100;
             positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
             positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
-            scales[i] = Math.random();
+            randomness[i] = Math.random();
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
 
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                color: { value: new THREE.Color(0x64ffda) },
-                time: { value: 0 },
-            },
-            vertexShader: `
-                uniform float time;
-                attribute float scale;
-                void main() {
-                    vec3 pos = position;
-                    pos.y += sin(pos.x * 0.2 + time) * 2.0;
-                    pos.z += cos(pos.y * 0.2 + time) * 2.0;
-                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                    gl_PointSize = scale * (300.0 / -mvPosition.z);
-                    gl_Position = projectionMatrix * mvPosition;
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 color;
-                void main() {
-                    if (length(gl_PointCoord - vec2(0.5)) > 0.5) discard;
-                    gl_FragColor = vec4(color, 1.0);
-                }
-            `,
+        const material = new THREE.PointsMaterial({
+            color: 0x4284d2,
+            size: isMobile ? 0.3 : 0.4,
             transparent: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false, // Prevents points from blocking each other
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
         });
 
         const points = new THREE.Points(geometry, material);
         scene.add(points);
 
-        // Interaction
+        // --- CONNECTING LINES (Neural Net - Restored) ---
+        const lineGeo = new THREE.IcosahedronGeometry(15, 1);
+        const lineMat = new THREE.MeshBasicMaterial({ 
+            color: 0x00d2ef, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0.08 
+        });
+        const net = new THREE.Mesh(lineGeo, lineMat);
+        scene.add(net);
+
+        // --- GRID FLOOR (Restored) ---
+        const gridHelper = new THREE.GridHelper(200, 40, 0x112240, 0x112240);
+        gridHelper.position.y = -10;
+        scene.add(gridHelper);
+
+        // --- INTERACTION ---
         const mouse = new THREE.Vector2();
+        const gyro = { x: 0, y: 0 };
         let targetX = 0, targetY = 0;
 
         const handleMouseMove = (e) => {
@@ -143,18 +202,57 @@ const NeuralFlow = () => {
             }
         };
 
+        // Gyroscope Handler
+        const handleOrientation = (e) => {
+            // Beta: -180 to 180 (front/back tilt), Gamma: -90 to 90 (left/right tilt)
+            if (e.beta !== null && e.gamma !== null) {
+                // Map to -1 to 1 range with sensitivity
+                gyro.x = (e.gamma / 30); // Left/Right
+                gyro.y = (e.beta - 45) / 30; // Front/Back (offset for natural holding angle)
+                
+                // Clamp
+                gyro.x = Math.max(-1, Math.min(1, gyro.x));
+                gyro.y = Math.max(-1, Math.min(1, gyro.y));
+            }
+        };
+
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('touchmove', handleTouchMove);
+        window.addEventListener('deviceorientation', handleOrientation);
+
+        // iOS Permission Request
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            document.addEventListener('click', () => {
+                DeviceOrientationEvent.requestPermission().catch(console.error);
+            }, { once: true });
+        }
 
         const clock = new THREE.Clock();
         const animate = () => {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
-            material.uniforms.time.value = time * (isMobile ? 0.5 : 1.0); // Rule 11: Slow down on mobile
 
-            targetX = mouse.x * 5;
-            targetY = mouse.y * 5;
-            const lerpSpeed = isMobile ? 0.02 : 0.05;
+            // Pulse Color Logic (Restored)
+            const hue = (time * 0.05) % 1;
+            material.color.setHSL(0.5 + hue * 0.1, 0.8, 0.5);
+
+            // Animate Particles (Restored Wave)
+            const posAttr = points.geometry.attributes.position;
+            for (let i = 0; i < particleCount; i++) {
+                const x = posAttr.getX(i);
+                posAttr.setY(i, Math.sin(time + x * 0.1 + randomness[i] * 10) * 5);
+            }
+            posAttr.needsUpdate = true;
+
+            // Rotate Net
+            net.rotation.y += 0.002;
+            net.rotation.z += 0.001;
+
+            // Composite Interaction (Mouse + Gyro)
+            targetX = (mouse.x + gyro.x) * 5;
+            targetY = (mouse.y + gyro.y) * 5;
+            
+            const lerpSpeed = 0.05;
             camera.position.x += (targetX - camera.position.x) * lerpSpeed;
             camera.position.y += (-targetY + 10 - camera.position.y) * lerpSpeed;
             camera.lookAt(scene.position);
@@ -172,13 +270,23 @@ const NeuralFlow = () => {
 
         return () => {
             window.removeEventListener('resize', handleResize);
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('deviceorientation', handleOrientation);
             if (mount) mount.removeChild(renderer.domElement);
         };
     }, []);
 
-    return <div ref={mountRef} id="canvas-bg" className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020202]" />;
+    return (
+        <div ref={mountRef} id="canvas-bg" className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020202]">
+            {/* Gesture Prompt for iOS/Gyro */}
+            {isMobile && (
+                <div className="absolute bottom-4 right-4 text-[8px] font-mono text-acm-cyan opacity-20 pointer-events-none uppercase tracking-widest">
+                    Motion_Sensors_Active
+                </div>
+            )}
+        </div>
+    );
 };
 
 // --- GLITCH TEXT COMPONENT ---
@@ -470,52 +578,6 @@ const Team = () => {
 };
 
 
-// --- 3D TILT UNIT ---
-const TiltCard = ({ children, className = "" }) => {
-    const ref = useRef(null);
-    const [transform, setTransform] = useState("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
-    const [glow, setGlow] = useState("0% 0%");
-
-    const handleMove = (e) => {
-        const el = ref.current;
-        const { left, top, width, height } = el.getBoundingClientRect();
-        const x = e.clientX - left;
-        const y = e.clientY - top;
-        
-        const xPct = x / width;
-        const yPct = y / height;
-
-        const tiltX = (0.5 - yPct) * 20;
-        const tiltY = (xPct - 0.5) * 20;
-
-        setTransform(`perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`);
-        setGlow(`${xPct * 100}% ${yPct * 100}%`);
-    };
-
-    const handleLeave = () => {
-        setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
-        setGlow("50% 50%");
-    };
-
-    return (
-        <div 
-            ref={ref} 
-            onMouseMove={handleMove} 
-            onMouseLeave={handleLeave}
-            className={`transition-all duration-200 ease-out ${className}`}
-            style={{ transform }}
-        >
-            <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
-                {/* Dynamic Glow Gradient */}
-                <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
-                    style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
-                />
-                {children}
-            </div>
-        </div>
-    );
-};
 
 
 
