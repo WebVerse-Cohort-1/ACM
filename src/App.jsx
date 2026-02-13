@@ -101,6 +101,11 @@ const TiltCard = ({ children, className = "" }) => {
         setGlow("50% 50%");
     };
 
+    const gyroStyle = window.innerWidth < 1024 ? {
+        transform: `perspective(1000px) rotateY(${gyro.x * 10}deg) rotateX(${-gyro.y * 10}deg)`,
+        transition: 'transform 0.1s ease-out'
+    } : {};
+
     return (
         <div 
             ref={cardRef}
