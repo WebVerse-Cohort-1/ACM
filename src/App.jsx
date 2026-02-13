@@ -101,22 +101,18 @@ const TiltCard = ({ children, className = "" }) => {
         setGlow("50% 50%");
     };
 
-    const gyroStyle = window.innerWidth < 1024 ? {
-        transform: `perspective(1000px) rotateY(${gyro.x * 10}deg) rotateX(${-gyro.y * 10}deg)`,
-        transition: 'transform 0.1s ease-out'
-    } : {};
-
     return (
         <div 
             ref={cardRef}
-            className={`transition-all duration-300 ease-out group relative ${className}`} 
+            className={`transition-all duration-300 ease-out group relative overflow-hidden ${className}`} 
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={gyroStyle}
         >
             <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
+                {/* Dynamic Glow Gradient */}
                 <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none z-10"
                     style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
                 />
                 {children}
@@ -310,7 +306,7 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className={`fixed top-0 w-full px-6 md:px-12 flex justify-between items-center transition-all duration-300 z-[1001] ${scrolled ? 'py-4 bg-[#020c1b]/95 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-8'}`}>
+            <nav className={`fixed top-0 w-full px-6 md:px-12 flex justify-between items-center transition-all duration-300 z-[1001] ${scrolled || isOpen ? 'py-4 bg-[#020c1b]/95 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-8'}`}>
                 <Link to="/" onClick={() => setIsOpen(false)} className="text-2xl font-heading font-bold tracking-widest text-white hover:text-acm-cyan transition-colors">
                     TSEC <span className="text-acm-cyan">ACM</span>
                 </Link>
@@ -334,7 +330,7 @@ const Navbar = () => {
             </nav>
 
             {/* Mobile Menu Overlay */}
-            <div className={`fixed inset-0 bg-[#020c1b] flex flex-col items-center justify-center gap-10 md:hidden transition-all duration-500 z-[1000] ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+            <div className={`fixed inset-0 bg-[#020c1b] flex flex-col items-center justify-center gap-10 md:hidden transition-all duration-500 z-[1000] pt-20 ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                 {/* Decorative scanning line */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-acm-cyan/30 animate-pulse"></div>
                 
@@ -802,7 +798,7 @@ const Contact = () => (
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
 
         <div className="w-full max-w-5xl relative z-10 perspective-1000">
-            <TiltCard className="bg-black/90 border border-acm-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0">
+            <TiltCard className="bg-black/90 md:border md:border-acm-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-50"></div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 bg-acm-cyan/5 rounded-tl-full pointer-events-none"></div>
@@ -847,7 +843,7 @@ const Contact = () => (
                     </div>
 
                     {/* Right: Input Terminal */}
-                    <div className="w-full md:w-7/12 p-6 md:p-12">
+                    <div className="w-full md:w-7/12 p-6 md:p-12 bg-black/20">
                         <form className="space-y-6" onSubmit={e => e.preventDefault()}>
                             <div className="group relative">
                                 <input type="text" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6" placeholder=" " />
