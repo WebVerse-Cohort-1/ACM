@@ -31,7 +31,8 @@ const CustomCursor = () => {
 };
 
 // --- MAGNETIC BUTTON ---
-const MagneticButton = ({ children, className, onClick }) => {
+// --- MAGNETIC BUTTON ---
+const MagneticButton = ({ children, className, onClick, as: Component = 'button', ...props }) => {
     const btnRef = useRef(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
@@ -46,16 +47,17 @@ const MagneticButton = ({ children, className, onClick }) => {
     const handleMouseLeave = () => setPosition({ x: 0, y: 0 });
 
     return (
-        <button
+        <Component
             ref={btnRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             onClick={onClick}
             style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
             className={`transition-transform duration-200 ease-out ${className}`}
+            {...props}
         >
             {children}
-        </button>
+        </Component>
     );
 };
 
@@ -200,6 +202,7 @@ const GlitchText = ({ text, className }) => {
 const Navbar = () => {
     const location = useLocation();
     const [hovered, setHovered] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     const navItems = [
         { name: 'Home', path: '/' },
@@ -233,8 +236,24 @@ const Navbar = () => {
                 ))}
             </div>
             
-            {/* Mobile Menu Placeholder (Simplified for brevity) */}
-            <div className="md:hidden text-2xl">☰</div>
+            {/* Mobile Menu Toggle */}
+            <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-2xl z-50 focus:outline-none mix-blend-difference">
+                {isOpen ? '✕' : '☰'}
+            </button>
+
+            {/* Mobile Menu Overlay */}
+            <div className={`fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-40 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                 {navItems.map((item) => (
+                    <Link 
+                        key={item.name} 
+                        to={item.path} 
+                        onClick={() => setIsOpen(false)} 
+                        className="text-4xl font-heading font-bold text-gray-500 hover:text-white hover:scale-110 transition-all"
+                    >
+                        {item.name}
+                    </Link>
+                ))}
+            </div>
         </nav>
     );
 };
@@ -262,12 +281,12 @@ const Home = () => (
 
             <div className="flex gap-6">
                 <Link to="/events">
-                    <MagneticButton className="px-8 py-4 bg-white text-black font-bold rounded-none hover:bg-acm-cyan transition-colors">
+                    <MagneticButton as="div" className="px-8 py-4 bg-white text-black font-bold rounded-none hover:bg-acm-cyan transition-colors">
                         EXPLORE EVENTS ↗
                     </MagneticButton>
                 </Link>
                 <Link to="/contact">
-                    <MagneticButton className="px-8 py-4 border border-white/20 text-white font-bold rounded-none hover:bg-white/10 backdrop-blur-md">
+                    <MagneticButton as="div" className="px-8 py-4 border border-white/20 text-white font-bold rounded-none hover:bg-white/10 backdrop-blur-md">
                         JOIN NETWORK
                     </MagneticButton>
                 </Link>
