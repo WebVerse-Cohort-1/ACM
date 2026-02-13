@@ -50,12 +50,42 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
+        /* Global Reset & Foundation */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body { 
             margin: 0; 
             background-color: #020C1B; 
             color: #8892b0;
+            overflow-x: hidden; /* Prevent horizontal scroll mess */
+            width: 100vw;
+            position: relative;
         }
         
+        /* Proper Breakpoints (Foundation) */
+        
+        /* Desktop */
+        @media (min-width: 1024px) { }
+
+        /* Tablet */
+        @media (max-width: 1024px) { }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            h1 { font-size: clamp(2rem, 8vw, 3rem) !important; }
+            h2 { font-size: clamp(1.5rem, 6vw, 2rem) !important; }
+            .row { flex-direction: column !important; }
+            .container { padding: 0 20px !important; width: 100% !important; }
+        }
+
+        /* Small mobile */
+        @media (max-width: 480px) {
+             h1 { font-size: 1.75rem !important; }
+        }
+
         /* Smooth Scroll */
         html { scroll-behavior: smooth; }
         

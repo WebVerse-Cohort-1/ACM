@@ -64,107 +64,100 @@ const MagneticButton = ({ children, className, onClick, as: Component = 'button'
 // --- THREE.JS NEURAL FLOW BACKGROUND ---
 const NeuralFlow = () => {
     const mountRef = useRef(null);
+    const isMobile = window.innerWidth < 768;
 
     useEffect(() => {
         const mount = mountRef.current;
         const scene = new THREE.Scene();
-        // Deep space fog
         scene.fog = new THREE.FogExp2(0x020202, 0.002);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.z = 30;
         camera.position.y = 10;
 
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !isMobile }); // Performance: Disable antialias on mobile
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Rule 4: Limit pixel ratio
         mount.appendChild(renderer.domElement);
 
         // --- WAVE PARTICLES ---
-        const particleCount = 2000;
+        const particleCount = isMobile ? 120 : 2000; // Rule 4: Reduce load on mobile
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const scales = new Float32Array(particleCount);
-        const randomness = new Float32Array(particleCount * 3);
 
         for (let i = 0; i < particleCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 100; // x
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 20; // y
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 100; // z
+            positions[i * 3] = (Math.random() - 0.5) * 100;
+            positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
             scales[i] = Math.random();
-            randomness[i * 3] = Math.random();
-            randomness[i * 3 + 1] = Math.random();
-            randomness[i * 3 + 2] = Math.random();
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
-        
-        // Shader Material for more control
-        const material = new THREE.PointsMaterial({
-            color: 0x4284d2,
-            size: 0.4,
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                color: { value: new THREE.Color(0x64ffda) },
+                time: { value: 0 },
+            },
+            vertexShader: `
+                uniform float time;
+                attribute float scale;
+                void main() {
+                    vec3 pos = position;
+                    pos.y += sin(pos.x * 0.2 + time) * 2.0;
+                    pos.z += cos(pos.y * 0.2 + time) * 2.0;
+                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                    gl_PointSize = scale * (300.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 color;
+                void main() {
+                    if (length(gl_PointCoord - vec2(0.5)) > 0.5) discard;
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `,
             transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending
+            blending: THREE.AdditiveBlending,
+            depthWrite: false, // Prevents points from blocking each other
         });
 
-        const particles = new THREE.Points(geometry, material);
-        scene.add(particles);
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
 
-        // --- CONNECTING LINES (NEURAL NET) ---
-        // Creating a smaller chaotic network in the center
-        const lineGeo = new THREE.IcosahedronGeometry(15, 1);
-        const lineMat = new THREE.MeshBasicMaterial({ 
-            color: 0x00d2ef, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.05 
-        });
-        const net = new THREE.Mesh(lineGeo, lineMat);
-        scene.add(net);
+        // Interaction
+        const mouse = new THREE.Vector2();
+        let targetX = 0, targetY = 0;
 
-        // --- ANIMATION ---
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetX = 0;
-        let targetY = 0;
-
-        const handleMouseMove = (event) => {
-            mouseX = (event.clientX - window.innerWidth / 2) * 0.05;
-            mouseY = (event.clientY - window.innerHeight / 2) * 0.05;
+        const handleMouseMove = (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
         };
-        document.addEventListener('mousemove', handleMouseMove);
+        const handleTouchMove = (e) => {
+            if (e.touches.length > 0) {
+                mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('touchmove', handleTouchMove);
 
         const clock = new THREE.Clock();
-
         const animate = () => {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
+            material.uniforms.time.value = time * (isMobile ? 0.5 : 1.0); // Rule 11: Slow down on mobile
 
-            // Smooth camera Movement
-            targetX = mouseX * 0.5;
-            targetY = mouseY * 0.5;
-            camera.position.x += (targetX - camera.position.x) * 0.05;
-            camera.position.y += (-targetY + 10 - camera.position.y) * 0.05;
+            targetX = mouse.x * 5;
+            targetY = mouse.y * 5;
+            const lerpSpeed = isMobile ? 0.02 : 0.05;
+            camera.position.x += (targetX - camera.position.x) * lerpSpeed;
+            camera.position.y += (-targetY + 10 - camera.position.y) * lerpSpeed;
             camera.lookAt(scene.position);
-
-            // Animate Particles (Wave effect)
-            const positions = particles.geometry.attributes.position.array;
-            for (let i = 0; i < particleCount; i++) {
-                const x = positions[i * 3];
-                // Sine wave movement based on X position and Time
-                positions[i * 3 + 1] = Math.sin(time + x * 0.1 + randomness[i*3]*10) * 5 + (Math.cos(time * 0.5 + randomness[i*3+1]*10) * 2);
-            }
-            particles.geometry.attributes.position.needsUpdate = true;
-
-            // Rotate Net
-            net.rotation.y += 0.001;
-            net.rotation.z += 0.0005;
-            
-            // Pulse Color
-            const hue = (time * 0.1) % 1;
-            const color = new THREE.Color().setHSL(0.6 + hue * 0.1, 0.8, 0.5); // Oscillate around Blue/Cyan
-            material.color = color;
 
             renderer.render(scene, camera);
         };
@@ -180,6 +173,7 @@ const NeuralFlow = () => {
         return () => {
             window.removeEventListener('resize', handleResize);
             document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('touchmove', handleTouchMove);
             if (mount) mount.removeChild(renderer.domElement);
         };
     }, []);
@@ -199,10 +193,9 @@ const GlitchText = ({ text, className }) => {
 };
 
 
-// --- NAVBAR ---
+// --- NAVBAR (Mobile First Recreation) ---
 const Navbar = () => {
     const location = useLocation();
-    const [hovered, setHovered] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
@@ -211,6 +204,11 @@ const Navbar = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Prevent scroll when menu is open
+    useEffect(() => {
+        document.body.style.overflow = isOpen ? 'hidden' : 'auto';
+    }, [isOpen]);
 
     const navItems = [
         { name: 'Home', path: '/' },
@@ -222,45 +220,54 @@ const Navbar = () => {
     ];
 
     return (
-        <nav className={`fixed top-0 w-full z-40 px-8 flex justify-between items-center transition-all duration-300 ${scrolled ? 'py-4 bg-[#020c1b]/80 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-6 mix-blend-difference'}`}>
-            <Link to="/" className={`text-2xl font-heading font-bold tracking-widest z-50 transition-colors ${scrolled ? 'text-white' : ''}`}>
-                TSEC <span className="text-acm-cyan">ACM</span>
-            </Link>
+        <>
+            <nav className={`fixed top-0 w-full px-6 md:px-12 flex justify-between items-center transition-all duration-300 z-[1001] ${scrolled ? 'py-4 bg-[#020c1b]/95 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-8'}`}>
+                <Link to="/" onClick={() => setIsOpen(false)} className="text-2xl font-heading font-bold tracking-widest text-white hover:text-acm-cyan transition-colors">
+                    TSEC <span className="text-acm-cyan">ACM</span>
+                </Link>
 
-            <div className={`hidden md:flex gap-1 ${scrolled ? 'text-gray-300' : ''}`}>
-                {navItems.map((item) => (
-                    <Link key={item.name} to={item.path}>
-                        <div 
-                            className="relative px-6 py-2 overflow-hidden group"
-                            onMouseEnter={() => setHovered(item.name)}
-                            onMouseLeave={() => setHovered(null)}
-                        >
-                            <span className={`relative z-10 text-sm uppercase tracking-widest transition-colors duration-300 ${location.pathname === item.path ? 'text-acm-cyan' : (scrolled ? 'text-gray-300 group-hover:text-white' : 'text-gray-300 group-hover:text-black')}`}>
-                                {item.name}
-                            </span>
-                            <span className="absolute inset-0 bg-acm-cyan transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></span>
-                        </div>
-                    </Link>
-                ))}
-            </div>
-            
-            <button onClick={() => setIsOpen(!isOpen)} className={`md:hidden text-2xl z-50 focus:outline-none transition-colors ${scrolled ? 'text-white' : 'mix-blend-difference'}`}>
-                {isOpen ? '✕' : '☰'}
-            </button>
+                {/* Desktop Links */}
+                <div className="hidden md:flex gap-8">
+                    {navItems.map((item) => (
+                        <Link key={item.name} to={item.path} className={`text-xs uppercase tracking-[0.3em] transition-all hover:text-acm-cyan ${location.pathname === item.path ? 'text-acm-cyan font-bold' : 'text-gray-400'}`}>
+                            {item.name}
+                        </Link>
+                    ))}
+                </div>
+                
+                {/* Mobile Trigger */}
+                <button 
+                    onClick={() => setIsOpen(!isOpen)} 
+                    className="md:hidden text-white text-3xl z-[1002] focus:outline-none focus:text-acm-cyan transition-colors"
+                >
+                    {isOpen ? '✕' : '☰'}
+                </button>
+            </nav>
 
-            <div className={`fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-[9999] ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                 {navItems.map((item) => (
+            {/* Mobile Menu Overlay */}
+            <div className={`fixed inset-0 bg-[#020c1b] flex flex-col items-center justify-center gap-10 md:hidden transition-all duration-500 z-[1000] ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+                {/* Decorative scanning line */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-acm-cyan/30 animate-pulse"></div>
+                
+                {navItems.map((item, idx) => (
                     <Link 
                         key={item.name} 
                         to={item.path} 
                         onClick={() => setIsOpen(false)} 
-                        className="text-4xl font-heading font-bold text-gray-400 hover:text-white hover:scale-110 transition-all"
+                        className={`group relative text-3xl font-heading font-bold uppercase tracking-widest transition-all duration-300 ${location.pathname === item.path ? 'text-acm-cyan ml-4' : 'text-gray-500 hover:text-white'}`}
+                        style={{ transitionDelay: `${idx * 50}ms` }}
                     >
-                        {item.name}
+                        <span className="relative z-10">{item.name}</span>
+                        {location.pathname === item.path && <span className="absolute -left-6 top-1/2 -translate-y-1/2 text-acm-cyan animate-ping text-sm">⊕</span>}
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-acm-cyan scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                     </Link>
                 ))}
+
+                <div className="mt-12 text-[10px] font-mono text-gray-600 tracking-[0.5em] animate-pulse">
+                    :: STATUS_ONLINE ::
+                </div>
             </div>
-        </nav>
+        </>
     );
 };
 
@@ -526,8 +533,9 @@ const FusionGallery = () => {
         // Z-Spacing: 1200px per item + Offset so first item is visible but background
         z: i * 1200 + 650, 
         // Drift Scatter (Background State)
-        x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 40 : 150), // Reduced X spread on mobile
-        y: (Math.random() - 0.5) * (window.innerWidth < 768 ? 40 : 100), // Reduced Y spread on mobile
+        // Rule 9: Compress horizontally, expand vertically on mobile to prevent crowding
+        x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 25 : 150), // Compressed X
+        y: (Math.random() - 0.5) * (window.innerWidth < 768 ? 90 : 100), // Expanded Y
         rotation: (Math.random() - 0.5) * 45,
         title: `EVENT_LOG_${i < 9 ? '0' : ''}${i + 1}`,
         desc: "Secure data node accessed. Decrypting visual archives...",
@@ -567,8 +575,7 @@ const FusionGallery = () => {
     const maxZ = items[items.length - 1].z + 2000;
 
     return (
-        <div className="min-h-screen bg-black transition-colors duration-1000"
-             style={{ backgroundColor: activeIndex >= 0 ? '#000000' : '#020202' }}>
+        <div className="min-h-screen bg-transparent transition-colors duration-1000">
             
             {/* Scroll Spacer */}
             <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
@@ -763,13 +770,13 @@ const Contact = () => (
                 <div className="flex flex-col md:flex-row">
                     
                     {/* Left: Interactive Data Panel */}
-                    <div className="md:w-5/12 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/5 relative">
+                    <div className="w-full md:w-5/12 p-6 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/5 relative">
                         <div className="absolute top-4 left-4 w-2 h-2 bg-acm-cyan rounded-full animate-ping"></div>
                         
-                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2">
+                        <h1 className="text-3xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
                             UPLINK
                         </h1>
-                        <p className="text-gray-400 font-mono text-xs mb-12">:: SECURE_CHANNEL_ESTABLISHED</p>
+                        <p className="text-gray-400 font-mono text-[10px] md:text-xs mb-8 md:mb-12">:: SECURE_CHANNEL_ESTABLISHED</p>
 
                         <div className="space-y-8 font-mono text-sm">
                             <div className="group cursor-pointer">
@@ -797,7 +804,7 @@ const Contact = () => (
                     </div>
 
                     {/* Right: Input Terminal */}
-                    <div className="md:w-7/12 p-8 md:p-12">
+                    <div className="w-full md:w-7/12 p-6 md:p-12">
                         <form className="space-y-6" onSubmit={e => e.preventDefault()}>
                             <div className="group relative">
                                 <input type="text" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6" placeholder=" " />
@@ -821,7 +828,7 @@ const Contact = () => (
                             </div>
                             
                             <div className="pt-4">
-                                <MagneticButton className="w-full py-4 bg-acm-cyan/10 border border-acm-cyan text-acm-cyan font-bold tracking-[0.2em] hover:bg-acm-cyan hover:text-black transition-all duration-300 group relative overflow-hidden">
+                                <MagneticButton className="w-full py-5 md:py-4 bg-acm-cyan/10 border border-acm-cyan text-acm-cyan font-bold tracking-[0.2em] hover:bg-acm-cyan hover:text-black transition-all duration-300 group relative overflow-hidden min-h-[50px]">
                                     <span className="relative z-10">INITIATE_UPLOAD</span>
                                     <div className="absolute inset-0 bg-acm-cyan transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                                 </MagneticButton>
