@@ -198,27 +198,36 @@ const GlitchText = ({ text, className }) => {
     );
 };
 
+
 // --- NAVBAR ---
 const Navbar = () => {
     const location = useLocation();
     const [hovered, setHovered] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const navItems = [
         { name: 'Home', path: '/' },
         { name: 'About', path: '/about' },
+        { name: 'Gallery', path: '/gallery' },
         { name: 'Events', path: '/events' },
         { name: 'Team', path: '/team' },
         { name: 'Contact', path: '/contact' }
     ];
 
     return (
-        <nav className="fixed top-0 w-full z-40 px-8 py-6 flex justify-between items-center mix-blend-difference text-white">
-            <Link to="/" className="text-2xl font-heading font-bold tracking-widest z-50">
+        <nav className={`fixed top-0 w-full z-40 px-8 flex justify-between items-center transition-all duration-300 ${scrolled ? 'py-4 bg-[#020c1b]/80 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-6 mix-blend-difference'}`}>
+            <Link to="/" className={`text-2xl font-heading font-bold tracking-widest z-50 transition-colors ${scrolled ? 'text-white' : ''}`}>
                 TSEC<span className="text-acm-cyan">ACM</span>
             </Link>
 
-            <div className="hidden md:flex gap-1">
+            <div className={`hidden md:flex gap-1 ${scrolled ? 'text-gray-300' : ''}`}>
                 {navItems.map((item) => (
                     <Link key={item.name} to={item.path}>
                         <div 
@@ -226,29 +235,26 @@ const Navbar = () => {
                             onMouseEnter={() => setHovered(item.name)}
                             onMouseLeave={() => setHovered(null)}
                         >
-                            <span className={`relative z-10 text-sm uppercase tracking-widest transition-colors duration-300 ${location.pathname === item.path ? 'text-acm-cyan' : 'text-gray-300 group-hover:text-black'}`}>
+                            <span className={`relative z-10 text-sm uppercase tracking-widest transition-colors duration-300 ${location.pathname === item.path ? 'text-acm-cyan' : (scrolled ? 'text-gray-300 group-hover:text-white' : 'text-gray-300 group-hover:text-black')}`}>
                                 {item.name}
                             </span>
-                            {/* Hover Fill Effect */}
                             <span className="absolute inset-0 bg-acm-cyan transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></span>
                         </div>
                     </Link>
                 ))}
             </div>
             
-            {/* Mobile Menu Toggle */}
-            <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-2xl z-50 focus:outline-none mix-blend-difference">
+            <button onClick={() => setIsOpen(!isOpen)} className={`md:hidden text-2xl z-50 focus:outline-none transition-colors ${scrolled ? 'text-white' : 'mix-blend-difference'}`}>
                 {isOpen ? '✕' : '☰'}
             </button>
 
-            {/* Mobile Menu Overlay */}
-            <div className={`fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-40 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center gap-8 md:hidden transition-all duration-300 z-40 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                  {navItems.map((item) => (
                     <Link 
                         key={item.name} 
                         to={item.path} 
                         onClick={() => setIsOpen(false)} 
-                        className="text-4xl font-heading font-bold text-gray-500 hover:text-white hover:scale-110 transition-all"
+                        className="text-4xl font-heading font-bold text-gray-400 hover:text-white hover:scale-110 transition-all"
                     >
                         {item.name}
                     </Link>
@@ -304,36 +310,59 @@ const Home = () => (
 );
 
 const Events = () => {
+    const events = [
+        { title: 'CodeSprint 26', date: 'MAR 15', tag: 'HACKATHON', color: 'from-acm-cyan to-blue-600', desc: '48h intensive prototyping sprint.' },
+        { title: 'System_Breach', date: 'APR 02', tag: 'CTF', color: 'from-red-500 to-orange-600', desc: 'Cybersecurity capture the flag.' },
+        { title: 'Neural_Nets', date: 'MAY 10', tag: 'WORKSHOP', color: 'from-purple-500 to-indigo-600', desc: 'Deep learning with experts.' },
+        { title: 'Cloud_Summit', date: 'JUN 22', tag: 'CONFERENCE', color: 'from-blue-400 to-teal-400', desc: 'Cloud native architecture.' },
+        { title: 'Open_Source', date: 'JUL 14', tag: 'INITIATIVE', color: 'from-green-400 to-emerald-600', desc: 'Summer contribution drive.' },
+        { title: 'Dev_Fest', date: 'AUG 30', tag: 'MEETUP', color: 'from-yellow-400 to-orange-500', desc: 'Community developer meet.' },
+    ];
+
     return (
-        <div className="min-h-screen pt-32 px-8 md:px-20">
-            <h1 className="text-6xl md:text-8xl font-heading font-bold mb-16 opacity-10 fixed -z-10 top-20 right-0 pointer-events-none">
-                EVENTS
+        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
+             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+                TIMELINE
             </h1>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-32 max-w-6xl mx-auto">
-                {[
-                     { title: 'CodeSprint 26', date: 'MAR 15', tag: 'HACKATHON', color: 'border-acm-cyan' },
-                     { title: 'System_Breach', date: 'APR 02', tag: 'CTF', color: 'border-red-500' },
-                     { title: 'Neural_Nets', date: 'MAY 10', tag: 'WORKSHOP', color: 'border-acm-blue' },
-                ].map((ev, i) => (
-                    <div key={i} className={`group relative ${i % 2 === 1 ? 'md:mt-32' : ''}`}>
-                        <div className={`border-t-2 ${ev.color} pt-4 mb-4 flex justify-between items-start`}>
-                            <span className="font-mono text-xs">{ev.date}</span>
-                            <span className="font-mono text-xs px-2 py-1 bg-white/5">{ev.tag}</span>
+            <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
+                <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
+                    EVENT_<span className="text-acm-cyan">LOGS</span>
+                </h2>
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">:: UPCOMING_OPERATIONS</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 perspective-1000">
+                {events.map((ev, i) => (
+                    <TiltCard key={i} className="group aspect-[4/5] md:aspect-[4/3] cursor-pointer">
+                        <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
+                            {/* Date Badge */}
+                            <div className="flex justify-between items-start">
+                                <span className="font-mono text-xl font-bold text-white border-b-2 border-acm-cyan pb-1">
+                                    {ev.date}
+                                </span>
+                                <span className="font-mono text-[9px] border border-white/20 px-2 py-1 rounded text-gray-300 bg-black/20 backdrop-blur-md">
+                                    {ev.tag}
+                                </span>
+                            </div>
+                            
+                            {/* Central Glow */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none">
+                                <div className={`w-40 h-40 rounded-full bg-gradient-to-br ${ev.color} blur-3xl animate-pulse`}></div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                <h3 className="text-3xl font-heading font-bold text-white mb-2 shadow-black drop-shadow-md">{ev.title}</h3>
+                                <p className="text-sm text-gray-300 font-mono mb-6 border-l-2 border-white/20 pl-3">
+                                    {ev.desc}
+                                </p>
+                                <MagneticButton as="div" className="text-xs border border-white/20 hover:border-acm-cyan text-acm-cyan px-4 py-2 rounded uppercase tracking-wider bg-black/40 backdrop-blur-md">
+                                    Register Interface &rarr;
+                                </MagneticButton>
+                            </div>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-bold mb-4 group-hover:text-acm-cyan transition-colors duration-300">
-                            {ev.title}
-                        </h2>
-                        <p className="text-gray-400 text-sm mb-6 max-w-xs">
-                            Join the elite developers in a race against time and logic.
-                        </p>
-                        <MagneticButton className="text-sm border-b border-white pb-1 hover:text-acm-cyan hover:border-acm-cyan transition-colors">
-                            REGISTER NOW
-                        </MagneticButton>
-                        
-                        {/* Hover Image Reveal (Simulated with div) */}
-                        <div className="absolute top-0 -z-10 w-64 h-80 bg-gradient-to-br from-gray-800 to-black opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-x-10 translate-y-[-20%] pointer-events-none grayscale group-hover:grayscale-0"></div>
-                    </div>
+                    </TiltCard>
                 ))}
             </div>
         </div>
@@ -376,47 +405,394 @@ const About = () => (
     </div>
 );
 
-const Team = () => (
-    <div className="min-h-screen pt-32 px-8 pb-20">
-        <h1 className="text-center text-acm-cyan font-mono tracking-widest mb-20 animate-pulse">:: PROTOCOL_LEADERS</h1>
-        <div className="flex flex-wrap justify-center gap-1">
-            {['CHAIR', 'VICE', 'SEC', 'TREAS', 'TECH', 'DESIGN', 'PR', 'WEB'].map((role, i) => (
-                <div key={i} className="relative w-full md:w-64 h-80 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-acm-cyan/50 transition-all duration-300 group overflow-hidden">
-                    <div className="absolute inset-0 flex flex-col justify-end p-6">
-                        <span className="text-5xl font-heading font-bold opacity-20 -mb-4 group-hover:opacity-100 group-hover:mb-0 transition-all duration-300 transform group-hover:-translate-y-2">
-                            0{i+1}
-                        </span>
-                        <h3 className="text-xl font-bold text-white relative z-10">{role}</h3>
-                        <p className="text-xs text-acm-cyan font-mono mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                            :: LEADER
+const Team = () => {
+    const members = [
+        { role: 'CHAIR', id: '01', color: 'from-cyan-500 to-blue-500' },
+        { role: 'VICE', id: '02', color: 'from-purple-500 to-pink-500' },
+        { role: 'SEC', id: '03', color: 'from-green-400 to-emerald-600' },
+        { role: 'TREAS', id: '04', color: 'from-yellow-400 to-orange-500' },
+        { role: 'TECH', id: '05', color: 'from-blue-600 to-indigo-900' },
+        { role: 'DESIGN', id: '06', color: 'from-pink-500 to-rose-600' },
+        { role: 'PR', id: '07', color: 'from-indigo-400 to-cyan-400' },
+        { role: 'WEB', id: '08', color: 'from-teal-400 to-cyan-300' },
+    ];
+
+    return (
+        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
+             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+                COMMAND
+            </h1>
+            
+            <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
+                <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
+                    PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
+                </h2>
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">:: CORE_COMMITTEE_NODES</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 perspective-1000">
+                {members.map((m, i) => (
+                    <TiltCard key={i} className="group aspect-[3/4] cursor-pointer">
+                        <div className="relative h-full w-full p-6 flex flex-col justify-between z-10">
+                            {/* Top ID */}
+                            <div className="flex justify-between items-start">
+                                <span className="font-mono text-4xl font-bold text-white/10 group-hover:text-white/30 transition-colors">
+                                    {m.id}
+                                </span>
+                                <div className="w-2 h-2 rounded-full bg-acm-cyan animate-pulse"></div>
+                            </div>
+                            
+                            {/* Central Glow representing the person */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none">
+                                <div className={`w-32 h-32 rounded-full bg-gradient-to-t ${m.color} blur-3xl`}></div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                <h3 className="text-2xl font-heading font-bold text-white mb-1">{m.role}</h3>
+                                <p className="text-xs text-acm-cyan font-mono tracking-widest opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                                    :: ACTIVE_NODE
+                                </p>
+                            </div>
+                        </div>
+                    </TiltCard>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+
+// --- 3D TILT UNIT ---
+const TiltCard = ({ children, className = "" }) => {
+    const ref = useRef(null);
+    const [transform, setTransform] = useState("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
+    const [glow, setGlow] = useState("0% 0%");
+
+    const handleMove = (e) => {
+        const el = ref.current;
+        const { left, top, width, height } = el.getBoundingClientRect();
+        const x = e.clientX - left;
+        const y = e.clientY - top;
+        
+        const xPct = x / width;
+        const yPct = y / height;
+
+        const tiltX = (0.5 - yPct) * 20;
+        const tiltY = (xPct - 0.5) * 20;
+
+        setTransform(`perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`);
+        setGlow(`${xPct * 100}% ${yPct * 100}%`);
+    };
+
+    const handleLeave = () => {
+        setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
+        setGlow("50% 50%");
+    };
+
+    return (
+        <div 
+            ref={ref} 
+            onMouseMove={handleMove} 
+            onMouseLeave={handleLeave}
+            className={`transition-all duration-200 ease-out ${className}`}
+            style={{ transform }}
+        >
+            <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
+                {/* Dynamic Glow Gradient */}
+                <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
+                    style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
+                />
+                {children}
+            </div>
+        </div>
+    );
+};
+
+
+
+
+
+
+// --- FUSION GALLERY (Tunnel + Drift + Carousel) ---
+const FusionGallery = () => {
+    const [scrollProgress, setScrollProgress] = useState(0);
+    const [activeIndex, setActiveIndex] = useState(-1);
+    
+    // Data: 3D Positions + Content
+    const items = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
+        id: i,
+        // Z-Spacing: 1200px per item
+        z: i * 1200, 
+        // Drift Scatter (Background State)
+        x: (Math.random() - 0.5) * 150, // vw relative
+        y: (Math.random() - 0.5) * 100, // vh relative
+        rotation: (Math.random() - 0.5) * 45,
+        title: `EVENT_LOG_${i < 9 ? '0' : ''}${i + 1}`,
+        desc: "Secure data node accessed. Decrypting visual archives...",
+        slides: [
+            `from-cyan-900/40 to-blue-900/40`, 
+            `from-purple-900/40 to-pink-900/40`,
+            `from-emerald-900/40 to-teal-900/40`
+        ]
+    })), []);
+
+    // Scroll Logic
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrollProgress(window.scrollY * 1.0);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Determine Active Item
+    useEffect(() => {
+        let closest = -1;
+        let minDist = Infinity;
+
+        items.forEach((item, index) => {
+            const dist = Math.abs(item.z - scrollProgress); // Distance from abstract "camera"
+            if (dist < 600) { // Active Window width
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = index;
+                }
+            }
+        });
+        setActiveIndex(closest);
+    }, [scrollProgress, items]);
+
+    const maxZ = items[items.length - 1].z + 2000;
+
+    return (
+        <div className="min-h-screen bg-black transition-colors duration-1000"
+             style={{ backgroundColor: activeIndex >= 0 ? '#000000' : '#020202' }}>
+            
+            {/* Scroll Spacer */}
+            <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
+
+            {/* HUD */}
+            <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 text-center mix-blend-exclusion pointer-events-none w-full">
+                <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-2 tracking-tighter">
+                    NEURAL_<span className="text-acm-cyan">ARCHIVE</span>
+                </h1>
+                <div className="flex justify-center space-x-4 text-[10px] md:text-xs font-mono text-acm-cyan/80">
+                     <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
+                     <span>:: DEPTH: {Math.round(scrollProgress)}</span>
+                </div>
+            </div>
+
+            {/* Viewport */}
+            <div className="fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center perspective-[1000px]">
+                <div className="relative w-full h-full preserve-3d">
+                    {items.map((item, index) => {
+                        const isActive = index === activeIndex;
+                        
+                        // Relative Z Calculation
+                        // Standard Tunnel: Item is at (item.z - scrollProgress) away from camera.
+                        // We offset by -500 to start them "in front".
+                        const rawZ = -item.z + scrollProgress - 500;
+                        
+                        // Visibility Check (Removed to keep items floating in background)
+                        // if (rawZ > 1500 || rawZ < -5000) return null;
+
+                        return (
+                            <FusionCard 
+                                key={item.id} 
+                                item={item} 
+                                isActive={isActive} 
+                                rawZ={rawZ}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Sub-Component for individual card logic
+const FusionCard = ({ item, isActive, rawZ }) => {
+    // Current Carousel Slide
+    const [slide, setSlide] = useState(0);
+
+    // Compute Transforms
+    // If Active: Fixed at center, Scale 1, Rotation 0
+    // If Inactive: Uses rawZ, item.x, item.y, item.rotation
+    
+    // We use CSS transition to handle the smooth snap (Drift -> Snapped)
+    const style = isActive 
+        ? {
+            transform: `translate3d(-50%, -50%, 0) translate3d(0, 0, 0) scale(1) rotate(0deg)`,
+            opacity: 1,
+            zIndex: 100,
+            filter: 'none'
+        }
+        : {
+            transform: `translate3d(-50%, -50%, 0) translate3d(${item.x}vw, ${item.y}vh, ${rawZ}px) scale(0.6) rotate(${item.rotation}deg)`,
+            opacity: Math.max(0, (rawZ + 2000) / 2500) * 0.3, // dimmer in background
+            zIndex: 0,
+            filter: 'blur(4px) grayscale(100%)'
+        };
+
+    const nextSlide = (e) => {
+        if (e) e.stopPropagation();
+        setSlide((prev) => (prev + 1) % item.slides.length);
+    };
+    
+    const prevSlide = (e) => {
+        if (e) e.stopPropagation();
+        setSlide((prev) => (prev - 1 + item.slides.length) % item.slides.length);
+    };
+
+    // Keyboard Navigation
+    useEffect(() => {
+        if (!isActive) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isActive, item.slides.length]);
+
+    return (
+        <div 
+            className="absolute top-1/2 left-1/2 w-[90vw] md:w-[900px] h-[60vh] md:h-[70vh] transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform flex items-center justify-center p-4"
+            style={style}
+        >
+            <div className={`w-full h-full bg-black/90 border ${isActive ? 'border-acm-cyan' : 'border-white/10'} backdrop-blur-2xl rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]`}>
+                
+                {/* Carousel Area */}
+                <div className="relative flex-1 bg-gradient-to-b from-gray-900 to-black overflow-hidden group">
+                    {/* Slides */}
+                    {item.slides.map((color, i) => (
+                        <div 
+                            key={i}
+                            className="absolute inset-0 transition-opacity duration-500 ease-in-out flex items-center justify-center"
+                            style={{ opacity: i === slide ? 1 : 0 }}
+                        >
+                            {/* Bg Gradient */}
+                            <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-40 mix-blend-screen`}></div>
+                            
+                            {/* Simulated Image */}
+                             <div className="relative z-10 text-center space-y-4">
+                                <h3 className="text-4xl md:text-8xl font-black text-white/5 select-none tracking-tighter">
+                                    IMAGE_0{i+1}
+                                </h3>
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Navigation Controls (Only show if Active) */}
+                    {isActive && (
+                        <>
+                            <button 
+                                onClick={prevSlide}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
+                            >
+                                ←
+                            </button>
+                            <button 
+                                onClick={nextSlide}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
+                            >
+                                →
+                            </button>
+                            
+                            {/* Indicators */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+                                {item.slides.map((_, i) => (
+                                    <div 
+                                        key={i} 
+                                        className={`w-12 h-1 rounded-full transition-all ${i === slide ? 'bg-acm-cyan' : 'bg-white/20'}`} 
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Footer / Caption */}
+                <div className="h-32 bg-black/40 border-t border-white/10 p-8 flex items-center justify-between z-20">
+                    <div>
+                        <h2 className={`text-3xl font-bold text-white mb-2 ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-100`}>
+                            {item.title}
+                        </h2>
+                        <p className={`text-gray-400 font-mono text-xs ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-200`}>
+                            {item.desc}
                         </p>
                     </div>
+                     <div className={`font-mono text-5xl font-bold text-white/5 ${isActive ? 'scale-100 text-acm-cyan/20' : 'scale-50'} transition-all duration-500`}>
+                        {item.id < 9 ? `0${item.id+1}` : item.id+1}
+                    </div>
                 </div>
-            ))}
-        </div>
-    </div>
-);
 
+            </div>
+        </div>
+    );
+};
+
+
+
+
+// --- UPDATED CONTACT (Holographic Terminal) ---
 const Contact = () => (
-    <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="w-full max-w-3xl">
-            <h1 className="text-6xl md:text-8xl font-heading font-bold mb-10 text-center mix-blend-overlay">PING_US</h1>
-            
-            <form className="space-y-0" onSubmit={e => e.preventDefault()}>
-                <div className="border-b border-white/20 group focus-within:border-acm-cyan transition-colors">
-                    <input type="text" placeholder="IDENTITY" className="w-full bg-transparent py-6 text-xl md:text-2xl outline-none placeholder-gray-600 font-mono" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]"></div>
+
+        <div className="w-full max-w-4xl relative z-10 perspective-1000">
+            <TiltCard className="bg-black/80 border border-acm-cyan/30 backdrop-blur-xl p-8 md:p-16 rounded-3xl shadow-[0_0_100px_rgba(0,255,136,0.1)]">
+                <div className="flex flex-col md:flex-row gap-12">
+                    
+                    {/* Left: Info */}
+                    <div className="flex-1 space-y-8">
+                        <div>
+                            <h1 className="text-5xl md:text-7xl font-heading font-bold text-white mb-2">
+                                LINK_<span className="text-transparent bg-clip-text bg-gradient-to-r from-acm-cyan to-blue-500">UPLINK</span>
+                            </h1>
+                            <p className="text-gray-400 font-mono text-sm">:: ESTABLISH_SECURE_CONNECTION</p>
+                        </div>
+
+                        <div className="space-y-4 font-mono text-sm text-gray-300">
+                            <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-lg border border-white/5 hover:border-acm-cyan/50 transition-colors">
+                                <span className="text-acm-cyan">@</span>
+                                <span>acm.tsec@gmail.com</span>
+                            </div>
+                            <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-lg border border-white/5 hover:border-acm-cyan/50 transition-colors">
+                                <span className="text-acm-cyan">#</span>
+                                <span>TSEC, Bandra (W), Mumbai</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right: Form */}
+                    <div className="flex-1">
+                        <form className="space-y-6" onSubmit={e => e.preventDefault()}>
+                            <div className="group">
+                                <label className="text-xs font-mono text-acm-cyan mb-2 block group-focus-within:animate-pulse">IDENTITY</label>
+                                <input type="text" className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-acm-cyan outline-none transition-all" />
+                            </div>
+                            <div className="group">
+                                <label className="text-xs font-mono text-acm-cyan mb-2 block group-focus-within:animate-pulse">FREQUENCY</label>
+                                <input type="email" className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-acm-cyan outline-none transition-all" />
+                            </div>
+                            <div className="group">
+                                <label className="text-xs font-mono text-acm-cyan mb-2 block group-focus-within:animate-pulse">TRANSMISSION</label>
+                                <textarea rows="3" className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-acm-cyan outline-none transition-all"></textarea>
+                            </div>
+                            
+                            <MagneticButton className="w-full py-4 bg-acm-cyan text-black font-bold tracking-widest rounded-lg hover:bg-white transition-colors shadow-[0_0_20px_rgba(100,255,218,0.4)]">
+                                SEND_PACKET
+                            </MagneticButton>
+                        </form>
+                    </div>
+
                 </div>
-                <div className="border-b border-white/20 group focus-within:border-acm-cyan transition-colors">
-                    <input type="email" placeholder="FREQUENCY (EMAIL)" className="w-full bg-transparent py-6 text-xl md:text-2xl outline-none placeholder-gray-600 font-mono" />
-                </div>
-                <div className="border-b border-white/20 group focus-within:border-acm-cyan transition-colors mb-12">
-                     <input type="text" placeholder="TRANSMISSION" className="w-full bg-transparent py-6 text-xl md:text-2xl outline-none placeholder-gray-600 font-mono" />
-                </div>
-                
-                <MagneticButton className="w-full py-6 bg-acm-blue hover:bg-white hover:text-black transition-colors font-bold tracking-widest">
-                    INITIATE UPLINK
-                </MagneticButton>
-            </form>
+            </TiltCard>
         </div>
     </div>
 );
@@ -433,6 +809,7 @@ const App = () => {
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/team" element={<Team />} />
+                <Route path="/gallery" element={<FusionGallery />} />
                 <Route path="/contact" element={<Contact />} />
             </Routes>
         </HashRouter>

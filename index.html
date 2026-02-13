@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSEC ACM Student Chapter | React V3</title>
+    <title>TSEC ACM | Student Chapter</title>
     
-    <!-- Fonts -->
+    <!-- Fonts: Inter (Professional Sans) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,34 +16,29 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        acm: {
-                            blue: '#4284d2',
-                            dark: '#050505',
-                            card: '#111111',
-                            cyan: '#00d2ef'
-                        }
-                    },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        heading: ['Rajdhani', 'sans-serif']
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
+                    colors: {
+                        acm: {
+                            bg: '#020C1B',       // Deepest Navy
+                            primary: '#0A192F',  // Card Background
+                            secondary: '#112240',// Hover State
+                            slate: '#8892b0',    // Body Text
+                            light: '#ccd6f6',    // Headings
+                            teal: '#64ffda',     // Accent
                         }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
                     }
                 }
             }
         }
     </script>
 
-    <!-- React & Three.js Dependencies (UMD/Global) -->
+    <!-- React & Three.js Dependencies -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script crossorigin src="https://unpkg.com/history@5/umd/history.development.js"></script>
@@ -51,46 +46,35 @@
     <script crossorigin src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
     <script crossorigin src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     
-    <!-- Babel for JSX Compilation -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* CustomScroll */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4284d2; }
-        
-        body { margin: 0; overflow-x: hidden; background-color: #050505; color: white; }
-        #root { min-height: 100vh; display: flex; flex-direction: column; }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        body { 
+            margin: 0; 
+            background-color: #020C1B; 
+            color: #8892b0;
         }
         
-        .text-glow {
-            text-shadow: 0 0 20px rgba(0, 210, 239, 0.5);
-        }
+        /* Smooth Scroll */
+        html { scroll-behavior: smooth; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020C1B; }
+        ::-webkit-scrollbar-thumb { background: #112240; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64ffda; }
 
-        /* 3D Canvas Background */
-        #canvas-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
+        /* Utilities */
+        .glass-panel {
+            background: rgba(17, 34, 64, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(136, 146, 176, 0.1);
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
-    <!-- Application Logic -->
     <script type="text/babel" data-presets="react" src="./src/App.jsx"></script>
 </body>
 </html>
