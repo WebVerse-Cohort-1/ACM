@@ -144,47 +144,47 @@ const NeuralFlow = () => {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         mount.appendChild(renderer.domElement);
 
-        // --- WAVE PARTICLES (Restored High Fidelity) ---
-        const particleCount = 2000; // Restored to laptop volume
+        // --- WAVE PARTICLES ---
+        const particleCount = 2000;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
-        const randomness = new Float32Array(particleCount);
+        const scales = new Float32Array(particleCount);
+        const randomness = new Float32Array(particleCount * 3);
 
         for (let i = 0; i < particleCount; i++) {
             positions[i * 3] = (Math.random() - 0.5) * 100;
             positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
             positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
-            randomness[i] = Math.random();
+            scales[i] = Math.random();
+            randomness[i * 3] = Math.random();
+            randomness[i * 3 + 1] = Math.random();
+            randomness[i * 3 + 2] = Math.random();
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
+        geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
+        
         const material = new THREE.PointsMaterial({
             color: 0x4284d2,
-            size: isMobile ? 0.3 : 0.4,
+            size: 0.4,
             transparent: true,
             opacity: 0.8,
             blending: THREE.AdditiveBlending
         });
 
-        const points = new THREE.Points(geometry, material);
-        scene.add(points);
+        const particles = new THREE.Points(geometry, material);
+        scene.add(particles);
 
-        // --- CONNECTING LINES (Neural Net - Restored) ---
+        // --- CONNECTING LINES (NEURAL NET) ---
         const lineGeo = new THREE.IcosahedronGeometry(15, 1);
         const lineMat = new THREE.MeshBasicMaterial({ 
             color: 0x00d2ef, 
             wireframe: true, 
             transparent: true, 
-            opacity: 0.08 
+            opacity: 0.05 
         });
         const net = new THREE.Mesh(lineGeo, lineMat);
         scene.add(net);
-
-        // --- GRID FLOOR (Restored) ---
-        const gridHelper = new THREE.GridHelper(200, 40, 0x112240, 0x112240);
-        gridHelper.position.y = -10;
-        scene.add(gridHelper);
 
         // --- INTERACTION ---
         const mouse = new THREE.Vector2();
@@ -192,27 +192,19 @@ const NeuralFlow = () => {
         let targetX = 0, targetY = 0;
 
         const handleMouseMove = (e) => {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            mouse.x = (e.clientX - window.innerWidth / 2) * 0.05;
+            mouse.y = (e.clientY - window.innerHeight / 2) * 0.05;
         };
         const handleTouchMove = (e) => {
             if (e.touches.length > 0) {
-                mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+                mouse.x = (e.touches[0].clientX - window.innerWidth / 2) * 0.05;
+                mouse.y = (e.touches[0].clientY - window.innerHeight / 2) * 0.05;
             }
         };
-
-        // Gyroscope Handler
         const handleOrientation = (e) => {
-            // Beta: -180 to 180 (front/back tilt), Gamma: -90 to 90 (left/right tilt)
             if (e.beta !== null && e.gamma !== null) {
-                // Map to -1 to 1 range with sensitivity
-                gyro.x = (e.gamma / 30); // Left/Right
-                gyro.y = (e.beta - 45) / 30; // Front/Back (offset for natural holding angle)
-                
-                // Clamp
-                gyro.x = Math.max(-1, Math.min(1, gyro.x));
-                gyro.y = Math.max(-1, Math.min(1, gyro.y));
+                gyro.x = (e.gamma / 15);
+                gyro.y = (e.beta - 45) / 15;
             }
         };
 
@@ -220,7 +212,7 @@ const NeuralFlow = () => {
         window.addEventListener('touchmove', handleTouchMove);
         window.addEventListener('deviceorientation', handleOrientation);
 
-        // iOS Permission Request
+        // iOS Permission
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.addEventListener('click', () => {
                 DeviceOrientationEvent.requestPermission().catch(console.error);
@@ -232,30 +224,28 @@ const NeuralFlow = () => {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
 
-            // Pulse Color Logic (Restored)
-            const hue = (time * 0.05) % 1;
-            material.color.setHSL(0.5 + hue * 0.1, 0.8, 0.5);
+            // Camera Motion
+            targetX = (mouse.x + gyro.x) * 0.5;
+            targetY = (mouse.y + gyro.y) * 0.5;
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (-targetY + 10 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
 
-            // Animate Particles (Restored Wave)
-            const posAttr = points.geometry.attributes.position;
+            // Animate Particles
+            const posArr = particles.geometry.attributes.position.array;
             for (let i = 0; i < particleCount; i++) {
-                const x = posAttr.getX(i);
-                posAttr.setY(i, Math.sin(time + x * 0.1 + randomness[i] * 10) * 5);
+                const x = posArr[i * 3];
+                posArr[i * 3 + 1] = Math.sin(time + x * 0.1 + randomness[i*3]*10) * 5 + (Math.cos(time * 0.5 + randomness[i*3+1]*10) * 2);
             }
-            posAttr.needsUpdate = true;
+            particles.geometry.attributes.position.needsUpdate = true;
 
             // Rotate Net
-            net.rotation.y += 0.002;
-            net.rotation.z += 0.001;
-
-            // Composite Interaction (Mouse + Gyro)
-            targetX = (mouse.x + gyro.x) * 5;
-            targetY = (mouse.y + gyro.y) * 5;
+            net.rotation.y += 0.001;
+            net.rotation.z += 0.0005;
             
-            const lerpSpeed = 0.05;
-            camera.position.x += (targetX - camera.position.x) * lerpSpeed;
-            camera.position.y += (-targetY + 10 - camera.position.y) * lerpSpeed;
-            camera.lookAt(scene.position);
+            // Pulse Color
+            const hue = (time * 0.1) % 1;
+            material.color.setHSL(0.6 + hue * 0.1, 0.8, 0.5);
 
             renderer.render(scene, camera);
         };
@@ -277,16 +267,7 @@ const NeuralFlow = () => {
         };
     }, []);
 
-    return (
-        <div ref={mountRef} id="canvas-bg" className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020202]">
-            {/* Gesture Prompt for iOS/Gyro */}
-            {isMobile && (
-                <div className="absolute bottom-4 right-4 text-[8px] font-mono text-acm-cyan opacity-20 pointer-events-none uppercase tracking-widest">
-                    Motion_Sensors_Active
-                </div>
-            )}
-        </div>
-    );
+    return <div ref={mountRef} id="canvas-bg" className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020202]" />;
 };
 
 // --- GLITCH TEXT COMPONENT ---
