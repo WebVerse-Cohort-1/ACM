@@ -503,59 +503,134 @@ const About = () => (
 );
 
 const Team = () => {
-    const members = [
-        { role: 'CHAIR', id: '01', color: 'from-cyan-500 to-blue-500' },
-        { role: 'VICE', id: '02', color: 'from-purple-500 to-pink-500' },
-        { role: 'SEC', id: '03', color: 'from-green-400 to-emerald-600' },
-        { role: 'TREAS', id: '04', color: 'from-yellow-400 to-orange-500' },
-        { role: 'TECH', id: '05', color: 'from-blue-600 to-indigo-900' },
-        { role: 'DESIGN', id: '06', color: 'from-pink-500 to-rose-600' },
-        { role: 'PR', id: '07', color: 'from-indigo-400 to-cyan-400' },
-        { role: 'WEB', id: '08', color: 'from-teal-400 to-cyan-300' },
-    ];
+    const teamData = {
+        "FACULTY_SPONSORS": [
+            { name: "Dr. Aarti Deshpande", role: "Faculty Sponsor", desc: "Guiding TSEC ACM towards excellence with strategic vision and academic leadership.", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=500&fit=crop" },
+            { name: "Prof. S. Waghmare", role: "Faculty Incharge", desc: "Overseeing chapter operations and student engagement initiatives.", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&h=500&fit=crop" },
+            { name: "Prof. Mani J.", role: "Faculty Incharge", desc: "Mentoring project teams and fostering technical innovation.", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&h=500&fit=crop" },
+            { name: "Prof. K. Patel", role: "Faculty Incharge", desc: "Supporting student growth through industry-aligned mentorship.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&h=500&fit=crop" },
+        ],
+        "CORE_COMMITTEE": [
+            { name: "Taran Shetty", role: "Chairperson", desc: "Leading the chapter with a focus on community building and global tech standards.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop" },
+            { name: "Ananya Rai", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
+            { name: "Rahul Varma", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Ishani Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&h=500&fit=crop" },
+            { name: "Siddharth Jain", role: "Secretary", desc: "Maintaining structural integrity and official documentation of all proceedings.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
+        ],
+        "TECHNICAL_FORCE": [
+            { name: "Devansh Mehta", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
+            { name: "Tanvi Kulkarni", role: "Technical Head", desc: "Specializing in cloud architecture and system design patterns.", image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?q=80&w=400&h=500&fit=crop" },
+        ],
+        "WEB_ARCHITECTS": [
+            { name: "Sahil Shah", role: "Webmaster", desc: "Building immersive digital experiences with modern web stacks.", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=500&fit=crop" },
+            { name: "Nitya Iyer", role: "Webmaster", desc: "Optimizing web performance and maintaining digital infrastructure.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=500&fit=crop" },
+        ],
+        "DESIGN_SQUAD": [
+            { name: "Arjun Khanna", role: "Creative Designer", desc: "Visual storytelling through high-impact graphic design.", image: "https://images.unsplash.com/photo-1521119989659-a83eee488004?q=80&w=400&h=500&fit=crop" },
+            { name: "Pooja Hegde", role: "Creative Designer", desc: "Crafting visual identities that resonate with our tech community.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
+            { name: "Mehak Chawla", role: "UI/UX Designer", desc: "Designing user-centric interfaces for seamless digital navigation.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
+        ],
+        "CONTENT_STRATEGISTS": [
+            { name: "Rohan Deshmukh", role: "Editorial Incharge", desc: "Overseeing all published content and thematic consistency.", image: "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?q=80&w=400&h=500&fit=crop" },
+            { name: "Kiara Advani", role: "Newsletter Editor", desc: "Curating the latest tech news for our weekly subscriber base.", image: "https://images.unsplash.com/photo-1567532939604-b6c5b0ad2e01?q=80&w=400&h=500&fit=crop" },
+            { name: "Kabir Singh", role: "Content Writer", desc: "Translating complex tech concepts into engaging written narratives.", image: "https://images.unsplash.com/photo-1552058544-f2b08422138a?q=80&w=400&h=500&fit=crop" },
+        ],
+        "MEDIA_TEAM": [
+            { name: "Varun Dhawan", role: "Cinematographer", desc: "Capturing the essence of events through dynamic visual lenses.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Kriti Sanon", role: "Video Editor", desc: "Post-processing visual assets into premium brand stories.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=500&fit=crop" },
+            { name: "Ayush Khurana", role: "Social Media Manager", desc: "Managing our digital footprint and community engagement.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop" },
+            { name: "Sara Ali", role: "Social Media Manager", desc: "Curating viral content and handling channel outreach.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
+        ],
+        "MANAGEMENT_CREW": [
+            { name: "Aditya Roy", role: "Operational Head", desc: "Ensuring smooth execution of all logistical and back-end pipelines.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Tara Sutaria", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
+            { name: "Ishaan Khatter", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
+            { name: "Alaya F", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
+            { name: "Ranveer Singh", role: "Marketing Manager", desc: "Building brand awareness and strategic industry tie-ups.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
+            { name: "Janhvi Kapoor", role: "Marketing Manager", desc: "Driving student registrations and sponsorship acquisition.", image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?q=80&w=400&h=500&fit=crop" },
+        ],
+    };
 
     return (
-        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
+        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-7xl mx-auto pb-20">
              <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 COMMAND
             </h1>
             
-            <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
+            <div className="flex flex-col md:flex-row items-baseline justify-between mb-20 border-b border-white/10 pb-8 backdrop-blur-sm">
                 <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
                     PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">:: CORE_COMMITTEE_NODES</p>
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0 uppercase">:: Core committee & vertical heads</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 perspective-1000">
-                {members.map((m, i) => (
-                    <TiltCard key={i} className="group aspect-[3/4] cursor-pointer">
-                        <div className="relative h-full w-full p-6 flex flex-col justify-between z-10">
-                            {/* Top ID */}
-                            <div className="flex justify-between items-start">
-                                <span className="font-mono text-4xl font-bold text-white/10 group-hover:text-white/30 transition-colors">
-                                    {m.id}
-                                </span>
-                                <div className="w-2 h-2 rounded-full bg-acm-cyan animate-pulse"></div>
-                            </div>
-                            
-                            {/* Central Glow representing the person */}
-                            <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none">
-                                <div className={`w-32 h-32 rounded-full bg-gradient-to-t ${m.color} blur-3xl`}></div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <h3 className="text-2xl font-heading font-bold text-white mb-1">{m.role}</h3>
-                                <p className="text-xs text-acm-cyan font-mono tracking-widest opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-                                    :: ACTIVE_NODE
-                                </p>
-                            </div>
-                        </div>
-                    </TiltCard>
-                ))}
-            </div>
+            {Object.entries(teamData).map(([category, members]) => (
+                <div key={category} className="mb-24">
+                    <h3 className="text-2xl font-mono text-acm-cyan/80 mb-12 tracking-[.3em] flex items-center gap-4">
+                        <span className="w-8 h-px bg-acm-cyan/40"></span>
+                        {category}
+                        <span className="text-[10px] opacity-30 mt-1">({members.length}_NODES)</span>
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {members.map((m, i) => (
+                            <TeamPersonaCard key={i} member={m} />
+                        ))}
+                    </div>
+                </div>
+            ))}
         </div>
+    );
+};
+
+// --- PREMUM TEAM CARD (Persona Style) ---
+const TeamPersonaCard = ({ member }) => {
+    return (
+        <TiltCard className="group relative aspect-[4/5] bg-[#020c1b] rounded-2xl border border-white/5 hover:border-acm-cyan/40 transition-all duration-500 overflow-hidden">
+            {/* LinkedIn Icon Top Right */}
+            <a 
+                href="#" 
+                className="absolute top-6 right-6 z-30 w-8 h-8 flex items-center justify-center bg-[#0077b5]/10 border border-[#0077b5]/30 rounded-lg hover:bg-[#0077b5] hover:text-white text-[#0077b5] transition-all"
+            >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </a>
+
+            <div className="relative h-full w-full p-8 flex flex-col z-10 transition-transform duration-500 group-hover:-translate-y-2">
+                {/* Name - Playfair Display (Serif) */}
+                <h3 className="text-3xl md:text-2xl font-['Playfair_Display'] font-bold text-white mb-1 group-hover:text-acm-cyan transition-colors leading-tight">
+                    {member.name}
+                </h3>
+                
+                {/* Role */}
+                <p className="text-acm-cyan font-semibold text-sm mb-4 tracking-wide font-sans">
+                    {member.role}
+                </p>
+
+                {/* Description */}
+                <p className="text-gray-300 text-xs leading-relaxed font-sans opacity-80 group-hover:opacity-100 transition-opacity">
+                    {member.desc}
+                </p>
+
+                {/* Persona Image at Bottom */}
+                <div className="mt-auto relative w-full h-56 md:h-48 flex justify-center items-end overflow-hidden">
+                    {/* Shadow behind person */}
+                    <div className="absolute bottom-0 w-40 h-40 bg-acm-cyan/10 rounded-full blur-3xl opacity-40 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    
+                    <img 
+                        src={member.image} 
+                        alt={member.name}
+                        className="relative z-10 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700 transform origin-bottom scale-[1.1] group-hover:scale-[1.15]"
+                        style={{
+                            WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 30%, black 100%)',
+                            maskImage: 'linear-gradient(to top, transparent 0%, black 30%, black 100%)'
+                        }}
+                    />
+                </div>
+            </div>
+
+            {/* Shine effect */}
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+        </TiltCard>
     );
 };
 
@@ -858,7 +933,7 @@ const Contact = () => (
                                     <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
                                     <div className="p-3 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
                                         <span className="text-acm-cyan text-lg">@</span>
-                                        <span className="text-xs">acm.tsec@gmail.com</span>
+                                        <span className="text-xs">acmco@tsecmumbai.in</span>
                                     </div>
                                 </div>
                             </div>
