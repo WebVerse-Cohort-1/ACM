@@ -18,11 +18,11 @@ const CustomCursor = () => {
     const { x, y } = useMousePosition();
     return (
         <>
-            <div 
+            <div
                 className="fixed top-0 left-0 w-8 h-8 border border-acm-cyan rounded-full pointer-events-none z-[100] transition-transform duration-100 ease-out mix-blend-difference"
                 style={{ transform: `translate(${x - 16}px, ${y - 16}px)` }}
             />
-            <div 
+            <div
                 className="fixed top-0 left-0 w-2 h-2 bg-acm-blue rounded-full pointer-events-none z-[100] transition-transform duration-75 ease-out"
                 style={{ transform: `translate(${x - 4}px, ${y - 4}px)` }}
             />
@@ -85,9 +85,9 @@ const TiltCard = ({ children, className = "" }) => {
         const rect = card.getBoundingClientRect();
         const xPct = (e.clientX - rect.left) / rect.width;
         const yPct = (e.clientY - rect.top) / rect.height;
-        
+
         setGlow(`${xPct * 100}% ${yPct * 100}%`);
-        
+
         if (window.innerWidth >= 1024) {
             const x = xPct - 0.5;
             const y = yPct - 0.5;
@@ -107,16 +107,16 @@ const TiltCard = ({ children, className = "" }) => {
     } : {};
 
     return (
-        <div 
+        <div
             ref={cardRef}
-            className={`transition-all duration-300 ease-out group relative overflow-hidden ${className}`} 
+            className={`transition-all duration-300 ease-out group relative overflow-hidden ${className}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={gyroStyle}
         >
             <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
                 {/* Dynamic Glow Gradient */}
-                <div 
+                <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none z-10"
                     style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
                 />
@@ -146,7 +146,7 @@ const NeuralFlow = () => {
         mount.appendChild(renderer.domElement);
 
         // --- WAVE PARTICLES ---
-        const particleCount = 2000;
+        const particleCount = 500;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const scales = new Float32Array(particleCount);
@@ -164,7 +164,7 @@ const NeuralFlow = () => {
 
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
-        
+
         const material = new THREE.PointsMaterial({
             color: 0x4284d2,
             size: 0.4,
@@ -178,11 +178,11 @@ const NeuralFlow = () => {
 
         // --- CONNECTING LINES (NEURAL NET) ---
         const lineGeo = new THREE.IcosahedronGeometry(15, 1);
-        const lineMat = new THREE.MeshBasicMaterial({ 
-            color: 0x00d2ef, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.05 
+        const lineMat = new THREE.MeshBasicMaterial({
+            color: 0x00d2ef,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.05
         });
         const net = new THREE.Mesh(lineGeo, lineMat);
         scene.add(net);
@@ -236,14 +236,14 @@ const NeuralFlow = () => {
             const posArr = particles.geometry.attributes.position.array;
             for (let i = 0; i < particleCount; i++) {
                 const x = posArr[i * 3];
-                posArr[i * 3 + 1] = Math.sin(time + x * 0.1 + randomness[i*3]*10) * 5 + (Math.cos(time * 0.5 + randomness[i*3+1]*10) * 2);
+                posArr[i * 3 + 1] = Math.sin(time + x * 0.1 + randomness[i * 3] * 10) * 5 + (Math.cos(time * 0.5 + randomness[i * 3 + 1] * 10) * 2);
             }
             particles.geometry.attributes.position.needsUpdate = true;
 
             // Rotate Net
             net.rotation.y += 0.001;
             net.rotation.z += 0.0005;
-            
+
             // Pulse Color
             const hue = (time * 0.1) % 1;
             material.color.setHSL(0.6 + hue * 0.1, 0.8, 0.5);
@@ -324,10 +324,10 @@ const Navbar = () => {
                         </Link>
                     ))}
                 </div>
-                
+
                 {/* Mobile Trigger */}
-                <button 
-                    onClick={() => setIsOpen(!isOpen)} 
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
                     className="md:hidden text-white text-3xl z-[1002] focus:outline-none focus:text-acm-cyan transition-colors"
                 >
                     {isOpen ? '✕' : '☰'}
@@ -338,12 +338,12 @@ const Navbar = () => {
             <div className={`fixed inset-0 bg-[#020c1b] flex flex-col items-center justify-center gap-10 md:hidden transition-all duration-500 z-[1000] pt-20 ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                 {/* Decorative scanning line */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-acm-cyan/30 animate-pulse"></div>
-                
+
                 {navItems.map((item, idx) => (
-                    <Link 
-                        key={item.name} 
-                        to={item.path} 
-                        onClick={() => setIsOpen(false)} 
+                    <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setIsOpen(false)}
                         className={`group relative text-3xl font-heading font-bold uppercase tracking-widest transition-all duration-300 ${location.pathname === item.path ? 'text-acm-cyan ml-4' : 'text-gray-500 hover:text-white'}`}
                         style={{ transitionDelay: `${idx * 50}ms` }}
                     >
@@ -376,9 +376,9 @@ const Home = () => (
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">READY</span><br />
                 <span className="text-acm-blue">ENGINEERS</span>
             </h1>
-            
+
             <p className="text-gray-400 text-lg md:text-xl max-w-xl mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-6">
-                The Official ACM Student Chapter of TSEC. <br/>
+                The Official ACM Student Chapter of TSEC. <br />
                 We don't just write code; we architect experiences.
             </p>
 
@@ -397,12 +397,12 @@ const Home = () => (
         </div>
 
         {/* Floating Scroll Indicator */}
-        <div className="absolute bottom-10 right-10 flex flex-col items-center gap-2 mix-blend-difference">
+        {/* <div className="absolute bottom-10 right-10 flex flex-col items-center gap-2 mix-blend-difference">
             <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
             </div>
             <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
-        </div>
+        </div> */}
     </div>
 );
 
@@ -418,10 +418,10 @@ const Events = () => {
 
     return (
         <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
-             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 TIMELINE
             </h1>
-            
+
             <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
                 <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
                     EVENT_<span className="text-acm-cyan">LOGS</span>
@@ -442,7 +442,7 @@ const Events = () => {
                                     {ev.tag}
                                 </span>
                             </div>
-                            
+
                             {/* Central Glow */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none">
                                 <div className={`w-40 h-40 rounded-full bg-gradient-to-br ${ev.color} blur-3xl animate-pulse`}></div>
@@ -466,41 +466,169 @@ const Events = () => {
     );
 };
 
-const About = () => (
-    <div className="min-h-screen pt-32 px-8 md:px-20 flex flex-col md:flex-row gap-20">
-        <div className="md:w-1/3">
-            <h1 className="text-6xl font-heading font-bold sticky top-32">
-                WHO<br/>WE<br/>ARE
-            </h1>
-        </div>
-        <div className="md:w-2/3 space-y-32">
-            <section>
-                <h2 className="text-2xl text-acm-cyan font-mono mb-6">:: MISSION_STATEMENT</h2>
-                <p className="text-2xl md:text-4xl font-light leading-snug">
-                    We are the <span className="text-white font-bold">architects</span> of the digital frontier. 
-                    TSEC ACM is not just a club; it's an incubator for those who dare to 
-                    <span className="italic text-gray-400"> disrupt</span> the status quo.
-                </p>
-            </section>
-            
-            <section>
-                <h2 className="text-2xl text-acm-blue font-mono mb-6">:: LEGACY_LOGS</h2>
-                <div className="border-l border-white/20 pl-10 space-y-16">
-                    <div>
-                        <span className="text-4xl font-heading font-bold opacity-30">2025</span>
-                        <h3 className="text-2xl font-bold mt-2">National Apex</h3>
-                        <p className="text-gray-400 mt-2">Awarded Best Student Chapter nationwide.</p>
-                    </div>
-                    <div>
-                        <span className="text-4xl font-heading font-bold opacity-30">2023</span>
-                        <h3 className="text-2xl font-bold mt-2">Source Code</h3>
-                        <p className="text-gray-400 mt-2">Launched open-source initiative with 500+ PRs.</p>
+const About = () => {
+    const stats = [
+        { label: "MEMBERS", value: 500 },
+        { label: "EVENTS", value: 30 },
+        { label: "AWARDS", value: 10 },
+    ];
+
+    const [counts, setCounts] = useState(stats.map(() => 0));
+    const [hasAnimated, setHasAnimated] = useState(false);
+    const statsRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated) {
+                    setHasAnimated(true);
+
+                    stats.forEach((stat, index) => {
+                        let start = 0;
+                        const duration = 1500;
+                        const increment = stat.value / (duration / 16);
+
+                        const counter = setInterval(() => {
+                            start += increment;
+
+                            if (start >= stat.value) {
+                                start = stat.value;
+                                clearInterval(counter);
+                            }
+
+                            setCounts(prev => {
+                                const updated = [...prev];
+                                updated[index] = Math.floor(start);
+                                return updated;
+                            });
+                        }, 16);
+                    });
+                }
+            },
+            { threshold: 0.4 }
+        );
+
+        if (statsRef.current) observer.observe(statsRef.current);
+
+        return () => observer.disconnect();
+    }, [hasAnimated]);
+    const aboutRef = useRef(null);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!aboutRef.current) return;
+
+            const rect = aboutRef.current.getBoundingClientRect();
+            const sectionHeight = aboutRef.current.offsetHeight;
+            const visible = Math.min(
+                Math.max((window.innerHeight - rect.top) / sectionHeight, 0),
+                1
+            );
+
+            setProgress(visible);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    return (
+        <div
+            ref={aboutRef}
+            className="min-h-screen pt-32 px-8 md:px-20 flex flex-col md:flex-row gap-20"
+        >
+
+            <div className="md:w-1/3 flex items-start justify-center relative">
+                <div className="sticky top-32 space-y-6">
+                    {["WHO", "WE", "ARE"].map((word, i) => {
+                        const threshold = (i + 1) / 3;
+
+                        const isActive = progress >= threshold;
+
+                        return (
+                            <div
+                                key={i}
+                                className={`text-6xl md:text-8xl font-heading font-bold transition-all duration-500 ${isActive
+                                        ? "text-acm-cyan scale-110"
+                                        : "text-gray-700 scale-100"
+                                    }`}
+                            >
+                                {word}
+                            </div>
+                        );
+                    })}
+
+                    {/* Vertical progress line */}
+                    <div className="absolute -left-6 top-0 h-full w-[2px] bg-white/10">
+                        <div
+                            className="w-full bg-acm-cyan transition-all duration-300"
+                            style={{ height: `${progress * 100}%` }}
+                        />
                     </div>
                 </div>
-            </section>
+            </div>
+
+
+            <div className="md:w-2/3 space-y-32">
+                <section>
+                    <h2 className="text-2xl text-acm-cyan font-mono mb-6">
+                        :: MISSION_STATEMENT
+                    </h2>
+                    <p className="text-2xl md:text-4xl font-light leading-snug">
+                        We are the <span className="text-white font-bold">architects</span> of the digital frontier.
+                        TSEC ACM is not just a club; it's an incubator for those who dare to
+                        <span className="italic text-gray-400"> disrupt</span> the status quo.
+                    </p>
+                </section>
+
+                <div
+                    ref={statsRef}
+                    className="grid grid-cols-2 md:grid-cols-3 gap-10 mt-20"
+                >
+                    {stats.map((stat, i) => (
+                        <div
+                            key={i}
+                            className="text-center group transition-transform duration-500 hover:-translate-y-2"
+                        >
+                            <h3 className="text-5xl md:text-6xl font-heading font-bold text-acm-cyan relative">
+                                {counts[i]}+
+                                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
+                            </h3>
+                            <p className="text-xs tracking-[0.3em] text-gray-500 mt-3">
+                                {stat.label}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                <section>
+                    <h2 className="text-2xl text-acm-blue font-mono mb-6">
+                        :: LEGACY_LOGS
+                    </h2>
+                    <div className="border-l border-white/20 pl-10 space-y-16">
+                        <div>
+                            <span className="text-4xl font-heading font-bold opacity-30">2025</span>
+                            <h3 className="text-2xl font-bold mt-2">National Apex</h3>
+                            <p className="text-gray-400 mt-2">
+                                Awarded Best Student Chapter nationwide.
+                            </p>
+                        </div>
+                        <div>
+                            <span className="text-4xl font-heading font-bold opacity-30">2023</span>
+                            <h3 className="text-2xl font-bold mt-2">Source Code</h3>
+                            <p className="text-gray-400 mt-2">
+                                Launched open-source initiative with 500+ PRs.
+                            </p>
+                            
+                        </div>
+                    </div>
+                </section><br /><br /><br />
+            </div>
         </div>
-    </div>
-);
+    );
+};
+
 
 const Team = () => {
     const members = [
@@ -516,10 +644,10 @@ const Team = () => {
 
     return (
         <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
-             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 COMMAND
             </h1>
-            
+
             <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
                 <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
                     PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
@@ -538,7 +666,7 @@ const Team = () => {
                                 </span>
                                 <div className="w-2 h-2 rounded-full bg-acm-cyan animate-pulse"></div>
                             </div>
-                            
+
                             {/* Central Glow representing the person */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none">
                                 <div className={`w-32 h-32 rounded-full bg-gradient-to-t ${m.color} blur-3xl`}></div>
@@ -570,12 +698,12 @@ const Team = () => {
 const FusionGallery = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // Data: 3D Positions + Content
     const items = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
         id: i,
         // Z-Spacing: 1200px per item + Offset so first item is visible but background
-        z: i * 1200 + 650, 
+        z: i * 1200 + 650,
         // Drift Scatter (Background State)
         // Rule 9: Compress horizontally, expand vertically on mobile to prevent crowding
         x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 25 : 150), // Compressed X
@@ -584,7 +712,7 @@ const FusionGallery = () => {
         title: `EVENT_LOG_${i < 9 ? '0' : ''}${i + 1}`,
         desc: "Secure data node accessed. Decrypting visual archives...",
         slides: [
-            `from-cyan-900/40 to-blue-900/40`, 
+            `from-cyan-900/40 to-blue-900/40`,
             `from-purple-900/40 to-pink-900/40`,
             `from-emerald-900/40 to-teal-900/40`
         ]
@@ -620,13 +748,13 @@ const FusionGallery = () => {
 
     return (
         <div className="min-h-screen bg-transparent transition-colors duration-1000">
-            
+
             {/* Scroll Spacer */}
             <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
 
             {/* HUD */}
             {/* HUD - Fades out on scroll to prevent overlap */}
-            <div 
+            <div
                 className="fixed top-24 left-1/2 -translate-x-1/2 z-50 text-center mix-blend-exclusion pointer-events-none w-full transition-opacity duration-300"
                 style={{ opacity: Math.max(0, 1 - scrollProgress / 400), transform: `translate(-50%, -${scrollProgress * 0.2}px)` }}
             >
@@ -634,8 +762,8 @@ const FusionGallery = () => {
                     NEURAL_<span className="text-acm-cyan">ARCHIVE</span>
                 </h1>
                 <div className="flex justify-center space-x-4 text-[10px] md:text-xs font-mono text-acm-cyan/80">
-                     <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
-                     <span>:: DEPTH: {Math.round(scrollProgress)}</span>
+                    <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
+                    <span>:: DEPTH: {Math.round(scrollProgress)}</span>
                 </div>
             </div>
 
@@ -644,20 +772,20 @@ const FusionGallery = () => {
                 <div className="relative w-full h-full preserve-3d">
                     {items.map((item, index) => {
                         const isActive = index === activeIndex;
-                        
+
                         // Relative Z Calculation
                         // Standard Tunnel: Item is at (item.z - scrollProgress) away from camera.
                         // We offset by -500 to start them "in front".
                         const rawZ = -item.z + scrollProgress - 500;
-                        
+
                         // Visibility Check (Removed to keep items floating in background)
                         // if (rawZ > 1500 || rawZ < -5000) return null;
 
                         return (
-                            <FusionCard 
-                                key={item.id} 
-                                item={item} 
-                                isActive={isActive} 
+                            <FusionCard
+                                key={item.id}
+                                item={item}
+                                isActive={isActive}
                                 rawZ={rawZ}
                             />
                         );
@@ -676,9 +804,9 @@ const FusionCard = ({ item, isActive, rawZ }) => {
     // Compute Transforms
     // If Active: Fixed at center, Scale 1, Rotation 0
     // If Inactive: Uses rawZ, item.x, item.y, item.rotation
-    
+
     // We use CSS transition to handle the smooth snap (Drift -> Snapped)
-    const style = isActive 
+    const style = isActive
         ? {
             transform: `translate3d(-50%, -50%, 0) translate3d(0, 0, 0) scale(1) rotate(0deg)`,
             opacity: 1,
@@ -689,7 +817,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
             transform: `translate3d(-50%, -50%, 0) translate3d(${item.x}vw, ${item.y}vh, ${rawZ}px) scale(0.6) rotate(${item.rotation}deg)`,
             // Mobile: Hide background items completely to avoid mess
             // Desktop: Show background items with low opacity
-            opacity: window.innerWidth < 768 && !isActive ? 0 : Math.max(0.3, (rawZ + 3000) / 3500), 
+            opacity: window.innerWidth < 768 && !isActive ? 0 : Math.max(0.3, (rawZ + 3000) / 3500),
             zIndex: 0,
             filter: 'blur(4px) grayscale(100%)'
         };
@@ -698,7 +826,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
         if (e) e.stopPropagation();
         setSlide((prev) => (prev + 1) % item.slides.length);
     };
-    
+
     const prevSlide = (e) => {
         if (e) e.stopPropagation();
         setSlide((prev) => (prev - 1 + item.slides.length) % item.slides.length);
@@ -716,28 +844,28 @@ const FusionCard = ({ item, isActive, rawZ }) => {
     }, [isActive, item.slides.length]);
 
     return (
-        <div 
+        <div
             className="absolute top-1/2 left-1/2 w-[95vw] md:w-[900px] h-[50vh] md:h-[70vh] transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform flex items-center justify-center p-2 md:p-4"
             style={style}
         >
             <div className={`w-full h-full bg-black/90 border ${isActive ? 'border-acm-cyan' : 'border-white/10'} backdrop-blur-2xl rounded-2xl md:rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]`}>
-                
+
                 {/* Carousel Area */}
                 <div className="relative flex-1 bg-gradient-to-b from-gray-900 to-black overflow-hidden group">
                     {/* Slides */}
                     {item.slides.map((color, i) => (
-                        <div 
+                        <div
                             key={i}
                             className="absolute inset-0 transition-opacity duration-500 ease-in-out flex items-center justify-center"
                             style={{ opacity: i === slide ? 1 : 0 }}
                         >
                             {/* Bg Gradient */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-40 mix-blend-screen`}></div>
-                            
+
                             {/* Simulated Image */}
-                             <div className="relative z-10 text-center space-y-2 md:space-y-4">
+                            <div className="relative z-10 text-center space-y-2 md:space-y-4">
                                 <h3 className="text-4xl md:text-8xl font-black text-white/5 select-none tracking-tighter">
-                                    IMAGE_0{i+1}
+                                    IMAGE_0{i + 1}
                                 </h3>
                             </div>
                         </div>
@@ -746,25 +874,25 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                     {/* Navigation Controls (Only show if Active) */}
                     {isActive && (
                         <>
-                            <button 
+                            <button
                                 onClick={prevSlide}
                                 className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
                             >
                                 ←
                             </button>
-                            <button 
+                            <button
                                 onClick={nextSlide}
                                 className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
                             >
                                 →
                             </button>
-                            
+
                             {/* Indicators */}
                             <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
                                 {item.slides.map((_, i) => (
-                                    <div 
-                                        key={i} 
-                                        className={`w-8 md:w-12 h-1 rounded-full transition-all ${i === slide ? 'bg-acm-cyan' : 'bg-white/20'}`} 
+                                    <div
+                                        key={i}
+                                        className={`w-8 md:w-12 h-1 rounded-full transition-all ${i === slide ? 'bg-acm-cyan' : 'bg-white/20'}`}
                                     />
                                 ))}
                             </div>
@@ -782,8 +910,8 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                             {item.desc}
                         </p>
                     </div>
-                     <div className={`font-mono text-3xl md:text-5xl font-bold text-white/5 ${isActive ? 'scale-100 text-acm-cyan/20' : 'scale-50'} transition-all duration-500`}>
-                        {item.id < 9 ? `0${item.id+1}` : item.id+1}
+                    <div className={`font-mono text-3xl md:text-5xl font-bold text-white/5 ${isActive ? 'scale-100 text-acm-cyan/20' : 'scale-50'} transition-all duration-500`}>
+                        {item.id < 9 ? `0${item.id + 1}` : item.id + 1}
                     </div>
                 </div>
 
@@ -806,7 +934,7 @@ const Contact = () => (
             <TiltCard className="bg-black/95 md:bg-black/90 md:border md:border-acm-cyan/30 backdrop-blur-2xl rounded-2xl md:rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0 border border-white/5">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-40"></div>
-                
+
                 {/* Mobile Terminal Header */}
                 <div className="md:hidden flex justify-between items-center p-4 border-b border-white/10 bg-white/5 font-mono text-[10px] tracking-widest text-acm-cyan">
                     <span>:: SESSION_TERMINAL_v4.2</span>
@@ -817,12 +945,12 @@ const Contact = () => (
                 </div>
 
                 <div className="flex flex-col md:flex-row">
-                    
+
                     {/* Left: Interactive Data Panel */}
                     <div className="w-full md:w-5/12 p-6 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/2 relative overflow-hidden flex flex-col">
                         {/* Tactical Background element */}
                         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-acm-cyan/5 rounded-full blur-3xl md:hidden"></div>
-                        
+
                         <div className="relative z-10">
                             <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
                                 UPLINK
@@ -832,7 +960,7 @@ const Contact = () => (
                                     <span className="opacity-50">{" >> "}</span> SECURE_CHANNEL_READY
                                 </span>
                                 <span className="text-[9px] opacity-40 uppercase tracking-widest leading-relaxed">
-                                    Let’s talk ideas, events & collabs.<br/>
+                                    Let’s talk ideas, events & collabs.<br />
                                     Reach the TSEC ACM team here.
                                 </span>
                             </p>
@@ -871,17 +999,17 @@ const Contact = () => (
                                 <span className="text-acm-cyan animate-pulse">HQ_LOCKED</span>
                             </label>
                             <div className="w-full h-40 md:h-56 rounded-lg overflow-hidden border border-white/10 relative grayscale brightness-75 contrast-125 group-hover/map:grayscale-0 group-hover/map:brightness-100 transition-all duration-700">
-                                <iframe 
+                                <iframe
                                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.8927005470253!2d72.86247937466826!3d19.213038647312154!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b0e5faf7047b%3A0x696803713d2f2b3b!2sThakur%20Shyamnarayan%20Engineering%20College!5e0!3m2!1sen!2sin!4v1716900000000"
                                     className="w-full h-full border-0 invert-[.9] hue-rotate-[160deg]"
-                                    allowFullScreen="" 
+                                    allowFullScreen=""
                                     loading="lazy"
                                 ></iframe>
                                 <div className="absolute inset-0 bg-acm-cyan/5 pointer-events-none group-hover/map:opacity-0 transition-opacity"></div>
                             </div>
                         </div>
 
-                         <div className="mt-6 text-[10px] font-mono text-gray-500 space-y-2 border-t border-white/5 pt-4">
+                        <div className="mt-6 text-[10px] font-mono text-gray-500 space-y-2 border-t border-white/5 pt-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <span className="block text-[8px] opacity-50 mb-1">AVAILABILITY</span>
@@ -914,7 +1042,7 @@ const Contact = () => (
                                 </label>
                                 <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
-                            
+
                             <div className="group relative">
                                 <input type="email" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 font-mono text-sm" placeholder=" " />
                                 <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
@@ -930,7 +1058,7 @@ const Contact = () => (
                                 </label>
                                 <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
-                            
+
                             <div className="pt-6">
                                 <MagneticButton className="w-full py-6 md:py-5 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan font-bold tracking-[0.3em] hover:bg-acm-cyan hover:text-black transition-all duration-500 group relative overflow-hidden rounded-lg">
                                     <span className="relative z-10 text-xs md:text-sm">INITIATE_HANDSHAKE</span>
