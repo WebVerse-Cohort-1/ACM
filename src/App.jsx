@@ -819,48 +819,83 @@ const Contact = () => (
                 <div className="flex flex-col md:flex-row">
                     
                     {/* Left: Interactive Data Panel */}
-                    <div className="w-full md:w-5/12 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/2 relative overflow-hidden">
+                    <div className="w-full md:w-5/12 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/2 relative overflow-hidden flex flex-col">
                         {/* Tactical Background element */}
                         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-acm-cyan/5 rounded-full blur-3xl md:hidden"></div>
                         
-                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
-                            UPLINK
-                        </h1>
-                        <p className="text-acm-cyan/60 font-mono text-[10px] md:text-xs mb-8 md:mb-12 flex items-center gap-2">
-                            <span className="opacity-50">{" >> "}</span> SECURE_CHANNEL_READY
-                        </p>
+                        <div className="relative z-10">
+                            <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
+                                UPLINK
+                            </h1>
+                            <p className="text-acm-cyan/60 font-mono text-[10px] md:text-xs mb-8 flex flex-col gap-1">
+                                <span className="flex items-center gap-2">
+                                    <span className="opacity-50">{" >> "}</span> SECURE_CHANNEL_READY
+                                </span>
+                                <span className="text-[9px] opacity-40 uppercase tracking-widest leading-relaxed">
+                                    Let’s talk ideas, events & collabs.<br/>
+                                    Reach the TSEC ACM team here.
+                                </span>
+                            </p>
 
-                        <div className="space-y-4 md:space-y-8 font-mono text-sm relative z-10">
-                            <div className="group cursor-pointer">
-                                <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># TARGET_LOC</label>
-                                <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex flex-col gap-1 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
-                                    <div className="flex items-center space-x-3">
-                                        <span className="text-acm-cyan text-lg">⊕</span>
-                                        <span className="text-xs md:text-sm">Thakur Village, Kandivali (E), Mumbai</span>
-                                    </div>
-                                    <div className="ml-8 text-[10px] font-mono text-acm-cyan/40 group-hover:text-acm-cyan/80 transition-colors">
-                                        LAT: 19.213683 | LON: 72.864668
+                            <div className="space-y-4 font-mono text-sm relative z-10 mb-8">
+                                <div className="group cursor-pointer">
+                                    <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># TARGET_HQ</label>
+                                    <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex flex-col gap-1 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
+                                        <div className="flex items-center space-x-3">
+                                            <span className="text-acm-cyan text-lg">⊕</span>
+                                            <span className="text-xs">Thakur Complex, Kandivali (E), Mumbai</span>
+                                        </div>
+                                        <div className="ml-8 text-[9px] text-gray-500 italic">
+                                            TSEC • 2nd Floor • IT Staffroom
+                                        </div>
+                                        <div className="ml-8 text-[10px] font-mono text-acm-cyan/40 group-hover:text-acm-cyan/80 transition-colors">
+                                            LAT: 19.213683 | LON: 72.864668
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="group cursor-pointer">
-                                <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
-                                <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
-                                    <span className="text-acm-cyan text-lg">@</span>
-                                    <span className="text-xs md:text-sm">acm.tsec@gmail.com</span>
+                                <div className="group cursor-pointer">
+                                    <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
+                                    <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
+                                        <span className="text-acm-cyan text-lg">@</span>
+                                        <span className="text-xs">acm.tsec@gmail.com</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                         <div className="mt-12 md:absolute md:bottom-8 md:left-8 text-[10px] font-mono text-gray-500 space-y-1">
-                            <div className="flex justify-between md:block">
-                                <span>STATUS: </span>
-                                <span className="text-acm-cyan animate-pulse">TRANSMITTING...</span>
+                        {/* Tactical Mini Map Section */}
+                        <div className="relative group/map mt-auto">
+                            <label className="text-[10px] text-gray-500 block mb-2 font-mono uppercase tracking-widest px-2 flex justify-between">
+                                <span>[ SCANNING_COORDINATES ]</span>
+                                <span className="text-acm-cyan animate-pulse">HQ_LOCKED</span>
+                            </label>
+                            <div className="w-full h-48 md:h-56 rounded-lg overflow-hidden border border-white/10 relative grayscale brightness-75 contrast-125 group-hover/map:grayscale-0 group-hover/map:brightness-100 transition-all duration-700">
+                                <iframe 
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.8927005470253!2d72.86247937466826!3d19.213038647312154!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b0e5faf7047b%3A0x696803713d2f2b3b!2sThakur%20Shyamnarayan%20Engineering%20College!5e0!3m2!1sen!2sin!4v1716900000000"
+                                    className="w-full h-full border-0 invert-[.9] hue-rotate-[160deg]"
+                                    allowFullScreen="" 
+                                    loading="lazy"
+                                ></iframe>
+                                <div className="absolute inset-0 bg-acm-cyan/5 pointer-events-none group-hover/map:opacity-0 transition-opacity"></div>
                             </div>
-                            <div className="flex justify-between md:block">
-                                <span>PROTOCOL: </span>
-                                <span>P2P_ENCRYPTED</span>
+                        </div>
+
+                         <div className="mt-8 text-[10px] font-mono text-gray-500 space-y-2 border-t border-white/5 pt-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span className="block text-[8px] opacity-50 mb-1">AVAILABILITY</span>
+                                    <p className="text-white/80">Mon – Fri (10AM-5PM)</p>
+                                    <p className="text-acm-cyan text-[8px]">Sat: Event Schedule Only</p>
+                                </div>
+                                <div>
+                                    <span className="block text-[8px] opacity-50 mb-1">REACH_US_FOR</span>
+                                    <ul className="text-[9px] text-white/60 space-y-0.5 list-['>'] list-inside">
+                                        <li>Partnerships</li>
+                                        <li>Hackathons</li>
+                                        <li>Bootcamps</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
