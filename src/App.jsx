@@ -797,85 +797,108 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
 // --- UPDATED CONTACT (Advanced Holographic Terminal) ---
 const Contact = () => (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-black">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 relative overflow-hidden bg-black">
         {/* Background Grid & Scanlines */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.02)_1px,transparent_1px)] bg-[size:30px_30px] md:bg-[size:50px_50px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
 
-        <div className="w-full max-w-5xl relative z-10 perspective-1000">
-            <TiltCard className="bg-black/90 md:border md:border-acm-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0">
+        <div className="w-full max-w-5xl relative z-10 perspective-1000 mt-16 md:mt-0">
+            <TiltCard className="bg-black/95 md:bg-black/90 md:border md:border-acm-cyan/30 backdrop-blur-2xl rounded-2xl md:rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0 border border-white/5">
                 {/* Decorative Elements */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-50"></div>
-                <div className="absolute bottom-0 right-0 w-32 h-32 bg-acm-cyan/5 rounded-tl-full pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-40"></div>
                 
-                {/* "Scanner" Line */}
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-acm-cyan/5 to-transparent translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-[2s] ease-in-out pointer-events-none"></div>
+                {/* Mobile Terminal Header */}
+                <div className="md:hidden flex justify-between items-center p-4 border-b border-white/10 bg-white/5 font-mono text-[10px] tracking-widest text-acm-cyan">
+                    <span>:: SESSION_TERMINAL_v4.2</span>
+                    <span className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-acm-cyan rounded-full animate-ping"></span>
+                        UPLINK_LIVE
+                    </span>
+                </div>
 
                 <div className="flex flex-col md:flex-row">
                     
                     {/* Left: Interactive Data Panel */}
-                    <div className="w-full md:w-5/12 p-6 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/5 relative">
-                        <div className="absolute top-4 left-4 w-2 h-2 bg-acm-cyan rounded-full animate-ping"></div>
+                    <div className="w-full md:w-5/12 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/2 relative overflow-hidden">
+                        {/* Tactical Background element */}
+                        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-acm-cyan/5 rounded-full blur-3xl md:hidden"></div>
                         
-                        <h1 className="text-3xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
+                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
                             UPLINK
                         </h1>
-                        <p className="text-gray-400 font-mono text-[10px] md:text-xs mb-8 md:mb-12">:: SECURE_CHANNEL_ESTABLISHED</p>
+                        <p className="text-acm-cyan/60 font-mono text-[10px] md:text-xs mb-8 md:mb-12 flex items-center gap-2">
+                            <span className="opacity-50">{" >> "}</span> SECURE_CHANNEL_READY
+                        </p>
 
-                        <div className="space-y-8 font-mono text-sm">
+                        <div className="space-y-4 md:space-y-8 font-mono text-sm relative z-10">
                             <div className="group cursor-pointer">
-                                <label className="text-[10px] text-gray-500 block mb-1">TARGET_COORDINATES</label>
-                                <div className="p-4 bg-black/40 border border-white/10 rounded group-hover:border-acm-cyan/50 transition-colors flex items-center space-x-3 text-gray-300 group-hover:text-white">
-                                    <span className="text-acm-cyan">⊕</span>
-                                    <span>Bandra (W), Mumbai, IN</span>
+                                <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># TARGET_LOC</label>
+                                <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
+                                    <span className="text-acm-cyan text-lg">⊕</span>
+                                    <span className="text-xs md:text-sm">Bandra (W), Mumbai, IN</span>
                                 </div>
                             </div>
 
                             <div className="group cursor-pointer">
-                                <label className="text-[10px] text-gray-500 block mb-1">DEDICATED_FREQUENCY</label>
-                                <div className="p-4 bg-black/40 border border-white/10 rounded group-hover:border-acm-cyan/50 transition-colors flex items-center space-x-3 text-gray-300 group-hover:text-white">
-                                    <span className="text-acm-cyan">@</span>
-                                    <span>acm.tsec@gmail.com</span>
+                                <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
+                                <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
+                                    <span className="text-acm-cyan text-lg">@</span>
+                                    <span className="text-xs md:text-sm">acm.tsec@gmail.com</span>
                                 </div>
                             </div>
                         </div>
 
-                         <div className="absolute bottom-8 left-8 text-[10px] font-mono text-gray-600">
-                            STATUS: <span className="text-acm-cyan animate-pulse">ONLINE</span><br/>
-                            ENCRYPTION: AES-256<br/>
-                            NODE: TSEC_HQ
+                         <div className="mt-12 md:absolute md:bottom-8 md:left-8 text-[10px] font-mono text-gray-500 space-y-1">
+                            <div className="flex justify-between md:block">
+                                <span>STATUS: </span>
+                                <span className="text-acm-cyan animate-pulse">TRANSMITTING...</span>
+                            </div>
+                            <div className="flex justify-between md:block">
+                                <span>PROTOCOL: </span>
+                                <span>P2P_ENCRYPTED</span>
+                            </div>
                         </div>
                     </div>
 
                     {/* Right: Input Terminal */}
-                    <div className="w-full md:w-7/12 p-6 md:p-12 bg-black/20">
-                        <form className="space-y-6" onSubmit={e => e.preventDefault()}>
+                    <div className="w-full md:w-7/12 p-8 md:p-12 bg-black/40 md:bg-black/20 relative">
+                        {/* Terminal Corner Brackets */}
+                        <div className="absolute top-0 right-0 p-2 opacity-20 pointer-events-none">[ ]</div>
+                        <div className="absolute bottom-0 left-0 p-2 opacity-20 pointer-events-none">[_]</div>
+
+                        <form className="space-y-8 md:space-y-6" onSubmit={e => e.preventDefault()}>
                             <div className="group relative">
-                                <input type="text" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6" placeholder=" " />
-                                <label className="absolute left-0 top-6 text-gray-500 text-sm peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono">
-                                    // ENTER_IDENTITY
+                                <input type="text" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 font-mono text-sm" placeholder=" " />
+                                <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
+                                    // USER_ID
                                 </label>
+                                <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
                             
                             <div className="group relative">
-                                <input type="email" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6" placeholder=" " />
-                                <label className="absolute left-0 top-6 text-gray-500 text-sm peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono">
-                                    // COMM_FREQUENCY (EMAIL)
+                                <input type="email" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 font-mono text-sm" placeholder=" " />
+                                <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
+                                    // FREQUENCY
                                 </label>
+                                <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
 
                             <div className="group relative">
-                                <textarea rows="4" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 resize-none" placeholder=" "></textarea>
-                                <label className="absolute left-0 top-6 text-gray-500 text-sm peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono">
-                                    // TRANSMISSION_PAYLOAD
+                                <textarea rows="3" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 resize-none font-mono text-sm leading-relaxed" placeholder=" "></textarea>
+                                <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
+                                    // PAYLOAD_DESC
                                 </label>
+                                <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
                             
-                            <div className="pt-4">
-                                <MagneticButton className="w-full py-5 md:py-4 bg-acm-cyan/10 border border-acm-cyan text-acm-cyan font-bold tracking-[0.2em] hover:bg-acm-cyan hover:text-black transition-all duration-300 group relative overflow-hidden min-h-[50px]">
-                                    <span className="relative z-10">INITIATE_UPLOAD</span>
-                                    <div className="absolute inset-0 bg-acm-cyan transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                            <div className="pt-6">
+                                <MagneticButton className="w-full py-6 md:py-5 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan font-bold tracking-[0.3em] hover:bg-acm-cyan hover:text-black transition-all duration-500 group relative overflow-hidden rounded-lg">
+                                    <span className="relative z-10 text-xs md:text-sm">INITIATE_HANDSHAKE</span>
+                                    <div className="absolute inset-0 bg-acm-cyan transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 origin-bottom"></div>
                                 </MagneticButton>
+                                <p className="text-[8px] font-mono text-gray-600 mt-4 text-center md:text-left opacity-40">
+                                    CONFIRMING_ACTION_WILL_SEND_ENCRYPTED_SIGNAL...
+                                </p>
                             </div>
                         </form>
                     </div>
