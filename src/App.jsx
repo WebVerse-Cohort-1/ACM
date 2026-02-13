@@ -833,9 +833,14 @@ const Contact = () => (
                         <div className="space-y-4 md:space-y-8 font-mono text-sm relative z-10">
                             <div className="group cursor-pointer">
                                 <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># TARGET_LOC</label>
-                                <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
-                                    <span className="text-acm-cyan text-lg">⊕</span>
-                                    <span className="text-xs md:text-sm">Bandra (W), Mumbai, IN</span>
+                                <div className="p-4 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex flex-col gap-1 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
+                                    <div className="flex items-center space-x-3">
+                                        <span className="text-acm-cyan text-lg">⊕</span>
+                                        <span className="text-xs md:text-sm">Thakur Village, Kandivali (E), Mumbai</span>
+                                    </div>
+                                    <div className="ml-8 text-[10px] font-mono text-acm-cyan/40 group-hover:text-acm-cyan/80 transition-colors">
+                                        LAT: 19.213683 | LON: 72.864668
+                                    </div>
                                 </div>
                             </div>
 
