@@ -523,8 +523,8 @@ const FusionGallery = () => {
     // Data: 3D Positions + Content
     const items = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
         id: i,
-        // Z-Spacing: 1200px per item
-        z: i * 1200, 
+        // Z-Spacing: 1200px per item + Offset so first item isn't immediately active
+        z: i * 1200 + 800, 
         // Drift Scatter (Background State)
         x: (Math.random() - 0.5) * 150, // vw relative
         y: (Math.random() - 0.5) * 100, // vh relative
