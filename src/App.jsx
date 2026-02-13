@@ -17,11 +17,11 @@ const CustomCursor = () => {
     const { x, y } = useMousePosition();
     return (
         <>
-            <div 
+            <div
                 className="fixed top-0 left-0 w-8 h-8 border border-acm-cyan rounded-full pointer-events-none z-[100] transition-transform duration-100 ease-out mix-blend-difference"
                 style={{ transform: `translate(${x - 16}px, ${y - 16}px)` }}
             />
-            <div 
+            <div
                 className="fixed top-0 left-0 w-2 h-2 bg-acm-blue rounded-full pointer-events-none z-[100] transition-transform duration-75 ease-out"
                 style={{ transform: `translate(${x - 4}px, ${y - 4}px)` }}
             />
@@ -84,13 +84,13 @@ const TiltCard = ({ children, className = "" }) => {
         const rect = card.getBoundingClientRect();
         const xPct = (e.clientX - rect.left) / rect.width;
         const yPct = (e.clientY - rect.top) / rect.height;
-        
+
         setGlow(`${xPct * 100}% ${yPct * 100}%`);
-        
+
         if (window.innerWidth >= 1024) {
             const x = xPct - 0.5;
             const y = yPct - 0.5;
-            card.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale3d(1.02, 1.02, 1.02)`;
+            card.style.transform = `perspective(1000px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale3d(1.02, 1.02, 1.02)`;
         }
     };
 
@@ -106,16 +106,16 @@ const TiltCard = ({ children, className = "" }) => {
     } : {};
 
     return (
-        <div 
+        <div
             ref={cardRef}
-            className={`transition-all duration-300 ease-out group relative overflow-hidden ${className}`} 
+            className={`transition-all duration-300 ease-out group relative overflow-hidden ${className}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={gyroStyle}
         >
             <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
                 {/* Dynamic Glow Gradient */}
-                <div 
+                <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none z-10"
                     style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
                 />
@@ -145,7 +145,7 @@ const NeuralFlow = () => {
         mount.appendChild(renderer.domElement);
 
         // --- WAVE PARTICLES ---
-        const particleCount = 2000;
+        const particleCount = 500;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const scales = new Float32Array(particleCount);
@@ -163,7 +163,7 @@ const NeuralFlow = () => {
 
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
-        
+
         const material = new THREE.PointsMaterial({
             color: 0x4284d2,
             size: 0.4,
@@ -177,11 +177,11 @@ const NeuralFlow = () => {
 
         // --- CONNECTING LINES (NEURAL NET) ---
         const lineGeo = new THREE.IcosahedronGeometry(15, 1);
-        const lineMat = new THREE.MeshBasicMaterial({ 
-            color: 0x00d2ef, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.05 
+        const lineMat = new THREE.MeshBasicMaterial({
+            color: 0x00d2ef,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.05
         });
         const net = new THREE.Mesh(lineGeo, lineMat);
         scene.add(net);
@@ -235,14 +235,14 @@ const NeuralFlow = () => {
             const posArr = particles.geometry.attributes.position.array;
             for (let i = 0; i < particleCount; i++) {
                 const x = posArr[i * 3];
-                posArr[i * 3 + 1] = Math.sin(time + x * 0.1 + randomness[i*3]*10) * 5 + (Math.cos(time * 0.5 + randomness[i*3+1]*10) * 2);
+                posArr[i * 3 + 1] = Math.sin(time + x * 0.1 + randomness[i * 3] * 10) * 5 + (Math.cos(time * 0.5 + randomness[i * 3 + 1] * 10) * 2);
             }
             particles.geometry.attributes.position.needsUpdate = true;
 
             // Rotate Net
             net.rotation.y += 0.001;
             net.rotation.z += 0.0005;
-            
+
             // Pulse Color
             const hue = (time * 0.1) % 1;
             material.color.setHSL(0.6 + hue * 0.1, 0.8, 0.5);
@@ -323,10 +323,10 @@ const Navbar = () => {
                         </Link>
                     ))}
                 </div>
-                
+
                 {/* Mobile Trigger */}
-                <button 
-                    onClick={() => setIsOpen(!isOpen)} 
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
                     className="md:hidden text-white text-3xl z-[1002] focus:outline-none focus:text-acm-cyan transition-colors"
                 >
                     {isOpen ? '✕' : '☰'}
@@ -337,12 +337,12 @@ const Navbar = () => {
             <div className={`fixed inset-0 bg-[#020c1b] flex flex-col items-center justify-center gap-10 md:hidden transition-all duration-500 z-[1000] pt-20 ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                 {/* Decorative scanning line */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-acm-cyan/30 animate-pulse"></div>
-                
+
                 {navItems.map((item, idx) => (
-                    <Link 
-                        key={item.name} 
-                        to={item.path} 
-                        onClick={() => setIsOpen(false)} 
+                    <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setIsOpen(false)}
                         className={`group relative text-3xl font-heading font-bold uppercase tracking-widest transition-all duration-300 ${location.pathname === item.path ? 'text-acm-cyan ml-4' : 'text-gray-500 hover:text-white'}`}
                         style={{ transitionDelay: `${idx * 50}ms` }}
                     >
@@ -375,9 +375,9 @@ const Home = () => (
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">READY</span><br />
                 <span className="text-acm-blue">ENGINEERS</span>
             </h1>
-            
+
             <p className="text-gray-400 text-lg md:text-xl max-w-xl mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-6">
-                The Official ACM Student Chapter of TSEC. <br/>
+                The Official ACM Student Chapter of TSEC. <br />
                 We don't just write code; we architect experiences.
             </p>
 
@@ -407,99 +407,283 @@ const Home = () => (
 
 const Events = () => {
     const events = [
-        { title: 'CodeSprint 26', date: 'MAR 15', tag: 'HACKATHON', color: 'from-acm-cyan to-blue-600', desc: '48h intensive prototyping sprint.' },
-        { title: 'System_Breach', date: 'APR 02', tag: 'CTF', color: 'from-red-500 to-orange-600', desc: 'Cybersecurity capture the flag.' },
-        { title: 'Neural_Nets', date: 'MAY 10', tag: 'WORKSHOP', color: 'from-purple-500 to-indigo-600', desc: 'Deep learning with experts.' },
-        { title: 'Cloud_Summit', date: 'JUN 22', tag: 'CONFERENCE', color: 'from-blue-400 to-teal-400', desc: 'Cloud native architecture.' },
-        { title: 'Open_Source', date: 'JUL 14', tag: 'INITIATIVE', color: 'from-green-400 to-emerald-600', desc: 'Summer contribution drive.' },
-        { title: 'Dev_Fest', date: 'AUG 30', tag: 'MEETUP', color: 'from-yellow-400 to-orange-500', desc: 'Community developer meet.' },
+        {
+            slug: 'codesprint-26',
+            title: 'CodeSprint 26',
+            date: 'MAR 15',
+            tag: 'HACKATHON',
+            color: 'from-acm-cyan to-blue-600',
+            desc: '48h intensive prototyping sprint.'
+        },
+        {
+            slug: 'system-breach',
+            title: 'System_Breach',
+            date: 'APR 02',
+            tag: 'CTF',
+            color: 'from-red-500 to-orange-600',
+            desc: 'Cybersecurity capture the flag.'
+        },
+        {
+            slug: 'neural-nets',
+            title: 'Neural_Nets',
+            date: 'MAY 10',
+            tag: 'WORKSHOP',
+            color: 'from-purple-500 to-indigo-600',
+            desc: 'Deep learning with experts.'
+        },
+        {
+            slug: 'cloud-summit',
+            title: 'Cloud_Summit',
+            date: 'JUN 22',
+            tag: 'CONFERENCE',
+            color: 'from-blue-400 to-teal-400',
+            desc: 'Cloud native architecture.'
+        },
+        {
+            slug: 'open-source',
+            title: 'Open_Source',
+            date: 'JUL 14',
+            tag: 'INITIATIVE',
+            color: 'from-green-400 to-emerald-600',
+            desc: 'Summer contribution drive.'
+        },
+        {
+            slug: 'dev-fest',
+            title: 'Dev_Fest',
+            date: 'AUG 30',
+            tag: 'MEETUP',
+            color: 'from-yellow-400 to-orange-500',
+            desc: 'Community developer meet.'
+        },
     ];
 
     return (
         <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
-             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+
+            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 TIMELINE
             </h1>
-            
+
             <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
                 <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
                     EVENT_<span className="text-acm-cyan">LOGS</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">:: UPCOMING_OPERATIONS</p>
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">
+                    :: UPCOMING_OPERATIONS
+                </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 perspective-1000">
-                {events.map((ev, i) => (
-                    <TiltCard key={i} className="group aspect-[4/5] md:aspect-[4/3] cursor-pointer">
-                        <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
-                            {/* Date Badge */}
-                            <div className="flex justify-between items-start">
-                                <span className="font-mono text-xl font-bold text-white border-b-2 border-acm-cyan pb-1">
-                                    {ev.date}
-                                </span>
-                                <span className="font-mono text-[9px] border border-white/20 px-2 py-1 rounded text-gray-300 bg-black/20 backdrop-blur-md">
-                                    {ev.tag}
-                                </span>
-                            </div>
-                            
-                            {/* Central Glow */}
-                            <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none">
-                                <div className={`w-40 h-40 rounded-full bg-gradient-to-br ${ev.color} blur-3xl animate-pulse`}></div>
-                            </div>
+                {events.map((ev) => (
 
-                            {/* Content */}
-                            <div className="z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <h3 className="text-3xl font-heading font-bold text-white mb-2 shadow-black drop-shadow-md">{ev.title}</h3>
-                                <p className="text-sm text-gray-300 font-mono mb-6 border-l-2 border-white/20 pl-3">
-                                    {ev.desc}
-                                </p>
-                                <MagneticButton as="div" className="text-xs border border-white/20 hover:border-acm-cyan text-acm-cyan px-4 py-2 rounded uppercase tracking-wider bg-black/40 backdrop-blur-md">
-                                    Register Interface &rarr;
-                                </MagneticButton>
+                    <Link
+                        key={ev.slug}
+                        to={`/events/${ev.slug}`}
+                        className="block"
+                    >
+                        <TiltCard
+                            intensity={5}
+                            className="group aspect-[4/5] md:aspect-[4/3] cursor-pointer"
+                        >
+                            <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
+
+                                {/* Date Badge */}
+                                <div className="flex justify-between items-start">
+                                    <span className="font-mono text-xl font-bold text-white border-b-2 border-acm-cyan pb-1">
+                                        {ev.date}
+                                    </span>
+                                    <span className="font-mono text-[9px] border border-white/20 px-2 py-1 rounded text-gray-300 bg-black/20 backdrop-blur-md">
+                                        {ev.tag}
+                                    </span>
+                                </div>
+
+                                {/* Central Glow */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none">
+                                    <div className={`w-40 h-40 rounded-full bg-gradient-to-br ${ev.color} blur-3xl animate-pulse`}></div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                    <h3 className="text-3xl font-heading font-bold text-white mb-2 drop-shadow-md">
+                                        {ev.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-300 font-mono mb-6 border-l-2 border-white/20 pl-3">
+                                        {ev.desc}
+                                    </p>
+
+                                    <div className="text-xs border border-white/20 hover:border-acm-cyan text-acm-cyan px-4 py-2 rounded uppercase tracking-wider bg-black/40 backdrop-blur-md inline-block">
+                                        View Details →
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </TiltCard>
+                        </TiltCard>
+                    </Link>
+
                 ))}
             </div>
         </div>
     );
 };
 
-const About = () => (
-    <div className="min-h-screen pt-32 px-8 md:px-20 flex flex-col md:flex-row gap-20">
-        <div className="md:w-1/3">
-            <h1 className="text-6xl font-heading font-bold sticky top-32">
-                WHO<br/>WE<br/>ARE
-            </h1>
-        </div>
-        <div className="md:w-2/3 space-y-32">
-            <section>
-                <h2 className="text-2xl text-acm-cyan font-mono mb-6">:: MISSION_STATEMENT</h2>
-                <p className="text-2xl md:text-4xl font-light leading-snug">
-                    We are the <span className="text-white font-bold">architects</span> of the digital frontier. 
-                    TSEC ACM is not just a club; it's an incubator for those who dare to 
-                    <span className="italic text-gray-400"> disrupt</span> the status quo.
-                </p>
-            </section>
-            
-            <section>
-                <h2 className="text-2xl text-acm-blue font-mono mb-6">:: LEGACY_LOGS</h2>
-                <div className="border-l border-white/20 pl-10 space-y-16">
-                    <div>
-                        <span className="text-4xl font-heading font-bold opacity-30">2025</span>
-                        <h3 className="text-2xl font-bold mt-2">National Apex</h3>
-                        <p className="text-gray-400 mt-2">Awarded Best Student Chapter nationwide.</p>
-                    </div>
-                    <div>
-                        <span className="text-4xl font-heading font-bold opacity-30">2023</span>
-                        <h3 className="text-2xl font-bold mt-2">Source Code</h3>
-                        <p className="text-gray-400 mt-2">Launched open-source initiative with 500+ PRs.</p>
+const About = () => {
+    const stats = [
+        { label: "MEMBERS", value: 500 },
+        { label: "EVENTS", value: 30 },
+        { label: "AWARDS", value: 10 },
+    ];
+
+    const [counts, setCounts] = useState(stats.map(() => 0));
+    const [hasAnimated, setHasAnimated] = useState(false);
+    const statsRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated) {
+                    setHasAnimated(true);
+
+                    stats.forEach((stat, index) => {
+                        let start = 0;
+                        const duration = 1500;
+                        const increment = stat.value / (duration / 16);
+
+                        const counter = setInterval(() => {
+                            start += increment;
+
+                            if (start >= stat.value) {
+                                start = stat.value;
+                                clearInterval(counter);
+                            }
+
+                            setCounts(prev => {
+                                const updated = [...prev];
+                                updated[index] = Math.floor(start);
+                                return updated;
+                            });
+                        }, 16);
+                    });
+                }
+            },
+            { threshold: 0.4 }
+        );
+
+        if (statsRef.current) observer.observe(statsRef.current);
+
+        return () => observer.disconnect();
+    }, [hasAnimated]);
+    const aboutRef = useRef(null);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!aboutRef.current) return;
+
+            const rect = aboutRef.current.getBoundingClientRect();
+            const sectionHeight = aboutRef.current.offsetHeight;
+            const visible = Math.min(
+                Math.max((window.innerHeight - rect.top) / sectionHeight, 0),
+                1
+            );
+
+            setProgress(visible);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    return (
+        <div
+            ref={aboutRef}
+            className="min-h-screen pt-32 px-8 md:px-20 flex flex-col md:flex-row gap-20"
+        >
+            <div className="md:w-1/3 flex items-start justify-center relative">
+                <div className="sticky top-32 space-y-6">
+                    {["WHO", "WE", "ARE"].map((word, i) => {
+                        const threshold = (i + 1) / 3;
+
+                        const isActive = progress >= threshold;
+
+                        return (
+                            <div
+                                key={i}
+                                className={`text-6xl md:text-8xl font-heading font-bold transition-all duration-500 ${isActive
+                                        ? "text-acm-cyan scale-110"
+                                        : "text-gray-700 scale-100"
+                                    }`}
+                            >
+                                {word}
+                            </div>
+                        );
+                    })}
+
+                    {/* Vertical progress line */}
+                    <div className="absolute -left-6 top-0 h-full w-[2px] bg-white/10">
+                        <div
+                            className="w-full bg-acm-cyan transition-all duration-300"
+                            style={{ height: `${progress * 100}%` }}
+                        />
                     </div>
                 </div>
-            </section>
+            </div>
+
+            <div className="md:w-2/3 space-y-32">
+                <section>
+                    <h2 className="text-2xl text-acm-cyan font-mono mb-6">
+                        :: MISSION_STATEMENT
+                    </h2>
+                    <p className="text-2xl md:text-4xl font-light leading-snug">
+                        We are the <span className="text-white font-bold">architects</span> of the digital frontier.
+                        TSEC ACM is not just a club; it's an incubator for those who dare to
+                        <span className="italic text-gray-400"> disrupt</span> the status quo.
+                    </p>
+                </section>
+
+                <div
+                    ref={statsRef}
+                    className="grid grid-cols-2 md:grid-cols-3 gap-10 mt-20"
+                >
+                    {stats.map((stat, i) => (
+                        <div
+                            key={i}
+                            className="text-center group transition-transform duration-500 hover:-translate-y-2"
+                        >
+                            <h3 className="text-5xl md:text-6xl font-heading font-bold text-acm-cyan relative">
+                                {counts[i]}+
+                                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
+                            </h3>
+                            <p className="text-xs tracking-[0.3em] text-gray-500 mt-3">
+                                {stat.label}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                <section>
+                    <h2 className="text-2xl text-acm-blue font-mono mb-6">
+                        :: LEGACY_LOGS
+                    </h2>
+                    <div className="border-l border-white/20 pl-10 space-y-16">
+                        <div>
+                            <span className="text-4xl font-heading font-bold opacity-30">2025</span>
+                            <h3 className="text-2xl font-bold mt-2">National Apex</h3>
+                            <p className="text-gray-400 mt-2">
+                                Awarded Best Student Chapter nationwide.
+                            </p>
+                        </div>
+                        <div>
+                            <span className="text-4xl font-heading font-bold opacity-30">2023</span>
+                            <h3 className="text-2xl font-bold mt-2">Source Code</h3>
+                            <p className="text-gray-400 mt-2">
+                                Launched open-source initiative with 500+ PRs.
+                            </p>
+                        </div>
+                    </div>
+                </section><br /><br /><br />
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const Team = () => {
     const teamData = {
@@ -514,7 +698,6 @@ const Team = () => {
             { name: "Ananya Rai", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
             { name: "Rahul Varma", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
             { name: "Ishani Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&h=500&fit=crop" },
-            { name: "Siddharth Jain", role: "Secretary", desc: "Maintaining structural integrity and official documentation of all proceedings.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
         ],
         "TECHNICAL_FORCE": [
             { name: "Devansh Mehta", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
@@ -545,18 +728,16 @@ const Team = () => {
             { name: "Tara Sutaria", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
             { name: "Ishaan Khatter", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
             { name: "Alaya F", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
-            { name: "Ranveer Singh", role: "Marketing Manager", desc: "Building brand awareness and strategic industry tie-ups.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
-            { name: "Janhvi Kapoor", role: "Marketing Manager", desc: "Driving student registrations and sponsorship acquisition.", image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?q=80&w=400&h=500&fit=crop" },
         ],
     };
 
     return (
         <div className="min-h-screen pt-32 px-6 md:px-20 max-w-7xl mx-auto pb-20">
-             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 COMMAND
             </h1>
-            
-            <div className="flex flex-col md:flex-row items-baseline justify-between mb-20 border-b border-white/10 pb-8 backdrop-blur-sm">
+
+            <div className="flex flex-col md:flex-row items-baseline justify-between mb-10 border-b border-white/10 pb-8 backdrop-blur-sm">
                 <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
                     PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
                 </h2>
@@ -570,7 +751,7 @@ const Team = () => {
                         {category}
                         <span className="text-[10px] opacity-30 mt-1">({members.length}_NODES)</span>
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {members.map((m, i) => (
                             <TeamPersonaCard key={i} member={m} />
@@ -587,11 +768,11 @@ const TeamPersonaCard = ({ member }) => {
     return (
         <TiltCard className="group relative aspect-[4/5] bg-[#020c1b] rounded-2xl border border-white/5 hover:border-acm-cyan/40 transition-all duration-500 overflow-hidden">
             {/* LinkedIn Icon Top Right */}
-            <a 
-                href="#" 
+            <a
+                href="#"
                 className="absolute top-6 right-6 z-30 w-8 h-8 flex items-center justify-center bg-[#0077b5]/10 border border-[#0077b5]/30 rounded-lg hover:bg-[#0077b5] hover:text-white text-[#0077b5] transition-all"
             >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
             </a>
 
             <div className="relative h-full w-full p-8 flex flex-col z-10 transition-transform duration-500 group-hover:-translate-y-2">
@@ -599,7 +780,7 @@ const TeamPersonaCard = ({ member }) => {
                 <h3 className="text-3xl md:text-2xl font-['Playfair_Display'] font-bold text-white mb-1 group-hover:text-acm-cyan transition-colors leading-tight">
                     {member.name}
                 </h3>
-                
+
                 {/* Role */}
                 <p className="text-acm-cyan font-semibold text-sm mb-4 tracking-wide font-sans">
                     {member.role}
@@ -614,9 +795,9 @@ const TeamPersonaCard = ({ member }) => {
                 <div className="mt-auto relative w-full h-56 md:h-48 flex justify-center items-end overflow-hidden">
                     {/* Shadow behind person */}
                     <div className="absolute bottom-0 w-40 h-40 bg-acm-cyan/10 rounded-full blur-3xl opacity-40 group-hover:opacity-100 transition-opacity duration-700"></div>
-                    
-                    <img 
-                        src={member.image} 
+
+                    <img
+                        src={member.image}
                         alt={member.name}
                         className="relative z-10 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700 transform origin-bottom scale-[1.1] group-hover:scale-[1.15]"
                         style={{
@@ -644,94 +825,138 @@ const TeamPersonaCard = ({ member }) => {
 const FusionGallery = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
     const [activeIndex, setActiveIndex] = useState(-1);
-    
-    // Data: 3D Positions + Content
-    const items = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
-        id: i,
-        // Z-Spacing: 1200px per item + Offset so first item is visible but background
-        z: i * 1200 + 650, 
-        // Drift Scatter (Background State)
-        // Rule 9: Compress horizontally, expand vertically on mobile to prevent crowding
-        x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 25 : 150), // Compressed X
-        y: (Math.random() - 0.5) * (window.innerWidth < 768 ? 90 : 100), // Expanded Y
-        rotation: (Math.random() - 0.5) * 45,
-        title: `EVENT_LOG_${i < 9 ? '0' : ''}${i + 1}`,
-        desc: "Secure data node accessed. Decrypting visual archives...",
-        slides: [
-            `from-cyan-900/40 to-blue-900/40`, 
-            `from-purple-900/40 to-pink-900/40`,
-            `from-emerald-900/40 to-teal-900/40`
-        ]
-    })), []);
 
-    // Scroll Logic
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrollProgress(window.scrollY * 1.0);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+    const items = useMemo(() => {
+        const events = [
+            {
+                slug: "codesprint-26",
+                category: "HACKATHON",
+                title: "CodeSprint 26",
+                desc: "48-hour innovation marathon.",
+                images: [
+                    "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200"
+                ]
+            },
+            {
+                slug: "system-breach",
+                category: "CTF",
+                title: "System_Breach",
+                desc: "Cybersecurity battlefield.",
+                images: [
+                    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?q=80&w=1200"
+                ]
+            },
+            {
+                slug: "neural-nets",
+                category: "WORKSHOP",
+                title: "Neural_Nets",
+                desc: "Deep learning immersion.",
+                images: [
+                    "https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200"
+                ]
+            },
+            {
+                slug: "cloud-summit",
+                category: "CONFERENCE",
+                title: "Cloud_Summit",
+                desc: "Cloud-native architecture talks.",
+                images: [
+                    "https://images.unsplash.com/photo-1492724441997-5dc865305da7?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200"
+                ]
+            },
+            {
+                slug: "open-source",
+                category: "INITIATIVE",
+                title: "Open_Source Drive",
+                desc: "30-day contribution marathon.",
+                images: [
+                    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1518773553398-650c184e0bb3?q=80&w=1200"
+                ]
+            },
+            {
+                slug: "dev-fest",
+                category: "MEETUP",
+                title: "Dev_Fest",
+                desc: "Community networking night.",
+                images: [
+                    "https://images.unsplash.com/photo-1503424886307-b090341d25d1?q=80&w=1200",
+                    "https://images.unsplash.com/photo-1492724441997-5dc865305da7?q=80&w=1200"
+                ]
+            }
+        ];
+
+        return events.map((event, i) => ({
+            ...event,
+            id: i,
+            z: i * 1200 + 650,
+            x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 25 : 150),
+            y: (Math.random() - 0.5) * (window.innerWidth < 768 ? 90 : 100),
+            rotation: (Math.random() - 0.5) * 45
+        }));
     }, []);
+useEffect(() => {
+    setScrollProgress(items[0].z);
+}, [items]);
 
-    // Determine Active Item
+   useEffect(() => {
+    const handleScroll = () => {
+        const min = items[0].z;
+        const max = items[items.length - 1].z;
+
+        const raw = window.scrollY;
+
+        const clamped = Math.min(Math.max(raw, min), max);
+
+        setScrollProgress(clamped);
+
+        // Optional: lock actual page scroll visually
+        if (raw !== clamped) {
+            window.scrollTo(0, clamped);
+        }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+}, [items]);
+
     useEffect(() => {
         let closest = -1;
         let minDist = Infinity;
 
         items.forEach((item, index) => {
-            const dist = Math.abs(item.z - scrollProgress); // Distance from abstract "camera"
-            if (dist < 600) { // Active Window width
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = index;
-                }
+            const dist = Math.abs(item.z - scrollProgress);
+            if (dist < 600 && dist < minDist) {
+                minDist = dist;
+                closest = index;
             }
         });
+
         setActiveIndex(closest);
     }, [scrollProgress, items]);
 
     const maxZ = items[items.length - 1].z + 2000;
 
     return (
-        <div className="min-h-screen bg-transparent transition-colors duration-1000">
-            
-            {/* Scroll Spacer */}
-            <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
+        <div className="min-h-screen bg-transparent">
+            <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50" />
 
-            {/* HUD */}
-            {/* HUD - Fades out on scroll to prevent overlap */}
-            <div 
-                className="fixed top-24 left-1/2 -translate-x-1/2 z-50 text-center mix-blend-exclusion pointer-events-none w-full transition-opacity duration-300"
-                style={{ opacity: Math.max(0, 1 - scrollProgress / 400), transform: `translate(-50%, -${scrollProgress * 0.2}px)` }}
-            >
-                <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-2 tracking-tighter">
-                    NEURAL_<span className="text-acm-cyan">ARCHIVE</span>
-                </h1>
-                <div className="flex justify-center space-x-4 text-[10px] md:text-xs font-mono text-acm-cyan/80">
-                     <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
-                     <span>:: DEPTH: {Math.round(scrollProgress)}</span>
-                </div>
-            </div>
-
-            {/* Viewport */}
             <div className="fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center perspective-[1000px]">
                 <div className="relative w-full h-full preserve-3d">
                     {items.map((item, index) => {
                         const isActive = index === activeIndex;
-                        
-                        // Relative Z Calculation
-                        // Standard Tunnel: Item is at (item.z - scrollProgress) away from camera.
-                        // We offset by -500 to start them "in front".
                         const rawZ = -item.z + scrollProgress - 500;
-                        
-                        // Visibility Check (Removed to keep items floating in background)
-                        // if (rawZ > 1500 || rawZ < -5000) return null;
 
                         return (
-                            <FusionCard 
-                                key={item.id} 
-                                item={item} 
-                                isActive={isActive} 
+                            <FusionCard
+                                key={item.id}
+                                item={item}
+                                isActive={isActive}
                                 rawZ={rawZ}
                             />
                         );
@@ -744,123 +969,89 @@ const FusionGallery = () => {
 
 // Sub-Component for individual card logic
 const FusionCard = ({ item, isActive, rawZ }) => {
-    // Current Carousel Slide
+    const navigate = ReactRouterDOM.useNavigate();
     const [slide, setSlide] = useState(0);
 
-    // Compute Transforms
-    // If Active: Fixed at center, Scale 1, Rotation 0
-    // If Inactive: Uses rawZ, item.x, item.y, item.rotation
-    
-    // We use CSS transition to handle the smooth snap (Drift -> Snapped)
-    const style = isActive 
+    // Reset slide when inactive
+    useEffect(() => {
+        if (!isActive) setSlide(0);
+    }, [isActive]);
+
+    const style = isActive
         ? {
-            transform: `translate3d(-50%, -50%, 0) translate3d(0, 0, 0) scale(1) rotate(0deg)`,
+            transform: `translate3d(-50%, -50%, 0) scale(1)`,
             opacity: 1,
             zIndex: 100,
-            filter: 'none'
+            filter: "none"
         }
         : {
             transform: `translate3d(-50%, -50%, 0) translate3d(${item.x}vw, ${item.y}vh, ${rawZ}px) scale(0.6) rotate(${item.rotation}deg)`,
-            // Mobile: Hide background items completely to avoid mess
-            // Desktop: Show background items with low opacity
-            opacity: window.innerWidth < 768 && !isActive ? 0 : Math.max(0.3, (rawZ + 3000) / 3500), 
+            opacity: window.innerWidth < 768 ? 0 : Math.max(0.3, (rawZ + 3000) / 3500),
             zIndex: 0,
-            filter: 'blur(4px) grayscale(100%)'
+            filter: "blur(4px) grayscale(100%)"
         };
 
     const nextSlide = (e) => {
-        if (e) e.stopPropagation();
-        setSlide((prev) => (prev + 1) % item.slides.length);
-    };
-    
-    const prevSlide = (e) => {
-        if (e) e.stopPropagation();
-        setSlide((prev) => (prev - 1 + item.slides.length) % item.slides.length);
+        e.stopPropagation();
+        setSlide((prev) => (prev + 1) % item.images.length);
     };
 
-    // Keyboard Navigation
-    useEffect(() => {
-        if (!isActive) return;
-        const handleKeyDown = (e) => {
-            if (e.key === 'ArrowLeft') prevSlide();
-            if (e.key === 'ArrowRight') nextSlide();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isActive, item.slides.length]);
+    const prevSlide = (e) => {
+        e.stopPropagation();
+        setSlide((prev) => (prev - 1 + item.images.length) % item.images.length);
+    };
 
     return (
-        <div 
-            className="absolute top-1/2 left-1/2 w-[95vw] md:w-[900px] h-[50vh] md:h-[70vh] transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform flex items-center justify-center p-2 md:p-4"
+        <div
+            className="absolute top-1/2 left-1/2 w-[95vw] md:w-[900px] h-[55vh] md:h-[70vh] transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
             style={style}
         >
-            <div className={`w-full h-full bg-black/90 border ${isActive ? 'border-acm-cyan' : 'border-white/10'} backdrop-blur-2xl rounded-2xl md:rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]`}>
-                
-                {/* Carousel Area */}
-                <div className="relative flex-1 bg-gradient-to-b from-gray-900 to-black overflow-hidden group">
-                    {/* Slides */}
-                    {item.slides.map((color, i) => (
-                        <div 
+            <div
+                onClick={() => navigate(`/events/${item.slug}`)}
+                className={`cursor-pointer w-full h-full bg-black/90 border ${isActive ? "border-acm-cyan" : "border-white/10"} rounded-2xl overflow-hidden flex flex-col`}
+            >
+                <div className="relative flex-1 overflow-hidden">
+                    {item.images.map((img, i) => (
+                        <div
                             key={i}
-                            className="absolute inset-0 transition-opacity duration-500 ease-in-out flex items-center justify-center"
+                            className="absolute inset-0 transition-opacity duration-500"
                             style={{ opacity: i === slide ? 1 : 0 }}
                         >
-                            {/* Bg Gradient */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-40 mix-blend-screen`}></div>
-                            
-                            {/* Simulated Image */}
-                             <div className="relative z-10 text-center space-y-2 md:space-y-4">
-                                <h3 className="text-4xl md:text-8xl font-black text-white/5 select-none tracking-tighter">
-                                    IMAGE_0{i+1}
-                                </h3>
-                            </div>
+                            <img src={img} className="w-full h-full object-cover" />
                         </div>
                     ))}
 
-                    {/* Navigation Controls (Only show if Active) */}
-                    {isActive && (
+                    {isActive && item.images.length > 1 && (
                         <>
-                            <button 
+                            <button
                                 onClick={prevSlide}
-                                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 px-4 py-2 text-white"
                             >
                                 ←
                             </button>
-                            <button 
+                            <button
                                 onClick={nextSlide}
-                                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-acm-cyan hover:text-black border border-white/10 text-white transition-all z-20"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 px-4 py-2 text-white"
                             >
                                 →
                             </button>
-                            
-                            {/* Indicators */}
-                            <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
-                                {item.slides.map((_, i) => (
-                                    <div 
-                                        key={i} 
-                                        className={`w-8 md:w-12 h-1 rounded-full transition-all ${i === slide ? 'bg-acm-cyan' : 'bg-white/20'}`} 
-                                    />
-                                ))}
-                            </div>
                         </>
                     )}
                 </div>
 
-                {/* Footer / Caption */}
-                <div className="h-24 md:h-32 bg-black/40 border-t border-white/10 p-4 md:p-8 flex items-center justify-between z-20">
-                    <div>
-                        <h2 className={`text-xl md:text-3xl font-bold text-white mb-1 md:mb-2 ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-100`}>
-                            {item.title}
-                        </h2>
-                        <p className={`text-gray-400 font-mono text-[10px] md:text-xs line-clamp-1 ${isActive ? 'translate-x-0' : '-translate-x-4 opacity-0'} transition-all duration-500 delay-200`}>
-                            {item.desc}
-                        </p>
-                    </div>
-                     <div className={`font-mono text-3xl md:text-5xl font-bold text-white/5 ${isActive ? 'scale-100 text-acm-cyan/20' : 'scale-50'} transition-all duration-500`}>
-                        {item.id < 9 ? `0${item.id+1}` : item.id+1}
-                    </div>
-                </div>
+                <div className="p-6 bg-black/40 border-t border-white/10">
+                    <span className="text-xs font-mono tracking-[0.3em] text-acm-cyan block mb-2">
+                        {item.category}
+                    </span>
 
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                        {item.title}
+                    </h2>
+
+                    <p className="text-gray-400 text-sm">
+                        {item.desc}
+                    </p>
+                </div>
             </div>
         </div>
     );
@@ -871,7 +1062,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
 // --- UPDATED CONTACT (Advanced Holographic Terminal) ---
 const Contact = () => (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 relative overflow-hidden bg-black">
+    <div className="min-h-screen flex items-center justify-center p-4 mt-20 md:p-8 relative overflow-hidden bg-black">
         {/* Background Grid & Scanlines */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.02)_1px,transparent_1px)] bg-[size:30px_30px] md:bg-[size:50px_50px]"></div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
@@ -880,7 +1071,7 @@ const Contact = () => (
             <TiltCard className="bg-black/95 md:bg-black/90 md:border md:border-acm-cyan/30 backdrop-blur-2xl rounded-2xl md:rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0 border border-white/5">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-40"></div>
-                
+
                 {/* Mobile Terminal Header */}
                 <div className="md:hidden flex justify-between items-center p-4 border-b border-white/10 bg-white/5 font-mono text-[10px] tracking-widest text-acm-cyan">
                     <span>:: SESSION_TERMINAL_v4.2</span>
@@ -891,12 +1082,12 @@ const Contact = () => (
                 </div>
 
                 <div className="flex flex-col md:flex-row">
-                    
+
                     {/* Left: Interactive Data Panel */}
                     <div className="w-full md:w-5/12 p-6 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/2 relative overflow-hidden flex flex-col">
                         {/* Tactical Background element */}
                         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-acm-cyan/5 rounded-full blur-3xl md:hidden"></div>
-                        
+
                         <div className="relative z-10">
                             <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2 uppercase tracking-tighter">
                                 UPLINK
@@ -906,7 +1097,7 @@ const Contact = () => (
                                     <span className="opacity-50">{" >> "}</span> SECURE_CHANNEL_READY
                                 </span>
                                 <span className="text-[9px] opacity-40 uppercase tracking-widest leading-relaxed">
-                                    Let’s talk ideas, events & collabs.<br/>
+                                    Let’s talk ideas, events & collabs.<br />
                                     Reach the TSEC ACM team here.
                                 </span>
                             </p>
@@ -945,17 +1136,17 @@ const Contact = () => (
                                 <span className="text-acm-cyan animate-pulse">HQ_LOCKED</span>
                             </label>
                             <div className="w-full h-40 md:h-56 rounded-lg overflow-hidden border border-white/10 relative grayscale brightness-75 contrast-125 group-hover/map:grayscale-0 group-hover/map:brightness-100 transition-all duration-700">
-                                <iframe 
+                                <iframe
                                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.8927005470253!2d72.86247937466826!3d19.213038647312154!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b0e5faf7047b%3A0x696803713d2f2b3b!2sThakur%20Shyamnarayan%20Engineering%20College!5e0!3m2!1sen!2sin!4v1716900000000"
                                     className="w-full h-full border-0 invert-[.9] hue-rotate-[160deg]"
-                                    allowFullScreen="" 
+                                    allowFullScreen=""
                                     loading="lazy"
                                 ></iframe>
                                 <div className="absolute inset-0 bg-acm-cyan/5 pointer-events-none group-hover/map:opacity-0 transition-opacity"></div>
                             </div>
                         </div>
 
-                         <div className="mt-6 text-[10px] font-mono text-gray-500 space-y-2 border-t border-white/5 pt-4">
+                        <div className="mt-6 text-[10px] font-mono text-gray-500 space-y-2 border-t border-white/5 pt-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <span className="block text-[8px] opacity-50 mb-1">AVAILABILITY</span>
@@ -988,7 +1179,7 @@ const Contact = () => (
                                 </label>
                                 <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
-                            
+
                             <div className="group relative">
                                 <input type="email" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 font-mono text-sm" placeholder=" " />
                                 <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
@@ -1004,7 +1195,7 @@ const Contact = () => (
                                 </label>
                                 <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
-                            
+
                             <div className="pt-6">
                                 <MagneticButton className="w-full py-6 md:py-5 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan font-bold tracking-[0.3em] hover:bg-acm-cyan hover:text-black transition-all duration-500 group relative overflow-hidden rounded-lg">
                                     <span className="relative z-10 text-xs md:text-sm">INITIATE_HANDSHAKE</span>
@@ -1022,22 +1213,334 @@ const Contact = () => (
         </div>
     </div>
 );
+// --- EVENT DETAIL PAGE ---
+const eventData = {
+    "codesprint-26": {
+        title: "CodeSprint 26",
+        dateText: "MAR 15 • 48 HOURS • TSEC CAMPUS",
+        eventDate: "March 15, 2026 09:00:00",
+        prizePool: 100000,
+        description: "A 48-hour flagship hackathon transforming ideas into scalable tech products.",
+        tracks: [
+            "AI & Machine Learning",
+            "Cybersecurity",
+            "Web3 & Blockchain",
+            "Open Innovation"
+        ],
+        speakers: [
+            {
+                name: "Rohit Sharma",
+                role: "Senior Engineer, Google",
+                image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400"
+            },
+            {
+                name: "Ananya Mehta",
+                role: "AI Researcher, Microsoft",
+                image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400"
+            }
+        ],
+        faqs: [
+            { question: "Team size?", answer: "2–4 members allowed." },
+            { question: "Is it offline?", answer: "Yes. Fully on campus." },
+            { question: "Food provided?", answer: "Yes. All meals included." }
+        ]
+    },
+
+    "system-breach": {
+        title: "System_Breach",
+        dateText: "APR 02 • 12 HOURS • CYBER LAB",
+        eventDate: "April 2, 2026 10:00:00",
+        prizePool: 50000,
+        description: "A high-intensity cybersecurity Capture The Flag competition.",
+        tracks: [
+            "Web Exploitation",
+            "Cryptography",
+            "Reverse Engineering",
+            "Digital Forensics"
+        ],
+        speakers: [
+            {
+                name: "Arjun Nair",
+                role: "Security Analyst, Deloitte",
+                image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400"
+            }
+        ],
+        faqs: [
+            { question: "Experience required?", answer: "Basic cybersecurity knowledge recommended." },
+            { question: "Team size?", answer: "2–3 members." },
+            { question: "Prizes?", answer: "Cash rewards + internship opportunities." }
+        ]
+    },
+
+    "neural-nets": {
+        title: "Neural_Nets Workshop",
+        dateText: "MAY 10 • 1 DAY • AI LAB",
+        eventDate: "May 10, 2026 09:30:00",
+        prizePool: 20000,
+        description: "Hands-on deep learning workshop covering CNNs and real-world AI deployment.",
+        tracks: [
+            "Neural Network Fundamentals",
+            "Computer Vision",
+            "Model Deployment"
+        ],
+        speakers: [
+            {
+                name: "Dr. Meera Iyer",
+                role: "AI Researcher",
+                image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400"
+            }
+        ],
+        faqs: [
+            { question: "ML experience needed?", answer: "Basic Python is enough." },
+            { question: "Certificate?", answer: "Yes. ACM verified certificate." }
+        ]
+    },
+
+    "cloud-summit": {
+        title: "Cloud_Summit",
+        dateText: "JUN 22 • 1 DAY • AUDITORIUM",
+        eventDate: "June 22, 2026 10:00:00",
+        prizePool: 30000,
+        description: "Conference on scalable cloud-native architecture and DevOps.",
+        tracks: [
+            "Cloud Architecture",
+            "Kubernetes",
+            "CI/CD Pipelines"
+        ],
+        speakers: [
+            {
+                name: "Sahil Verma",
+                role: "Cloud Architect, AWS",
+                image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400"
+            }
+        ],
+        faqs: [
+            { question: "Slides shared?", answer: "Yes. After event." },
+            { question: "Who should attend?", answer: "Backend & cloud enthusiasts." }
+        ]
+    },
+
+    "open-source": {
+        title: "Open_Source Drive",
+        dateText: "JUL 14 • 30 DAYS • ONLINE",
+        eventDate: "July 14, 2026 08:00:00",
+        prizePool: 15000,
+        description: "Month-long open source contribution initiative.",
+        tracks: [
+            "Git & Version Control",
+            "First PR Guidance",
+            "Maintainer Interaction"
+        ],
+        speakers: [
+            {
+                name: "Kabir Joshi",
+                role: "Open Source Maintainer",
+                image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400"
+            }
+        ],
+        faqs: [
+            { question: "Beginner friendly?", answer: "Yes." },
+            { question: "Mentorship?", answer: "Dedicated mentors available." }
+        ]
+    },
+
+    "dev-fest": {
+        title: "Dev_Fest Meetup",
+        dateText: "AUG 30 • EVENING • CAMPUS HUB",
+        eventDate: "August 30, 2026 17:00:00",
+        prizePool: 10000,
+        description: "Community developer meetup with talks and networking.",
+        tracks: [
+            "Lightning Talks",
+            "Startup Pitches",
+            "Networking"
+        ],
+        speakers: [
+            {
+                name: "Nitya Rao",
+                role: "Startup Founder",
+                image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400"
+            }
+        ],
+        faqs: [
+            { question: "Open to all?", answer: "Yes." },
+            { question: "Food?", answer: "Evening refreshments provided." }
+        ]
+    }
+};
+const EventDetail = () => {
+    const { slug } = ReactRouterDOM.useParams();
+    const event = eventData[slug];
+
+    const [prize, setPrize] = React.useState(0);
+    const [timeLeft, setTimeLeft] = React.useState({});
+    const [activeFAQ, setActiveFAQ] = React.useState(null);
+
+    // Prize Animation
+    React.useEffect(() => {
+        if (!event?.prizePool) return;
+
+        let start = 0;
+        const duration = 1500;
+        const increment = event.prizePool / (duration / 16);
+
+        const counter = setInterval(() => {
+            start += increment;
+            if (start >= event.prizePool) {
+                start = event.prizePool;
+                clearInterval(counter);
+            }
+            setPrize(Math.floor(start));
+        }, 16);
+
+        return () => clearInterval(counter);
+    }, [event]);
+
+    // Countdown
+    React.useEffect(() => {
+        if (!event?.eventDate) return;
+
+        const interval = setInterval(() => {
+            const difference =
+                new Date(event.eventDate) - new Date();
+
+            if (difference <= 0) {
+                setTimeLeft({});
+                clearInterval(interval);
+                return;
+            }
+
+            setTimeLeft({
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((difference / (1000 * 60)) % 60),
+                seconds: Math.floor((difference / 1000) % 60)
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [event]);
+
+    if (!event) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-white text-3xl">
+                Event Not Found
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen pt-32 px-6 md:px-20 text-white max-w-6xl mx-auto pb-32">
+
+            <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">
+                {event.title}
+            </h1>
+
+            <p className="text-acm-cyan font-mono mb-8">
+                {event.dateText}
+            </p>
+
+            <p className="text-gray-300 text-lg mb-12 max-w-3xl">
+                {event.description}
+            </p>
+
+            <h2 className="text-3xl font-bold mb-6">🏆 Prize Pool</h2>
+            <div className="text-6xl font-heading font-bold text-acm-cyan mb-16">
+                ₹ {prize.toLocaleString()}
+            </div>
+
+            {timeLeft.days !== undefined && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center mb-20">
+                    {Object.entries(timeLeft).map(([key, value]) => (
+                        <div key={key} className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                            <div className="text-4xl font-bold text-acm-cyan">
+                                {value}
+                            </div>
+                            <div className="text-sm uppercase tracking-widest text-gray-400">
+                                {key}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <h2 className="text-3xl font-bold mb-8">Tracks</h2>
+            <div className="grid md:grid-cols-2 gap-6 mb-20">
+                {event.tracks?.map((track, i) => (
+                    <div key={i} className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                        {track}
+                    </div>
+                ))}
+            </div>
+
+            {event.speakers?.length > 0 && (
+                <>
+                    <h2 className="text-3xl font-bold mb-10">Speakers</h2>
+                    <div className="grid md:grid-cols-3 gap-8 mb-20">
+                        {event.speakers.map((speaker, i) => (
+                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
+                                <img
+                                    src={speaker.image}
+                                    alt={speaker.name}
+                                    className="w-28 h-28 mx-auto rounded-full object-cover mb-4"
+                                />
+                                <h3 className="text-xl font-bold">
+                                    {speaker.name}
+                                </h3>
+                                <p className="text-acm-cyan text-sm mt-2">
+                                    {speaker.role}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            <h2 className="text-3xl font-bold mb-8">FAQs</h2>
+            <div className="space-y-6">
+                {event.faqs?.map((faq, i) => (
+                    <div key={i} className="border border-white/10 rounded-xl overflow-hidden">
+                        <button
+                            onClick={() =>
+                                setActiveFAQ(activeFAQ === i ? null : i)
+                            }
+                            className="w-full text-left p-6 bg-white/5"
+                        >
+                            {faq.question}
+                        </button>
+
+                        {activeFAQ === i && (
+                            <div className="p-6 bg-black/40 text-gray-300">
+                                {faq.answer}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+        </div>
+    );
+};
+
+
 
 // --- APP ROOT ---
 const App = () => {
     return (
         <HashRouter>
-            <CustomCursor />
+            {/* <CustomCursor /> */}
             <NeuralFlow />
             <Navbar />
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/events" element={<Events />} />
+                <Route path="/events/:slug" element={<EventDetail />} />
                 <Route path="/team" element={<Team />} />
                 <Route path="/gallery" element={<FusionGallery />} />
                 <Route path="/contact" element={<Contact />} />
             </Routes>
+
         </HashRouter>
     );
 };
