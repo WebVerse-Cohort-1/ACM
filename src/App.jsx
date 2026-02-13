@@ -224,7 +224,7 @@ const Navbar = () => {
     return (
         <nav className={`fixed top-0 w-full z-40 px-8 flex justify-between items-center transition-all duration-300 ${scrolled ? 'py-4 bg-[#020c1b]/80 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-6 mix-blend-difference'}`}>
             <Link to="/" className={`text-2xl font-heading font-bold tracking-widest z-50 transition-colors ${scrolled ? 'text-white' : ''}`}>
-                TSEC<span className="text-acm-cyan">ACM</span>
+                TSEC <span className="text-acm-cyan">ACM</span>
             </Link>
 
             <div className={`hidden md:flex gap-1 ${scrolled ? 'text-gray-300' : ''}`}>
@@ -523,8 +523,8 @@ const FusionGallery = () => {
     // Data: 3D Positions + Content
     const items = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
         id: i,
-        // Z-Spacing: 1200px per item + Offset so first item isn't immediately active
-        z: i * 1200 + 800, 
+        // Z-Spacing: 1200px per item + Offset so first item is visible but background
+        z: i * 1200 + 650, 
         // Drift Scatter (Background State)
         x: (Math.random() - 0.5) * 150, // vw relative
         y: (Math.random() - 0.5) * 100, // vh relative
@@ -574,7 +574,11 @@ const FusionGallery = () => {
             <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
 
             {/* HUD */}
-            <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 text-center mix-blend-exclusion pointer-events-none w-full">
+            {/* HUD - Fades out on scroll to prevent overlap */}
+            <div 
+                className="fixed top-24 left-1/2 -translate-x-1/2 z-50 text-center mix-blend-exclusion pointer-events-none w-full transition-opacity duration-300"
+                style={{ opacity: Math.max(0, 1 - scrollProgress / 400), transform: `translate(-50%, -${scrollProgress * 0.2}px)` }}
+            >
                 <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-2 tracking-tighter">
                     NEURAL_<span className="text-acm-cyan">ARCHIVE</span>
                 </h1>
@@ -632,7 +636,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
         }
         : {
             transform: `translate3d(-50%, -50%, 0) translate3d(${item.x}vw, ${item.y}vh, ${rawZ}px) scale(0.6) rotate(${item.rotation}deg)`,
-            opacity: Math.max(0, (rawZ + 2000) / 2500) * 0.3, // dimmer in background
+            opacity: Math.max(0.3, (rawZ + 3000) / 3500), // Min 0.3 opacity to avoid black screen
             zIndex: 0,
             filter: 'blur(4px) grayscale(100%)'
         };
@@ -738,56 +742,88 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
 
 
-// --- UPDATED CONTACT (Holographic Terminal) ---
+// --- UPDATED CONTACT (Advanced Holographic Terminal) ---
 const Contact = () => (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-black">
+        {/* Background Grid & Scanlines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
 
-        <div className="w-full max-w-4xl relative z-10 perspective-1000">
-            <TiltCard className="bg-black/80 border border-acm-cyan/30 backdrop-blur-xl p-8 md:p-16 rounded-3xl shadow-[0_0_100px_rgba(0,255,136,0.1)]">
-                <div className="flex flex-col md:flex-row gap-12">
+        <div className="w-full max-w-5xl relative z-10 perspective-1000">
+            <TiltCard className="bg-black/90 border border-acm-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group">
+                {/* Decorative Elements */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-50"></div>
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-acm-cyan/5 rounded-tl-full pointer-events-none"></div>
+                
+                {/* "Scanner" Line */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-acm-cyan/5 to-transparent translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-[2s] ease-in-out pointer-events-none"></div>
+
+                <div className="flex flex-col md:flex-row">
                     
-                    {/* Left: Info */}
-                    <div className="flex-1 space-y-8">
-                        <div>
-                            <h1 className="text-5xl md:text-7xl font-heading font-bold text-white mb-2">
-                                LINK_<span className="text-transparent bg-clip-text bg-gradient-to-r from-acm-cyan to-blue-500">UPLINK</span>
-                            </h1>
-                            <p className="text-gray-400 font-mono text-sm">:: ESTABLISH_SECURE_CONNECTION</p>
+                    {/* Left: Interactive Data Panel */}
+                    <div className="md:w-5/12 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 bg-white/5 relative">
+                        <div className="absolute top-4 left-4 w-2 h-2 bg-acm-cyan rounded-full animate-ping"></div>
+                        
+                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2">
+                            UPLINK
+                        </h1>
+                        <p className="text-gray-400 font-mono text-xs mb-12">:: SECURE_CHANNEL_ESTABLISHED</p>
+
+                        <div className="space-y-8 font-mono text-sm">
+                            <div className="group cursor-pointer">
+                                <label className="text-[10px] text-gray-500 block mb-1">TARGET_COORDINATES</label>
+                                <div className="p-4 bg-black/40 border border-white/10 rounded group-hover:border-acm-cyan/50 transition-colors flex items-center space-x-3 text-gray-300 group-hover:text-white">
+                                    <span className="text-acm-cyan">⊕</span>
+                                    <span>Bandra (W), Mumbai, IN</span>
+                                </div>
+                            </div>
+
+                            <div className="group cursor-pointer">
+                                <label className="text-[10px] text-gray-500 block mb-1">DEDICATED_FREQUENCY</label>
+                                <div className="p-4 bg-black/40 border border-white/10 rounded group-hover:border-acm-cyan/50 transition-colors flex items-center space-x-3 text-gray-300 group-hover:text-white">
+                                    <span className="text-acm-cyan">@</span>
+                                    <span>acm.tsec@gmail.com</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="space-y-4 font-mono text-sm text-gray-300">
-                            <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-lg border border-white/5 hover:border-acm-cyan/50 transition-colors">
-                                <span className="text-acm-cyan">@</span>
-                                <span>acm.tsec@gmail.com</span>
-                            </div>
-                            <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-lg border border-white/5 hover:border-acm-cyan/50 transition-colors">
-                                <span className="text-acm-cyan">#</span>
-                                <span>TSEC, Bandra (W), Mumbai</span>
-                            </div>
+                         <div className="absolute bottom-8 left-8 text-[10px] font-mono text-gray-600">
+                            STATUS: <span className="text-acm-cyan animate-pulse">ONLINE</span><br/>
+                            ENCRYPTION: AES-256<br/>
+                            NODE: TSEC_HQ
                         </div>
                     </div>
 
-                    {/* Right: Form */}
-                    <div className="flex-1">
+                    {/* Right: Input Terminal */}
+                    <div className="md:w-7/12 p-8 md:p-12">
                         <form className="space-y-6" onSubmit={e => e.preventDefault()}>
-                            <div className="group">
-                                <label className="text-xs font-mono text-acm-cyan mb-2 block group-focus-within:animate-pulse">IDENTITY</label>
-                                <input type="text" className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-acm-cyan outline-none transition-all" />
-                            </div>
-                            <div className="group">
-                                <label className="text-xs font-mono text-acm-cyan mb-2 block group-focus-within:animate-pulse">FREQUENCY</label>
-                                <input type="email" className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-acm-cyan outline-none transition-all" />
-                            </div>
-                            <div className="group">
-                                <label className="text-xs font-mono text-acm-cyan mb-2 block group-focus-within:animate-pulse">TRANSMISSION</label>
-                                <textarea rows="3" className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-acm-cyan outline-none transition-all"></textarea>
+                            <div className="group relative">
+                                <input type="text" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6" placeholder=" " />
+                                <label className="absolute left-0 top-6 text-gray-500 text-sm peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono">
+                                    // ENTER_IDENTITY
+                                </label>
                             </div>
                             
-                            <MagneticButton className="w-full py-4 bg-acm-cyan text-black font-bold tracking-widest rounded-lg hover:bg-white transition-colors shadow-[0_0_20px_rgba(100,255,218,0.4)]">
-                                SEND_PACKET
-                            </MagneticButton>
+                            <div className="group relative">
+                                <input type="email" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6" placeholder=" " />
+                                <label className="absolute left-0 top-6 text-gray-500 text-sm peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono">
+                                    // COMM_FREQUENCY (EMAIL)
+                                </label>
+                            </div>
+
+                            <div className="group relative">
+                                <textarea rows="4" required className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 resize-none" placeholder=" "></textarea>
+                                <label className="absolute left-0 top-6 text-gray-500 text-sm peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono">
+                                    // TRANSMISSION_PAYLOAD
+                                </label>
+                            </div>
+                            
+                            <div className="pt-4">
+                                <MagneticButton className="w-full py-4 bg-acm-cyan/10 border border-acm-cyan text-acm-cyan font-bold tracking-[0.2em] hover:bg-acm-cyan hover:text-black transition-all duration-300 group relative overflow-hidden">
+                                    <span className="relative z-10">INITIATE_UPLOAD</span>
+                                    <div className="absolute inset-0 bg-acm-cyan transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                                </MagneticButton>
+                            </div>
                         </form>
                     </div>
 
