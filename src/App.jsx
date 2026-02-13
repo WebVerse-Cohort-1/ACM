@@ -631,28 +631,65 @@ const About = () => {
 
 
 const Team = () => {
-    const members = [
-        { role: 'CHAIR', id: '01', color: 'from-cyan-500 to-blue-500' },
-        { role: 'VICE', id: '02', color: 'from-purple-500 to-pink-500' },
-        { role: 'SEC', id: '03', color: 'from-green-400 to-emerald-600' },
-        { role: 'TREAS', id: '04', color: 'from-yellow-400 to-orange-500' },
-        { role: 'TECH', id: '05', color: 'from-blue-600 to-indigo-900' },
-        { role: 'DESIGN', id: '06', color: 'from-pink-500 to-rose-600' },
-        { role: 'PR', id: '07', color: 'from-indigo-400 to-cyan-400' },
-        { role: 'WEB', id: '08', color: 'from-teal-400 to-cyan-300' },
-    ];
+    const teamData = {
+        "FACULTY_SPONSORS": [
+            { name: "Dr. Aarti Deshpande", role: "Faculty Sponsor", desc: "Guiding TSEC ACM towards excellence with strategic vision and academic leadership.", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=500&fit=crop" },
+            { name: "Prof. S. Waghmare", role: "Faculty Incharge", desc: "Overseeing chapter operations and student engagement initiatives.", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&h=500&fit=crop" },
+            { name: "Prof. Mani J.", role: "Faculty Incharge", desc: "Mentoring project teams and fostering technical innovation.", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&h=500&fit=crop" },
+            { name: "Prof. K. Patel", role: "Faculty Incharge", desc: "Supporting student growth through industry-aligned mentorship.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&h=500&fit=crop" },
+        ],
+        "CORE_COMMITTEE": [
+            { name: "Taran Shetty", role: "Chairperson", desc: "Leading the chapter with a focus on community building and global tech standards.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop" },
+            { name: "Ananya Rai", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
+            { name: "Rahul Varma", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Ishani Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&h=500&fit=crop" },
+            { name: "Siddharth Jain", role: "Secretary", desc: "Maintaining structural integrity and official documentation of all proceedings.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
+        ],
+        "TECHNICAL_FORCE": [
+            { name: "Devansh Mehta", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
+            { name: "Tanvi Kulkarni", role: "Technical Head", desc: "Specializing in cloud architecture and system design patterns.", image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?q=80&w=400&h=500&fit=crop" },
+        ],
+        "WEB_ARCHITECTS": [
+            { name: "Sahil Shah", role: "Webmaster", desc: "Building immersive digital experiences with modern web stacks.", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=500&fit=crop" },
+            { name: "Nitya Iyer", role: "Webmaster", desc: "Optimizing web performance and maintaining digital infrastructure.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=500&fit=crop" },
+        ],
+        "DESIGN_SQUAD": [
+            { name: "Arjun Khanna", role: "Creative Designer", desc: "Visual storytelling through high-impact graphic design.", image: "https://images.unsplash.com/photo-1521119989659-a83eee488004?q=80&w=400&h=500&fit=crop" },
+            { name: "Pooja Hegde", role: "Creative Designer", desc: "Crafting visual identities that resonate with our tech community.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
+            { name: "Mehak Chawla", role: "UI/UX Designer", desc: "Designing user-centric interfaces for seamless digital navigation.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
+        ],
+        "CONTENT_STRATEGISTS": [
+            { name: "Rohan Deshmukh", role: "Editorial Incharge", desc: "Overseeing all published content and thematic consistency.", image: "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?q=80&w=400&h=500&fit=crop" },
+            { name: "Kiara Advani", role: "Newsletter Editor", desc: "Curating the latest tech news for our weekly subscriber base.", image: "https://images.unsplash.com/photo-1567532939604-b6c5b0ad2e01?q=80&w=400&h=500&fit=crop" },
+            { name: "Kabir Singh", role: "Content Writer", desc: "Translating complex tech concepts into engaging written narratives.", image: "https://images.unsplash.com/photo-1552058544-f2b08422138a?q=80&w=400&h=500&fit=crop" },
+        ],
+        "MEDIA_TEAM": [
+            { name: "Varun Dhawan", role: "Cinematographer", desc: "Capturing the essence of events through dynamic visual lenses.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Kriti Sanon", role: "Video Editor", desc: "Post-processing visual assets into premium brand stories.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=500&fit=crop" },
+            { name: "Ayush Khurana", role: "Social Media Manager", desc: "Managing our digital footprint and community engagement.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop" },
+            { name: "Sara Ali", role: "Social Media Manager", desc: "Curating viral content and handling channel outreach.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
+        ],
+        "MANAGEMENT_CREW": [
+            { name: "Aditya Roy", role: "Operational Head", desc: "Ensuring smooth execution of all logistical and back-end pipelines.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Tara Sutaria", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
+            { name: "Ishaan Khatter", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
+            { name: "Alaya F", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
+            { name: "Ranveer Singh", role: "Marketing Manager", desc: "Building brand awareness and strategic industry tie-ups.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
+            { name: "Janhvi Kapoor", role: "Marketing Manager", desc: "Driving student registrations and sponsorship acquisition.", image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?q=80&w=400&h=500&fit=crop" },
+        ],
+    };
 
     return (
         <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
-            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+             <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 COMMAND
             </h1>
-
+            
             <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
                 <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
                     PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">:: CORE_COMMITTEE_NODES</p>
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0 uppercase">:: Core committee & vertical heads</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 perspective-1000">
@@ -666,7 +703,7 @@ const Team = () => {
                                 </span>
                                 <div className="w-2 h-2 rounded-full bg-acm-cyan animate-pulse"></div>
                             </div>
-
+                            
                             {/* Central Glow representing the person */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none">
                                 <div className={`w-32 h-32 rounded-full bg-gradient-to-t ${m.color} blur-3xl`}></div>
@@ -986,7 +1023,7 @@ const Contact = () => (
                                     <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
                                     <div className="p-3 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
                                         <span className="text-acm-cyan text-lg">@</span>
-                                        <span className="text-xs">acm.tsec@gmail.com</span>
+                                        <span className="text-xs">acmco@tsecmumbai.in</span>
                                     </div>
                                 </div>
                             </div>
