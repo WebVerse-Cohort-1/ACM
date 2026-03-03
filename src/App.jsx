@@ -792,17 +792,17 @@ const TeamPersonaCard = ({ member }) => {
                 </p>
 
                 {/* Persona Image at Bottom */}
-                <div className="mt-auto relative w-full h-56 md:h-48 flex justify-center items-end overflow-hidden">
+                <div className="mt-auto relative w-full h-48 flex justify-center items-end">
                     {/* Shadow behind person */}
                     <div className="absolute bottom-0 w-40 h-40 bg-acm-cyan/10 rounded-full blur-3xl opacity-40 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-                    <img
-                        src={member.image}
+                    
+                    <img 
+                        src={member.image} 
                         alt={member.name}
-                        className="relative z-10 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700 transform origin-bottom scale-[1.1] group-hover:scale-[1.15]"
+                        className="relative z-10 w-full h-full object-cover rounded-t-xl grayscale group-hover:grayscale-0 transition-all duration-700 transform origin-bottom scale-[1.05] group-hover:scale-[1.1] mask-image-blur"
                         style={{
-                            WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 30%, black 100%)',
-                            maskImage: 'linear-gradient(to top, transparent 0%, black 30%, black 100%)'
+                            WebkitMaskImage: 'linear-gradient(to top, transparent 5%, black 40%)',
+                            maskImage: 'linear-gradient(to top, transparent 5%, black 40%)'
                         }}
                     />
                 </div>
@@ -1123,7 +1123,7 @@ const Contact = () => (
                                     <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
                                     <div className="p-3 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
                                         <span className="text-acm-cyan text-lg">@</span>
-                                        <span className="text-xs">acmco@tsecmumbai.in</span>
+                                        <span className="text-xs">acm.tsec@gmail.com</span>
                                     </div>
                                 </div>
                             </div>
