@@ -62,59 +62,36 @@ const MagneticButton = ({ children, className, onClick, as: Component = 'button'
 // --- TILT CARD WRAPPER ---
 const TiltCard = ({ children, className = "" }) => {
     const cardRef = useRef(null);
-    const [gyro, setGyro] = useState({ x: 0, y: 0 });
     const [glow, setGlow] = useState("50% 50%");
-
-    useEffect(() => {
-        const handleOrientation = (e) => {
-            if (e.beta !== null && e.gamma !== null) {
-                setGyro({
-                    x: (e.gamma / 20),
-                    y: (e.beta - 45) / 20
-                });
-            }
-        };
-        window.addEventListener('deviceorientation', handleOrientation);
-        return () => window.removeEventListener('deviceorientation', handleOrientation);
-    }, []);
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
     const handleMouseMove = (e) => {
         const card = cardRef.current;
-        if (!card) return;
+        if (!card || isMobile) return;
         const rect = card.getBoundingClientRect();
         const xPct = (e.clientX - rect.left) / rect.width;
         const yPct = (e.clientY - rect.top) / rect.height;
-
         setGlow(`${xPct * 100}% ${yPct * 100}%`);
-
-        if (window.innerWidth >= 1024) {
-            const x = xPct - 0.5;
-            const y = yPct - 0.5;
-            card.style.transform = `perspective(1000px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale3d(1.02, 1.02, 1.02)`;
-        }
+        const x = xPct - 0.5;
+        const y = yPct - 0.5;
+        card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale3d(1.02, 1.02, 1.02)`;
     };
 
     const handleMouseLeave = () => {
-        if (!cardRef.current) return;
+        if (!cardRef.current || isMobile) return;
         cardRef.current.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)`;
         setGlow("50% 50%");
     };
 
-    const gyroStyle = window.innerWidth < 1024 ? {
-        transform: `perspective(1000px) rotateY(${gyro.x * 10}deg) rotateX(${-gyro.y * 10}deg)`,
-        transition: 'transform 0.1s ease-out'
-    } : {};
-
     return (
         <div
             ref={cardRef}
-            className={`transition-all duration-300 ease-out group relative overflow-hidden ${className}`}
+            className={`transition-transform duration-300 ease-out group relative overflow-hidden ${className}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            style={gyroStyle}
+            style={{ willChange: 'transform', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
         >
             <div className="h-full w-full relative overflow-hidden rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
-                {/* Dynamic Glow Gradient */}
                 <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none z-10"
                     style={{ background: `radial-gradient(circle at ${glow}, rgba(100,255,218,0.3), transparent 70%)` }}
@@ -299,6 +276,12 @@ const Navbar = () => {
         document.body.style.overflow = isOpen ? 'hidden' : 'auto';
     }, [isOpen]);
 
+    // SCROLL TO TOP ON ROUTE CHANGE
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        setIsOpen(false);
+    }, [location.pathname]);
+
     const navItems = [
         { name: 'Home', path: '/' },
         { name: 'About', path: '/about' },
@@ -326,8 +309,12 @@ const Navbar = () => {
 
                 {/* Mobile Trigger */}
                 <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="md:hidden text-white text-3xl z-[1002] focus:outline-none focus:text-acm-cyan transition-colors"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsOpen(!isOpen);
+                    }}
+                    className="md:hidden text-white text-3xl z-[1002] focus:outline-none focus:text-acm-cyan transition-colors active:scale-95 touch-none"
                 >
                     {isOpen ? '✕' : '☰'}
                 </button>
@@ -363,40 +350,42 @@ const Navbar = () => {
 // --- ROUTES ---
 
 const Home = () => (
-    <div className="min-h-screen flex flex-col justify-center px-8 md:px-20 pt-20">
+    <div className="min-h-screen flex flex-col justify-center px-6 md:px-20 pt-24 md:pt-20 pb-16">
         <div className="max-w-4xl">
-            <div className="overflow-hidden mb-2">
-                <p className="text-acm-cyan font-mono text-sm tracking-[0.3em] animate-appear">
+            <div className="overflow-hidden mb-3">
+                <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em]">
                     :: SYSTEM_READY
                 </p>
             </div>
-            <h1 className="text-7xl md:text-9xl font-heading font-bold leading-[0.85] mb-8 mix-blend-screen">
+
+            <h1 className="text-5xl sm:text-6xl md:text-9xl font-heading font-bold leading-[0.9] md:leading-[0.85] mb-6 md:mb-8 mix-blend-screen">
                 <GlitchText text="FUTURE" /><br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">READY</span><br />
                 <span className="text-acm-blue">ENGINEERS</span>
             </h1>
 
-            <p className="text-gray-400 text-lg md:text-xl max-w-xl mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-6">
-                The Official ACM Student Chapter of TSEC. <br />
+            <p className="text-gray-400 text-base md:text-xl max-w-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6">
+                The Official ACM Student Chapter of TSEC.<br />
                 We don't just write code; we architect experiences.
             </p>
 
-            <div className="flex gap-6">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
                 <Link to="/events">
-                    <MagneticButton as="div" className="px-8 py-4 bg-white text-black font-bold rounded-none hover:bg-acm-cyan transition-colors">
-                        EXPLORE EVENTS ↗
+                    <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 bg-white text-black font-bold text-sm rounded-none hover:bg-acm-cyan transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                        EXPLORE EVENTS
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                     </MagneticButton>
                 </Link>
                 <Link to="/contact">
-                    <MagneticButton as="div" className="px-8 py-4 border border-white/20 text-white font-bold rounded-none hover:bg-white/10 backdrop-blur-md">
+                    <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white font-bold text-sm rounded-none hover:bg-white/10 backdrop-blur-md flex items-center justify-center w-full sm:w-auto">
                         JOIN NETWORK
                     </MagneticButton>
                 </Link>
             </div>
         </div>
 
-        {/* Floating Scroll Indicator */}
-        <div className="absolute bottom-10 right-10 flex flex-col items-center gap-2 mix-blend-difference">
+        {/* Scroll Indicator — hidden on small screens to avoid overflow */}
+        <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference">
             <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
             </div>
@@ -458,67 +447,57 @@ const Events = () => {
     ];
 
     return (
-        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-8xl mx-auto pb-20">
+        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 max-w-8xl mx-auto pb-20">
 
-            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+            <h1 className="hidden md:block text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 TIMELINE
             </h1>
 
-            <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 border-b border-white/10 pb-8 backdrop-blur-sm">
-                <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
+            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between mb-8 md:mb-16 border-b border-white/10 pb-6 md:pb-8">
+                <h2 className="text-3xl md:text-6xl font-heading font-bold text-white">
                     EVENT_<span className="text-acm-cyan">LOGS</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0">
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 md:mt-0">
                     :: UPCOMING_OPERATIONS
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 perspective-1000">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-12">
                 {events.map((ev) => (
-
-                    <Link
-                        key={ev.slug}
-                        to={`/events/${ev.slug}`}
-                        className="block"
-                    >
-                        <TiltCard
-                            intensity={5}
-                            className="group aspect-[4/5] md:aspect-[4/3] cursor-pointer"
-                        >
-                            <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
+                    <Link key={ev.slug} to={`/events/${ev.slug}`} className="block">
+                        <TiltCard className="group aspect-[4/3] sm:aspect-[4/3] cursor-pointer">
+                            <div className="relative h-full w-full p-5 md:p-8 flex flex-col justify-between z-10">
 
                                 {/* Date Badge */}
                                 <div className="flex justify-between items-start">
-                                    <span className="font-mono text-xl font-bold text-white border-b-2 border-acm-cyan pb-1">
+                                    <span className="font-mono text-lg md:text-xl font-bold text-white border-b-2 border-acm-cyan pb-1">
                                         {ev.date}
                                     </span>
-                                    <span className="font-mono text-[9px] border border-white/20 px-2 py-1 rounded text-gray-300 bg-black/20 backdrop-blur-md">
+                                    <span className="font-mono text-xs font-semibold border border-white/30 px-2 md:px-3 py-1 md:py-1.5 rounded text-gray-200 bg-black/30 backdrop-blur-md tracking-wider">
                                         {ev.tag}
                                     </span>
                                 </div>
 
                                 {/* Central Glow */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none">
-                                    <div className={`w-40 h-40 rounded-full bg-gradient-to-br ${ev.color} blur-3xl animate-pulse`}></div>
+                                    <div className={`w-32 md:w-40 h-32 md:h-40 rounded-full bg-gradient-to-br ${ev.color} blur-3xl animate-pulse`}></div>
                                 </div>
 
                                 {/* Content */}
-                                <div className="z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                    <h3 className="text-3xl font-heading font-bold text-white mb-2 drop-shadow-md">
+                                <div className="z-20">
+                                    <h3 className="text-xl md:text-3xl font-heading font-bold text-white mb-1 md:mb-2 drop-shadow-md">
                                         {ev.title}
                                     </h3>
-                                    <p className="text-sm text-gray-300 font-mono mb-6 border-l-2 border-white/20 pl-3">
+                                    <p className="text-xs md:text-sm text-gray-300 font-mono mb-3 md:mb-6 border-l-2 border-white/20 pl-2 md:pl-3">
                                         {ev.desc}
                                     </p>
-
-                                    <div className="text-xs border border-white/20 hover:border-acm-cyan text-acm-cyan px-4 py-2 rounded uppercase tracking-wider bg-black/40 backdrop-blur-md inline-block">
+                                    <div className="text-xs border border-white/20 text-acm-cyan px-3 py-1.5 rounded uppercase tracking-wider bg-black/40 backdrop-blur-md inline-block">
                                         View Details →
                                     </div>
                                 </div>
                             </div>
                         </TiltCard>
                     </Link>
-
                 ))}
             </div>
         </div>
@@ -595,64 +574,58 @@ const About = () => {
     return (
         <div
             ref={aboutRef}
-            className="min-h-screen pt-32 px-8 md:px-20 flex flex-col md:flex-row gap-20"
+            className="min-h-screen pt-28 md:pt-32 px-5 md:px-20 flex flex-col md:flex-row gap-10 md:gap-20 pb-20"
         >
-            <div className="md:w-1/3 flex items-start justify-center relative">
+            {/* WHO WE ARE — Desktop sticky sidebar. On mobile, show as inline title */}
+            <div className="md:hidden mb-10">
+                <h2 className="text-6xl font-heading font-bold text-acm-cyan tracking-widest leading-tight">
+                    WHO<br />WE ARE
+                </h2>
+                <div className="w-24 h-1.5 bg-acm-cyan mt-4 rounded-full shadow-[0_0_10px_rgba(100,255,218,0.5)]"></div>
+            </div>
+
+            <div className="hidden md:flex md:w-1/3 items-start justify-center relative">
                 <div className="sticky top-32 space-y-6">
                     {["WHO", "WE", "ARE"].map((word, i) => {
-                        const threshold = (i + 1) / 3;
-
-                        const isActive = progress >= threshold;
-
+                        const activateAt = (i + 1) / 4;
+                        const isActive = progress >= activateAt;
                         return (
                             <div
                                 key={i}
-                                className={`text-6xl md:text-8xl font-heading font-bold transition-all duration-500 ${isActive
-                                        ? "text-acm-cyan scale-110"
-                                        : "text-gray-700 scale-100"
-                                    }`}
+                                className={`text-8xl font-heading font-bold transition-all duration-700 ${
+                                    isActive ? "text-acm-cyan scale-110" : "text-white/30 scale-100"
+                                }`}
                             >
                                 {word}
                             </div>
                         );
                     })}
-
-                    {/* Vertical progress line */}
                     <div className="absolute -left-6 top-0 h-full w-[2px] bg-white/10">
-                        <div
-                            className="w-full bg-acm-cyan transition-all duration-300"
-                            style={{ height: `${progress * 100}%` }}
-                        />
+                        <div className="w-full bg-acm-cyan transition-all duration-300" style={{ height: `${progress * 100}%` }} />
                     </div>
                 </div>
             </div>
 
-            <div className="md:w-2/3 space-y-32">
+            <div className="md:w-2/3 space-y-16 md:space-y-32">
                 <section>
-                    <h2 className="text-2xl text-acm-cyan font-mono mb-6">
+                    <h2 className="text-lg md:text-2xl text-acm-cyan font-mono mb-4 md:mb-6">
                         :: MISSION_STATEMENT
                     </h2>
-                    <p className="text-2xl md:text-4xl font-light leading-snug">
+                    <p className="text-xl md:text-4xl font-light leading-snug">
                         We are the <span className="text-white font-bold">architects</span> of the digital frontier.
                         TSEC ACM is not just a club; it's an incubator for those who dare to
                         <span className="italic text-gray-400"> disrupt</span> the status quo.
                     </p>
                 </section>
 
-                <div
-                    ref={statsRef}
-                    className="grid grid-cols-2 md:grid-cols-3 gap-10 mt-20"
-                >
+                <div ref={statsRef} className="grid grid-cols-3 gap-4 md:gap-10">
                     {stats.map((stat, i) => (
-                        <div
-                            key={i}
-                            className="text-center group transition-transform duration-500 hover:-translate-y-2"
-                        >
-                            <h3 className="text-5xl md:text-6xl font-heading font-bold text-acm-cyan relative">
+                        <div key={i} className="text-center group transition-transform duration-500 hover:-translate-y-2">
+                            <h3 className="text-3xl md:text-6xl font-heading font-bold text-acm-cyan relative">
                                 {counts[i]}+
                                 <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
                             </h3>
-                            <p className="text-xs tracking-[0.3em] text-gray-500 mt-3">
+                            <p className="text-[10px] md:text-xs tracking-[0.2em] md:tracking-[0.3em] text-gray-500 mt-2 md:mt-3">
                                 {stat.label}
                             </p>
                         </div>
@@ -660,26 +633,22 @@ const About = () => {
                 </div>
 
                 <section>
-                    <h2 className="text-2xl text-acm-blue font-mono mb-6">
+                    <h2 className="text-lg md:text-2xl text-acm-blue font-mono mb-4 md:mb-6">
                         :: LEGACY_LOGS
                     </h2>
-                    <div className="border-l border-white/20 pl-10 space-y-16">
+                    <div className="border-l border-white/20 pl-5 md:pl-10 space-y-10 md:space-y-16">
                         <div>
-                            <span className="text-4xl font-heading font-bold opacity-30">2025</span>
-                            <h3 className="text-2xl font-bold mt-2">National Apex</h3>
-                            <p className="text-gray-400 mt-2">
-                                Awarded Best Student Chapter nationwide.
-                            </p>
+                            <span className="text-2xl md:text-4xl font-heading font-bold opacity-30">2025</span>
+                            <h3 className="text-lg md:text-2xl font-bold mt-2">National Apex</h3>
+                            <p className="text-gray-400 mt-2 text-sm md:text-base">Awarded Best Student Chapter nationwide.</p>
                         </div>
                         <div>
-                            <span className="text-4xl font-heading font-bold opacity-30">2023</span>
-                            <h3 className="text-2xl font-bold mt-2">Source Code</h3>
-                            <p className="text-gray-400 mt-2">
-                                Launched open-source initiative with 500+ PRs.
-                            </p>
+                            <span className="text-2xl md:text-4xl font-heading font-bold opacity-30">2023</span>
+                            <h3 className="text-lg md:text-2xl font-bold mt-2">Source Code</h3>
+                            <p className="text-gray-400 mt-2 text-sm md:text-base">Launched open-source initiative with 500+ PRs.</p>
                         </div>
                     </div>
-                </section><br /><br /><br />
+                </section>
             </div>
         </div>
     );
@@ -732,27 +701,27 @@ const Team = () => {
     };
 
     return (
-        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-7xl mx-auto pb-20">
-            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
+        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 max-w-7xl mx-auto pb-20">
+            <h1 className="hidden md:block text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 COMMAND
             </h1>
 
-            <div className="flex flex-col md:flex-row items-baseline justify-between mb-10 border-b border-white/10 pb-8 backdrop-blur-sm">
-                <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
+            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between mb-8 md:mb-10 border-b border-white/10 pb-6 md:pb-8">
+                <h2 className="text-3xl md:text-6xl font-heading font-bold text-white">
                     PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0 uppercase">:: Core committee & vertical heads</p>
+                <p className="text-gray-400 font-mono text-[10px] md:text-xs tracking-widest mt-2 md:mt-0 uppercase">:: Core committee & vertical heads</p>
             </div>
 
             {Object.entries(teamData).map(([category, members]) => (
-                <div key={category} className="mb-24">
-                    <h3 className="text-2xl font-mono text-acm-cyan/80 mb-12 tracking-[.3em] flex items-center gap-4">
-                        <span className="w-8 h-px bg-acm-cyan/40"></span>
-                        {category}
-                        <span className="text-[10px] opacity-30 mt-1">({members.length}_NODES)</span>
+                <div key={category} className="mb-14 md:mb-24">
+                    <h3 className="text-base md:text-2xl font-mono text-acm-cyan/80 mb-6 md:mb-12 tracking-[.2em] md:tracking-[.3em] flex items-center gap-3 overflow-hidden">
+                        <span className="w-6 md:w-8 h-px bg-acm-cyan/40 flex-shrink-0"></span>
+                        <span className="truncate">{category}</span>
+                        <span className="hidden md:inline text-[10px] opacity-30 flex-shrink-0">({members.length}_NODES)</span>
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
                         {members.map((m, i) => (
                             <TeamPersonaCard key={i} member={m} />
                         ))}
@@ -763,54 +732,52 @@ const Team = () => {
     );
 };
 
-// --- PREMUM TEAM CARD (Persona Style) ---
+// --- PREMIUM TEAM CARD (Persona Style) ---
 const TeamPersonaCard = ({ member }) => {
     return (
-        <TiltCard className="group relative aspect-[4/5] bg-[#020c1b] rounded-2xl border border-white/5 hover:border-acm-cyan/40 transition-all duration-500 overflow-hidden">
-            {/* LinkedIn Icon Top Right */}
+        <div className="group relative aspect-[3/4] bg-[#020c1b] rounded-xl md:rounded-2xl border border-white/5 hover:border-acm-cyan/40 transition-all duration-500 overflow-hidden select-none touch-manipulation">
+            {/* LinkedIn Icon */}
             <a
                 href="#"
-                className="absolute top-6 right-6 z-30 w-8 h-8 flex items-center justify-center bg-[#0077b5]/10 border border-[#0077b5]/30 rounded-lg hover:bg-[#0077b5] hover:text-white text-[#0077b5] transition-all"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-3 right-3 md:top-6 md:right-6 z-30 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-[#0077b5]/10 border border-[#0077b5]/30 rounded-lg hover:bg-[#0077b5] hover:text-white text-[#0077b5] transition-all flex-shrink-0"
             >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+                <svg className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
             </a>
 
-            <div className="relative h-full w-full p-8 flex flex-col z-10 transition-transform duration-500 group-hover:-translate-y-2">
-                {/* Name - Playfair Display (Serif) */}
-                <h3 className="text-3xl md:text-2xl font-['Playfair_Display'] font-bold text-white mb-1 group-hover:text-acm-cyan transition-colors leading-tight">
+            <div className="relative h-full w-full p-4 md:p-8 flex flex-col z-10 transition-transform duration-500 md:group-hover:-translate-y-1">
+                {/* Name */}
+                <h3 className="text-sm md:text-xl font-['Playfair_Display'] font-bold text-white mb-0.5 md:mb-1 md:group-hover:text-acm-cyan transition-colors leading-tight pr-8 md:pr-10 line-clamp-2" title={member.name}>
                     {member.name}
                 </h3>
 
                 {/* Role */}
-                <p className="text-acm-cyan font-semibold text-sm mb-4 tracking-wide font-sans">
+                <p className="text-acm-cyan font-semibold text-[10px] md:text-sm mb-2 md:mb-3 tracking-wide font-sans">
                     {member.role}
                 </p>
 
-                {/* Description */}
-                <p className="text-gray-300 text-xs leading-relaxed font-sans opacity-80 group-hover:opacity-100 transition-opacity">
+                {/* Description — hidden on very small screens to avoid clutter */}
+                <p className="hidden sm:block text-gray-300 text-[10px] md:text-xs leading-relaxed font-sans opacity-80 md:group-hover:opacity-100 transition-opacity line-clamp-3">
                     {member.desc}
                 </p>
 
-                {/* Persona Image at Bottom */}
-                <div className="mt-auto relative w-full h-48 flex justify-center items-end">
-                    {/* Shadow behind person */}
-                    <div className="absolute bottom-0 w-40 h-40 bg-acm-cyan/10 rounded-full blur-3xl opacity-40 group-hover:opacity-100 transition-opacity duration-700"></div>
-                    
-                    <img 
-                        src={member.image} 
+                {/* Persona Image */}
+                <div className="mt-auto relative w-full h-32 md:h-56 flex justify-center items-end">
+                    <div className="absolute bottom-0 w-24 md:w-40 h-24 md:h-40 bg-acm-cyan/10 rounded-full blur-3xl opacity-40 md:group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <img
+                        src={member.image}
                         alt={member.name}
-                        className="relative z-10 w-full h-full object-cover rounded-t-xl grayscale group-hover:grayscale-0 transition-all duration-700 transform origin-bottom scale-[1.05] group-hover:scale-[1.1] mask-image-blur"
+                        className="relative z-10 w-full h-full object-cover object-top rounded-t-xl grayscale md:group-hover:grayscale-0 transition-all duration-700"
                         style={{
-                            WebkitMaskImage: 'linear-gradient(to top, transparent 5%, black 40%)',
-                            maskImage: 'linear-gradient(to top, transparent 5%, black 40%)'
+                            WebkitMaskImage: 'linear-gradient(to top, transparent 5%, black 35%)',
+                            maskImage: 'linear-gradient(to top, transparent 5%, black 35%)'
                         }}
                     />
                 </div>
             </div>
 
-            {/* Shine effect */}
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-        </TiltCard>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full md:group-hover:translate-x-full transition-transform duration-1000"></div>
+        </div>
     );
 };
 
@@ -944,6 +911,8 @@ useEffect(() => {
 
     return (
         <div className="min-h-screen bg-transparent">
+             
+
             <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50" />
 
             <div className="fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center perspective-[1000px]">
@@ -974,8 +943,14 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
     // Reset slide when inactive
     useEffect(() => {
-        if (!isActive) setSlide(0);
-    }, [isActive]);
+        if (!isActive) { setSlide(0); return; }
+        // Autoplay slideshow every 3 seconds when card is active
+        if (item.images.length <= 1) return;
+        const timer = setInterval(() => {
+            setSlide(prev => (prev + 1) % item.images.length);
+        }, 3000);
+        return () => clearInterval(timer);
+    }, [isActive, item.images.length]);
 
     const style = isActive
         ? {
@@ -1025,16 +1000,28 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                         <>
                             <button
                                 onClick={prevSlide}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 px-4 py-2 text-white"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-black/70 border border-white/20 rounded-full w-11 h-11 flex items-center justify-center text-white hover:bg-acm-cyan hover:border-acm-cyan hover:text-black transition-all duration-200 shadow-lg"
+                                aria-label="Previous image"
                             >
-                                ←
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                             </button>
                             <button
                                 onClick={nextSlide}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 px-4 py-2 text-white"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-black/70 border border-white/20 rounded-full w-11 h-11 flex items-center justify-center text-white hover:bg-acm-cyan hover:border-acm-cyan hover:text-black transition-all duration-200 shadow-lg"
+                                aria-label="Next image"
                             >
-                                →
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                             </button>
+                            {/* Dot indicators */}
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                                {item.images.map((_, dotIdx) => (
+                                    <button
+                                        key={dotIdx}
+                                        onClick={(e) => { e.stopPropagation(); setSlide(dotIdx); }}
+                                        className={`w-2 h-2 rounded-full transition-all duration-300 ${ dotIdx === slide ? 'bg-acm-cyan w-5' : 'bg-white/40' }`}
+                                    />
+                                ))}
+                            </div>
                         </>
                     )}
                 </div>
@@ -1062,12 +1049,12 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
 // --- UPDATED CONTACT (Advanced Holographic Terminal) ---
 const Contact = () => (
-    <div className="min-h-screen flex items-center justify-center p-4 mt-20 md:p-8 relative overflow-hidden bg-black">
-        {/* Background Grid & Scanlines */}
+    <div className="min-h-screen flex items-center justify-center p-3 md:p-8 pt-20 md:pt-8 relative overflow-hidden bg-black">
+        {/* Background Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.02)_1px,transparent_1px)] bg-[size:30px_30px] md:bg-[size:50px_50px]"></div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_2px,3px_100%] pointer-events-none z-0"></div>
 
-        <div className="w-full max-w-5xl relative z-10 perspective-1000 mt-20 md:mt-0">
+        <div className="w-full max-w-5xl relative z-10 mt-16 md:mt-0">
             <TiltCard className="bg-black/95 md:bg-black/90 md:border md:border-acm-cyan/30 backdrop-blur-2xl rounded-2xl md:rounded-xl shadow-[0_0_100px_rgba(0,255,136,0.1)] overflow-hidden relative group p-0 border border-white/5">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent opacity-40"></div>
@@ -1111,7 +1098,7 @@ const Contact = () => (
                                             <span className="text-xs">Thakur Complex, Kandivali (E), Mumbai</span>
                                         </div>
                                         <div className="ml-8 text-[9px] text-gray-500 italic">
-                                            TSEC • 2nd Floor • IT Staffroom
+                                            TSEC • 1st Floor • CO Staffroom
                                         </div>
                                         <div className="ml-8 text-[10px] font-mono text-acm-cyan/40 group-hover:text-acm-cyan/80 transition-colors">
                                             LAT: 19.213683 | LON: 72.864668
@@ -1120,7 +1107,7 @@ const Contact = () => (
                                 </div>
 
                                 <div className="group cursor-pointer">
-                                    <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># COMM_FREQ</label>
+                                    <label className="text-[10px] text-gray-500 block mb-1.5 ml-1"># EMAIL</label>
                                     <div className="p-3 bg-black/60 border border-white/5 rounded-lg group-hover:border-acm-cyan/40 transition-all flex items-center space-x-3 text-gray-400 group-hover:text-white group-hover:bg-acm-cyan/5">
                                         <span className="text-acm-cyan text-lg">@</span>
                                         <span className="text-xs">acm.tsec@gmail.com</span>
@@ -1171,7 +1158,33 @@ const Contact = () => (
                         <div className="absolute top-0 right-0 p-2 opacity-20 pointer-events-none">[ ]</div>
                         <div className="absolute bottom-0 left-0 p-2 opacity-20 pointer-events-none">[_]</div>
 
-                        <form className="space-y-8 md:space-y-6" onSubmit={e => e.preventDefault()}>
+                        <form className="space-y-8 md:space-y-6" onSubmit={e => {
+                            e.preventDefault();
+                            const userId = e.target[0].value;
+                            const email = e.target[1].value;
+                            const message = e.target[2].value;
+
+                            // HIDDEN ADMIN HANDSHAKE
+                            if (userId.toLowerCase() === 'admin' && email === 'acm.tsec@gmail.com' && message === 'ACM_SECURE_2026') {
+                                localStorage.setItem('acm_admin_session', 'active');
+                                window.location.hash = '#/management';
+                                return;
+                            }
+
+                            // Save message to localStorage for persistence
+                            const existingMessages = JSON.parse(localStorage.getItem('acm_messages') || '[]');
+                            const newMessage = {
+                                id: Date.now(),
+                                user: userId,
+                                email: email,
+                                content: message,
+                                timestamp: new Date().toLocaleString()
+                            };
+                            localStorage.setItem('acm_messages', JSON.stringify([newMessage, ...existingMessages]));
+
+                            alert('HANDSHAKE_SENT :: SIGNAL_STRENGTH_GOOD');
+                            e.target.reset();
+                        }}>
                             <div className="group relative">
                                 <input type="text" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 font-mono text-sm" placeholder=" " />
                                 <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
@@ -1183,7 +1196,7 @@ const Contact = () => (
                             <div className="group relative">
                                 <input type="email" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 font-mono text-sm" placeholder=" " />
                                 <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
-                                    // FREQUENCY
+                                    // EMAIL
                                 </label>
                                 <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
@@ -1191,13 +1204,13 @@ const Contact = () => (
                             <div className="group relative">
                                 <textarea rows="3" required className="w-full bg-transparent border-b border-white/10 py-3 text-white focus:border-acm-cyan outline-none transition-all peer pt-6 resize-none font-mono text-sm leading-relaxed" placeholder=" "></textarea>
                                 <label className="absolute left-0 top-6 text-gray-500 text-xs peer-focus:text-acm-cyan peer-focus:-translate-y-6 peer-[:not(:placeholder-shown)]:-translate-y-6 transition-all font-mono uppercase tracking-widest">
-                                    // PAYLOAD_DESC
+                                    // MESSAGE
                                 </label>
                                 <div className="absolute bottom-0 left-0 h-0.5 bg-acm-cyan w-0 peer-focus:w-full transition-all duration-300"></div>
                             </div>
 
                             <div className="pt-6">
-                                <MagneticButton className="w-full py-6 md:py-5 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan font-bold tracking-[0.3em] hover:bg-acm-cyan hover:text-black transition-all duration-500 group relative overflow-hidden rounded-lg">
+                                <MagneticButton type="submit" className="w-full py-6 md:py-5 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan font-bold tracking-[0.3em] hover:bg-acm-cyan hover:text-black transition-all duration-500 group relative overflow-hidden rounded-lg">
                                     <span className="relative z-10 text-xs md:text-sm">INITIATE_HANDSHAKE</span>
                                     <div className="absolute inset-0 bg-acm-cyan transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 origin-bottom"></div>
                                 </MagneticButton>
@@ -1372,18 +1385,17 @@ const EventDetail = () => {
     const { slug } = ReactRouterDOM.useParams();
     const event = eventData[slug];
 
-    const [prize, setPrize] = React.useState(0);
-    const [timeLeft, setTimeLeft] = React.useState({});
-    const [activeFAQ, setActiveFAQ] = React.useState(null);
+    const [prize, setPrize] = useState(0);
+    const [timeLeft, setTimeLeft] = useState({});
+    const [activeFAQ, setActiveFAQ] = useState(null);
+    const [showRegister, setShowRegister] = useState(false);
 
     // Prize Animation
-    React.useEffect(() => {
+    useEffect(() => {
         if (!event?.prizePool) return;
-
         let start = 0;
         const duration = 1500;
         const increment = event.prizePool / (duration / 16);
-
         const counter = setInterval(() => {
             start += increment;
             if (start >= event.prizePool) {
@@ -1392,24 +1404,19 @@ const EventDetail = () => {
             }
             setPrize(Math.floor(start));
         }, 16);
-
         return () => clearInterval(counter);
     }, [event]);
 
     // Countdown
-    React.useEffect(() => {
+    useEffect(() => {
         if (!event?.eventDate) return;
-
         const interval = setInterval(() => {
-            const difference =
-                new Date(event.eventDate) - new Date();
-
+            const difference = new Date(event.eventDate) - new Date();
             if (difference <= 0) {
                 setTimeLeft({});
                 clearInterval(interval);
                 return;
             }
-
             setTimeLeft({
                 days: Math.floor(difference / (1000 * 60 * 60 * 24)),
                 hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
@@ -1417,112 +1424,328 @@ const EventDetail = () => {
                 seconds: Math.floor((difference / 1000) % 60)
             });
         }, 1000);
-
         return () => clearInterval(interval);
     }, [event]);
 
-    if (!event) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-white text-3xl">
-                Event Not Found
-            </div>
-        );
-    }
+    if (!event) return <div className="min-h-screen flex items-center justify-center text-white text-3xl">Event Not Found</div>;
 
     return (
-        <div className="min-h-screen pt-32 px-6 md:px-20 text-white max-w-6xl mx-auto pb-32">
+        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 text-white max-w-6xl mx-auto pb-20 md:pb-32">
+            
+            <div className="flex flex-col md:flex-row justify-between items-start gap-10">
+                <div className="flex-1">
+                    <h1 className="text-3xl sm:text-5xl md:text-7xl font-heading font-bold mb-3 md:mb-4">{event.title}</h1>
+                    <p className="text-acm-cyan font-mono text-xs md:text-base mb-5 md:mb-8">{event.dateText}</p>
+                    <p className="text-gray-300 text-sm md:text-lg mb-8 md:mb-12 max-w-3xl leading-relaxed">{event.description}</p>
+                    
+                    <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-6">🏆 Prize Pool</h2>
+                    <div className="text-4xl md:text-6xl font-heading font-bold text-acm-cyan mb-10 md:mb-16">₹ {prize.toLocaleString()}</div>
+                </div>
 
-            <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">
-                {event.title}
-            </h1>
-
-            <p className="text-acm-cyan font-mono mb-8">
-                {event.dateText}
-            </p>
-
-            <p className="text-gray-300 text-lg mb-12 max-w-3xl">
-                {event.description}
-            </p>
-
-            <h2 className="text-3xl font-bold mb-6">🏆 Prize Pool</h2>
-            <div className="text-6xl font-heading font-bold text-acm-cyan mb-16">
-                ₹ {prize.toLocaleString()}
+                <div className="w-full md:w-80 sticky top-32">
+                    <MagneticButton onClick={() => setShowRegister(true)} className="w-full py-5 bg-white text-black font-bold tracking-widest hover:bg-acm-cyan transition-colors shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                        REGISTER_NOW
+                    </MagneticButton>
+                    <div className="mt-4 p-4 border border-white/10 bg-white/5 rounded-xl text-[10px] font-mono text-gray-500 uppercase leading-loose">
+                        :: Status: Registration Open<br/>
+                        :: Verified: TSEC Chapters<br/>
+                        :: Entry Code: ACM_ENCRYPT_26
+                    </div>
+                </div>
             </div>
 
             {timeLeft.days !== undefined && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center mb-20">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 text-center mb-12 md:mb-20">
                     {Object.entries(timeLeft).map(([key, value]) => (
-                        <div key={key} className="p-6 bg-white/5 border border-white/10 rounded-xl">
-                            <div className="text-4xl font-bold text-acm-cyan">
-                                {value}
-                            </div>
-                            <div className="text-sm uppercase tracking-widest text-gray-400">
-                                {key}
-                            </div>
+                        <div key={key} className="p-3 md:p-6 bg-white/5 border border-white/10 rounded-xl">
+                            <div className="text-2xl md:text-4xl font-bold text-acm-cyan">{value}</div>
+                            <div className="text-[10px] md:text-sm uppercase tracking-widest text-gray-400 mt-1">{key}</div>
                         </div>
                     ))}
                 </div>
             )}
 
-            <h2 className="text-3xl font-bold mb-8">Tracks</h2>
-            <div className="grid md:grid-cols-2 gap-6 mb-20">
+            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-8">Tracks</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 mb-12 md:mb-20">
                 {event.tracks?.map((track, i) => (
-                    <div key={i} className="p-6 bg-white/5 border border-white/10 rounded-xl">
-                        {track}
-                    </div>
+                    <div key={i} className="p-4 md:p-6 bg-white/5 border border-white/10 rounded-xl text-sm md:text-base">{track}</div>
                 ))}
             </div>
 
             {event.speakers?.length > 0 && (
                 <>
-                    <h2 className="text-3xl font-bold mb-10">Speakers</h2>
-                    <div className="grid md:grid-cols-3 gap-8 mb-20">
+                    <h2 className="text-xl md:text-3xl font-bold mb-6 md:mb-10">Speakers</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 mb-12 md:mb-20">
                         {event.speakers.map((speaker, i) => (
-                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                                <img
-                                    src={speaker.image}
-                                    alt={speaker.name}
-                                    className="w-28 h-28 mx-auto rounded-full object-cover mb-4"
-                                />
-                                <h3 className="text-xl font-bold">
-                                    {speaker.name}
-                                </h3>
-                                <p className="text-acm-cyan text-sm mt-2">
-                                    {speaker.role}
-                                </p>
+                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 text-center">
+                                <img src={speaker.image} alt={speaker.name} className="w-16 h-16 md:w-28 md:h-28 mx-auto rounded-full object-cover mb-3 md:mb-4" />
+                                <h3 className="text-sm md:text-xl font-bold">{speaker.name}</h3>
+                                <p className="text-acm-cyan text-xs md:text-sm mt-1 md:mt-2">{speaker.role}</p>
                             </div>
                         ))}
                     </div>
                 </>
             )}
 
-            <h2 className="text-3xl font-bold mb-8">FAQs</h2>
-            <div className="space-y-6">
+            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-8">FAQs</h2>
+            <div className="space-y-3 md:space-y-6">
                 {event.faqs?.map((faq, i) => (
                     <div key={i} className="border border-white/10 rounded-xl overflow-hidden">
-                        <button
-                            onClick={() =>
-                                setActiveFAQ(activeFAQ === i ? null : i)
-                            }
-                            className="w-full text-left p-6 bg-white/5"
-                        >
-                            {faq.question}
-                        </button>
-
-                        {activeFAQ === i && (
-                            <div className="p-6 bg-black/40 text-gray-300">
-                                {faq.answer}
-                            </div>
-                        )}
+                        <button onClick={() => setActiveFAQ(activeFAQ === i ? null : i)} className="w-full text-left p-4 md:p-6 bg-white/5 text-sm md:text-base">{faq.question}</button>
+                        {activeFAQ === i && <div className="p-4 md:p-6 bg-black/40 text-gray-300 text-sm">{faq.answer}</div>}
                     </div>
                 ))}
             </div>
 
+            {/* Registration Modal */}
+            {showRegister && (
+                <div className="fixed inset-0 z-[2000] flex items-center justify-center px-4 overflow-y-auto pt-20 pb-10">
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowRegister(false)}></div>
+                    <div className="relative w-full max-w-lg bg-[#020c1b] border border-acm-cyan/30 rounded-2xl p-6 md:p-10 shadow-[0_0_100px_rgba(0,255,136,0.2)] overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-acm-cyan to-transparent"></div>
+                        
+                        <div className="flex justify-between items-start mb-8">
+                            <div>
+                                <h2 className="text-2xl md:text-3xl font-heading font-bold text-white uppercase tracking-tighter">EVENT_REGISTRATION</h2>
+                                <p className="text-acm-cyan font-mono text-[10px] mt-1 tracking-widest uppercase">Target: {event.title}</p>
+                            </div>
+                            <button onClick={() => setShowRegister(false)} className="text-gray-500 hover:text-white transition-colors text-2xl">✕</button>
+                        </div>
+
+                        <form className="space-y-5" onSubmit={e => {
+                            e.preventDefault();
+                            const data = {
+                                event: event.title,
+                                eventSlug: slug,
+                                name: e.target[0].value,
+                                team: e.target[1].value,
+                                email: e.target[2].value,
+                                timestamp: new Date().toLocaleString()
+                            };
+                            
+                            const existing = JSON.parse(localStorage.getItem('acm_registrations') || '[]');
+                            localStorage.setItem('acm_registrations', JSON.stringify([data, ...existing]));
+
+                            alert("UPLINK_STABLISHED :: REGISTRATION_LOGGED");
+                            setShowRegister(false);
+                        }}>
+                            <div className="space-y-1.5">
+                                <label className="block text-[10px] text-acm-cyan/70 font-mono uppercase tracking-widest">// FULL_NAME</label>
+                                <input type="text" required placeholder="John Doe" className="w-full bg-white/5 border border-white/10 p-3.5 text-white rounded-lg focus:border-acm-cyan outline-none transition-all placeholder:text-gray-600"/>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-[10px] text-acm-cyan/70 font-mono uppercase tracking-widest">// TEAM_NAME</label>
+                                <input type="text" required placeholder="Binary_Bards" className="w-full bg-white/5 border border-white/10 p-3.5 text-white rounded-lg focus:border-acm-cyan outline-none transition-all placeholder:text-gray-600"/>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-[10px] text-acm-cyan/70 font-mono uppercase tracking-widest">// DECODE_ID (EMAIL)</label>
+                                <input type="email" required placeholder="pilot@matrix.com" className="w-full bg-white/5 border border-white/10 p-3.5 text-white rounded-lg focus:border-acm-cyan outline-none transition-all placeholder:text-gray-600"/>
+                            </div>
+                            
+                            <div className="pt-4">
+                                <button type="submit" className="w-full py-4 bg-acm-cyan text-black font-bold tracking-[.3em] uppercase hover:bg-white transition-all shadow-[0_0_20px_rgba(100,255,218,0.2)] active:scale-[0.98]">
+                                    CONFIRM_UPLINK
+                                </button>
+                                <p className="text-[9px] font-mono text-gray-500 mt-4 text-center opacity-60">
+                                    BY PROCEEDING, YOU AGREE TO THE PROTOCOLS OF TSEC ACM.
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 
+
+// --- MANAGEMENT PAGE ---
+const Management = () => {
+    const navigate = ReactRouterDOM.useNavigate();
+    const [activeTab, setActiveTab] = useState('overview');
+    const [registrations, setRegistrations] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
+
+    useEffect(() => {
+        if (localStorage.getItem('acm_admin_session') !== 'active') {
+            navigate('/contact');
+        }
+        setRegistrations(JSON.parse(localStorage.getItem('acm_registrations') || '[]'));
+        setMessages(JSON.parse(localStorage.getItem('acm_messages') || '[]'));
+    }, []);
+
+    const logout = () => {
+        localStorage.removeItem('acm_admin_session');
+        navigate('/contact');
+    };
+
+    const clearData = (key) => {
+        if(confirm(`Wipe all ${key} data?`)){
+            localStorage.removeItem(`acm_${key}`);
+            if(key === 'registrations') setRegistrations([]);
+            else setMessages([]);
+        }
+    }
+
+    const regCounts = registrations.reduce((acc, curr) => {
+        acc[curr.event] = (acc[curr.event] || 0) + 1;
+        return acc;
+    }, {});
+
+    return (
+        <div className="min-h-screen pt-32 px-4 md:px-20 text-white pb-20">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b border-white/10 pb-10">
+                <div>
+                    <h1 className="text-4xl md:text-5xl font-heading font-bold uppercase tracking-tighter">CHAPTER_MANAGEMENT</h1>
+                    <p className="text-acm-cyan font-mono text-[10px] tracking-[0.3em] mt-2 opacity-60">:: ACCESS_LEVEL_AUTHORITY :: ENCRYPTED_LINK_ACTIVE</p>
+                </div>
+                <button onClick={logout} className="text-[10px] font-mono text-red-500 border border-red-500/30 px-6 py-3 uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all rounded-none">TERMINATE_SESSION</button>
+            </div>
+
+            {/* TAB STRIP */}
+            <div className="flex gap-4 mb-10 overflow-x-auto pb-2 border-b border-white/5 font-mono text-xs uppercase tracking-widest">
+                <button onClick={() => setActiveTab('overview')} className={`pb-4 px-2 whitespace-nowrap transition-all ${activeTab === 'overview' ? 'text-acm-cyan border-b border-acm-cyan' : 'text-gray-500 hover:text-white'}`}>[ OVERVIEW ]</button>
+                <button onClick={() => setActiveTab('registrations')} className={`pb-4 px-2 whitespace-nowrap transition-all ${activeTab === 'registrations' ? 'text-acm-cyan border-b border-acm-cyan' : 'text-gray-500 hover:text-white'}`}>[ REGISTRATIONS ({registrations.length}) ]</button>
+                <button onClick={() => setActiveTab('messages')} className={`pb-4 px-2 whitespace-nowrap transition-all ${activeTab === 'messages' ? 'text-acm-cyan border-b border-acm-cyan' : 'text-gray-500 hover:text-white'}`}>[ INBOX ({messages.length}) ]</button>
+            </div>
+
+            {activeTab === 'overview' && (
+                <div className="space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="p-8 bg-white/5 border border-white/10 rounded-2xl hover:border-acm-cyan/30 transition-colors">
+                            <h3 className="text-acm-cyan font-mono text-[10px] mb-6 uppercase tracking-widest">// TOTAL_REGISTRATIONS</h3>
+                            <div className="text-6xl font-bold flex items-baseline gap-2">{registrations.length}<span className="text-sm font-normal text-gray-600">NODES</span></div>
+                        </div>
+                        <div className="p-8 bg-white/5 border border-white/10 rounded-2xl hover:border-acm-cyan/30 transition-colors">
+                            <h3 className="text-acm-cyan font-mono text-[10px] mb-6 uppercase tracking-widest">// SYSTEM_HEALTH</h3>
+                            <div className="text-6xl font-bold text-green-500">99.2%</div>
+                            <p className="text-gray-500 text-[10px] mt-4 uppercase">Load Balanced Across 14 Sectors</p>
+                        </div>
+                        <div className="p-8 bg-white/5 border border-white/10 rounded-2xl hover:border-acm-cyan/30 transition-colors">
+                            <h3 className="text-acm-cyan font-mono text-[10px] mb-6 uppercase tracking-widest">// SECURE_INBOX</h3>
+                            <div className="text-6xl font-bold text-acm-cyan border-b-4 border-acm-cyan/20 inline-block">{messages.length}</div>
+                        </div>
+                    </div>
+
+                    <div className="p-10 border border-white/10 bg-white/2 rounded-2xl">
+                        <h2 className="text-xl font-bold mb-8 font-heading text-white uppercase tracking-tighter flex items-center gap-3">
+                            <span className="w-2 h-2 bg-acm-cyan rounded-full animate-pulse"></span>
+                            ACTIVE_EVENT_METRICS
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {Object.keys(eventData).map(slug => {
+                                const title = eventData[slug].title;
+                                const count = regCounts[title] || 0;
+                                return (
+                                    <div 
+                                        key={slug} 
+                                        onClick={() => {
+                                            setFilterEvent(title);
+                                            setActiveTab('registrations');
+                                        }}
+                                        className="p-4 border border-white/5 bg-black/40 rounded-xl relative overflow-hidden group cursor-pointer hover:bg-white/5 transition-all active:scale-[0.98]"
+                                    >
+                                        <div className="relative z-10">
+                                            <p className="text-gray-500 text-[9px] font-mono mb-1 uppercase tracking-widest">ID: {slug}</p>
+                                            <h4 className="font-bold text-sm mb-4">{title}</h4>
+                                            <div className="text-3xl font-heading font-black text-acm-cyan">{count}</div>
+                                            <p className="text-[10px] text-gray-600 mt-1 uppercase transition-all group-hover:text-gray-400">Registrations</p>
+                                        </div>
+                                        <div className="absolute bottom-0 right-0 w-20 h-20 bg-acm-cyan/5 rounded-full blur-2xl -mr-10 -mb-10 transition-all group-hover:bg-acm-cyan/10"></div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'registrations' && (
+                <div className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
+                    <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/2">
+                        <div className="flex items-center gap-4">
+                            <h2 className="font-mono text-xs uppercase tracking-widest text-acm-cyan">// REGISTRATION_RECORDS</h2>
+                            {filterEvent !== 'all' && (
+                                <div className="flex items-center gap-2 bg-acm-cyan/10 border border-acm-cyan/20 px-3 py-1 rounded-full">
+                                    <span className="text-[9px] text-acm-cyan font-mono uppercase font-bold tracking-tighter">Event: {filterEvent}</span>
+                                    <button onClick={() => setFilterEvent('all')} className="text-acm-cyan hover:text-white transition-colors text-xs leading-none">✕</button>
+                                </div>
+                            )}
+                        </div>
+                        <button onClick={() => clearData('registrations')} className="text-[9px] text-gray-600 hover:text-red-500 uppercase transition-colors underline-offset-4 underline">Clear Records</button>
+                    </div>
+                    {registrations.length === 0 ? (
+                        <div className="p-20 text-center text-gray-600 font-mono text-xs italic uppercase tracking-widest">NO_RECORDS_FOUND_IN_LOCAL_BUFFER</div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs font-mono">
+                                <thead className="bg-white/5 border-b border-white/10 text-gray-500">
+                                    <tr>
+                                        <th className="p-4 tracking-widest">TIMESTAMP</th>
+                                        <th className="p-4 tracking-widest">TARGET_EVENT</th>
+                                        <th className="p-4 tracking-widest">NAME</th>
+                                        <th className="p-4 tracking-widest">TEAM</th>
+                                        <th className="p-4 tracking-widest">EMAIL_UPLINK</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {registrations
+                                        .filter(reg => filterEvent === 'all' || reg.event === filterEvent)
+                                        .map((reg, i) => (
+                                            <tr key={i} className="hover:bg-white/5 transition-colors group">
+                                                <td className="p-4 text-gray-500">{reg.timestamp}</td>
+                                                <td className="p-4 text-acm-cyan">{reg.event}</td>
+                                                <td className="p-4 font-bold text-white capitalize">{reg.name}</td>
+                                                <td className="p-4 text-gray-300">{reg.team}</td>
+                                                <td className="p-4 text-gray-400 group-hover:text-white transition-colors">{reg.email}</td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                            {(filterEvent !== 'all' && registrations.filter(reg => reg.event === filterEvent).length === 0) && (
+                                <div className="p-20 text-center text-gray-600 font-mono text-xs italic uppercase tracking-widest underline">NO_UPLINKS_DETECTED_FOR_THIS_SECTOR</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'messages' && (
+                <div className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
+                     <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/2">
+                        <h2 className="font-mono text-xs uppercase tracking-widest text-acm-cyan">// SECURE_SIGNALS_RECEIVED</h2>
+                        <button onClick={() => clearData('messages')} className="text-[9px] text-gray-600 hover:text-red-500 uppercase transition-colors underline-offset-4 underline">Clear Inbox</button>
+                    </div>
+                    {messages.length === 0 ? (
+                        <div className="p-20 text-center text-gray-600 font-mono text-xs italic uppercase tracking-widest">INBOX_EMPTY :: SILENCE_DETECTED</div>
+                    ) : (
+                        <div className="divide-y divide-white/10">
+                            {messages.map((msg, i) => (
+                                <div key={i} className="p-6 hover:bg-white/5 transition-all">
+                                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-acm-cyan/10 border border-acm-cyan/20 flex items-center justify-center text-acm-cyan font-bold uppercase">{msg.user[0]}</div>
+                                            <div>
+                                                <h4 className="font-bold text-sm tracking-tight capitalize">{msg.user}</h4>
+                                                <p className="text-[10px] text-gray-500 font-mono">{msg.email}</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">{msg.timestamp}</span>
+                                    </div>
+                                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl ml-0 md:ml-14 text-sm leading-relaxed text-gray-300 italic border-l-2 border-l-acm-cyan/40">
+                                        "{msg.content}"
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
 
 // --- APP ROOT ---
 const App = () => {
@@ -1539,8 +1762,8 @@ const App = () => {
                 <Route path="/team" element={<Team />} />
                 <Route path="/gallery" element={<FusionGallery />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/management" element={<Management />} />
             </Routes>
-
         </HashRouter>
     );
 };
