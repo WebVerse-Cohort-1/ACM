@@ -1,5 +1,17 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
-const { HashRouter, Routes, Route, Link, useLocation } = ReactRouterDOM;
+const { HashRouter, Routes, Route, Link, useLocation, useNavigate, useParams } = ReactRouterDOM;
+
+
+// --- MEDIA UTILS ---
+const getDirectDriveUrl = (url) => {
+    if (!url) return '';
+    // Standard GDrive View Link -> Direct Thumbnail/Raw Link
+    if (url.includes('drive.google.com')) {
+        const idMatch = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
+        if (idMatch && idMatch[1]) return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+    }
+    return url;
+};
 
 // --- UTILS ---
 const useMousePosition = () => {
@@ -119,12 +131,18 @@ const NeuralFlow = () => {
         camera.position.y = 10;
 
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !isMobile });
+        // High DPI support
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 2));
-        mount.appendChild(renderer.domElement);
+        renderer.domElement.style.position = 'fixed';
+        renderer.domElement.style.top = '0';
+        renderer.domElement.style.left = '0';
+        renderer.domElement.style.zIndex = '-10'; // Bring it slightly forward
+        renderer.domElement.style.opacity = '1';  // Restore full particle visibility
+        document.body.appendChild(renderer.domElement);
 
         // --- WAVE PARTICLES ---
-        const particleCount = isMobile ? 200 : 500;
+        const particleCount = isMobile ? 120 : 400;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const scales = new Float32Array(particleCount);
@@ -226,7 +244,7 @@ const NeuralFlow = () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('touchmove', handleTouchMove);
-            if (mount) mount.removeChild(renderer.domElement);
+            if (document.body.contains(renderer.domElement)) document.body.removeChild(renderer.domElement);
         };
     }, []);
 
@@ -346,50 +364,70 @@ const Navbar = () => {
 
 // --- ROUTES ---
 
-const Home = () => (
-    <div className="min-h-screen flex flex-col justify-center px-6 md:px-20 pt-24 md:pt-20 pb-16">
-        <div className="max-w-4xl">
-            <div className="overflow-hidden mb-3">
-                <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em]">
-                    :: SYSTEM_READY
+const Home = () => {
+    const [data, setData] = useState({
+        homeHeading1: "FUTURE",
+        homeHeading2: "READY",
+        homeHeading3: "ENGINEERS",
+        homeDesc: "The Official ACM Student Chapter of TSEC.\nWe don't just write code; we architect experiences."
+    });
+
+    useEffect(() => {
+        try {
+            const stored = JSON.parse(localStorage.getItem('acm_about'));
+            if (stored) {
+                setData(prev => ({
+                    ...prev,
+                    ...stored
+                }));
+            }
+        } catch (e) {}
+    }, []);
+
+    return (
+        <div className="min-h-screen flex flex-col justify-center px-6 md:px-20 pt-24 md:pt-20 pb-16">
+            <div className="max-w-4xl">
+                <div className="overflow-hidden mb-3">
+                    <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em]">
+                        :: SYSTEM_READY
+                    </p>
+                </div>
+
+                <h1 className="text-5xl sm:text-6xl md:text-9xl font-heading font-bold leading-[0.9] md:leading-[0.85] mb-6 md:mb-8 mix-blend-screen">
+                    <GlitchText text={data.homeHeading1 || "FUTURE"} /><br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">{data.homeHeading2 || "READY"}</span><br />
+                    <span className="text-acm-blue uppercase">{data.homeHeading3 || "ENGINEERS"}</span>
+                </h1>
+
+                <p className="text-gray-400 text-base md:text-xl max-w-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6 whitespace-pre-line">
+                    {data.homeDesc || "The Official ACM Student Chapter of TSEC.\nWe don't just write code; we architect experiences."}
                 </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
+                    <Link to="/events">
+                        <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 bg-white text-black font-bold text-sm rounded-none hover:bg-acm-cyan transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                            EXPLORE EVENTS
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                        </MagneticButton>
+                    </Link>
+                    <Link to="/contact">
+                        <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white font-bold text-sm rounded-none hover:bg-white/10 backdrop-blur-md flex items-center justify-center w-full sm:w-auto">
+                            JOIN NETWORK
+                        </MagneticButton>
+                    </Link>
+                </div>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl md:text-9xl font-heading font-bold leading-[0.9] md:leading-[0.85] mb-6 md:mb-8 mix-blend-screen">
-                <GlitchText text="FUTURE" /><br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">READY</span><br />
-                <span className="text-acm-blue">ENGINEERS</span>
-            </h1>
-
-            <p className="text-gray-400 text-base md:text-xl max-w-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6">
-                The Official ACM Student Chapter of TSEC.<br />
-                We don't just write code; we architect experiences.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
-                <Link to="/events">
-                    <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 bg-white text-black font-bold text-sm rounded-none hover:bg-acm-cyan transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
-                        EXPLORE EVENTS
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-                    </MagneticButton>
-                </Link>
-                <Link to="/contact">
-                    <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white font-bold text-sm rounded-none hover:bg-white/10 backdrop-blur-md flex items-center justify-center w-full sm:w-auto">
-                        JOIN NETWORK
-                    </MagneticButton>
-                </Link>
+            {/* Scroll Indicator — hidden on small screens to avoid overflow */}
+            <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference">
+                <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
+                </div>
+                <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
             </div>
         </div>
-
-        {/* Scroll Indicator — hidden on small screens to avoid overflow */}
-        <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference">
-            <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
-            </div>
-            <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
-        </div>
-    </div>
-);
+    );
+};
 
 const Events = () => {
     const [events, setEvents] = useState([]);
@@ -400,7 +438,7 @@ const Events = () => {
             const data = JSON.parse(localStorage.getItem('acm_events') || '[]').map(ev => ({
                 slug: ev.slug,
                 title: ev.title,
-                date: ev.date || 'TBA',
+                date: ev.dateText || 'TBA',
                 tag: ev.category || 'EVENT',
                 color: ev.color || 'from-acm-cyan/40 to-black',
                 desc: ev.desc,
@@ -418,12 +456,10 @@ const Events = () => {
             </h1>
 
             <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between mb-8 md:mb-16 border-b border-white/10 pb-6 md:pb-8">
-                <h2 className="text-3xl md:text-6xl font-heading font-bold text-white">
+                <h2 className="text-3xl md:text-6xl font-heading font-bold text-white uppercase tracking-tighter">
                     EVENT_<span className="text-acm-cyan">LOGS</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 md:mt-0">
-                    :: UPCOMING_OPERATIONS
-                </p>
+                <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 md:mt-0 uppercase font-semibold">:: UPCOMING_OPERATIONS</p>
             </div>
 
             <div className="flex flex-wrap justify-center gap-6 md:gap-10">
@@ -492,9 +528,21 @@ const About = () => {
     useEffect(() => {
         try {
             const stored = JSON.parse(localStorage.getItem('acm_about'));
-            if (stored) setAboutData(stored);
-        } catch (e) {}
+            if (stored) {
+                setAboutData(prev => ({ ...prev, ...stored }));
+            }
+        } catch (e) {
+            console.error("About Data Load Error:", e);
+        }
     }, [location.pathname]);
+
+    // Handle stats animation re-triggering if data updates
+    useEffect(() => {
+        if (aboutData.stats) {
+            setCounts(aboutData.stats.map(() => 0));
+            setHasAnimated(false);
+        }
+    }, [aboutData.stats]);
 
     const stats = aboutData.stats;
     const [counts, setCounts] = useState(stats.map(() => 0));
@@ -593,9 +641,6 @@ const About = () => {
 
             <div className="md:w-2/3 space-y-16 md:space-y-32">
                 <section>
-                    <h2 className="text-lg md:text-2xl text-acm-cyan font-mono mb-4 md:mb-6">
-                        :: MISSION_STATEMENT
-                    </h2>
                     <p className="text-xl md:text-4xl font-light leading-snug">
                         {aboutData.mission.split(' ').map((word, i) => (
                             <span key={i} className={['architects', 'disrupt'].includes(word.toLowerCase().replace(/[^a-z]/gi, '')) ? "text-white font-bold" : ""}>
@@ -620,9 +665,6 @@ const About = () => {
                 </div>
 
                 <section>
-                    <h2 className="text-lg md:text-2xl text-acm-blue font-mono mb-4 md:mb-6">
-                        :: LEGACY_LOGS
-                    </h2>
                     <div className="border-l border-white/20 pl-5 md:pl-10 space-y-10 md:space-y-16">
                         {aboutData.legacyLogs?.map((log, i) => (
                             <div key={i}>
@@ -649,31 +691,29 @@ const Team = () => {
     }, [location.pathname]);
 
     return (
-        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 max-w-7xl mx-auto pb-20">
+        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 max-w-7xl mx-auto pb-20 relative z-10">
             <h1 className="hidden md:block text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
-                COMMAND
+                ACM_CORE
             </h1>
 
-            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between mb-8 md:mb-10 border-b border-white/10 pb-6 md:pb-8">
-                <h2 className="text-3xl md:text-6xl font-heading font-bold text-white">
-                    PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
+            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between mb-8 md:mb-16 border-b border-white/10 pb-6 md:pb-8">
+                <h2 className="text-4xl md:text-7xl font-heading font-bold text-white text-center md:text-left uppercase tracking-tighter">
+                    FORCE_<span className="text-acm-cyan">COMMAND</span>
                 </h2>
-                <p className="text-gray-400 font-mono text-[10px] md:text-xs tracking-widest mt-2 md:mt-0 uppercase">:: Core committee & vertical heads</p>
+                <p className="text-gray-500 font-mono text-[8px] md:text-xs tracking-[0.4em] mt-4 md:mt-0 uppercase font-bold text-center">// THE_ARCHITECTS_OF_CHAPTER_SCALING</p>
             </div>
 
             {Object.entries(teamData).map(([category, members]) => (
-                <div key={category} className="mb-14 md:mb-24">
-                    <h3 className="text-base md:text-2xl font-mono text-acm-cyan/80 mb-6 md:mb-12 tracking-[.2em] md:tracking-[.3em] flex items-center gap-3 overflow-hidden">
-                        <span className="w-6 md:w-8 h-px bg-acm-cyan/40 flex-shrink-0"></span>
-                        <span className="truncate">{category}</span>
-                        <span className="hidden md:inline text-[10px] opacity-30 flex-shrink-0">({members.length}_NODES)</span>
+                <div key={category} className="mb-20 md:mb-32">
+                    <h3 className="text-sm md:text-xl font-mono text-acm-cyan mb-8 md:mb-16 tracking-[.4em] flex items-center justify-center md:justify-start gap-4">
+                        <span className="w-12 h-px bg-acm-cyan/30"></span>
+                        <span className="uppercase">{category.replace(/_/g, ' ')}</span>
+                        <span className="text-[10px] opacity-20">[{members.length}_NODES]</span>
                     </h3>
 
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-12">
                         {members.map((m, i) => (
-                            <div key={i} className="w-[calc(50%-1rem)] md:w-[calc(33.33%-2rem)] lg:w-[calc(25%-2rem)] xl:w-[calc(20%-2rem)]">
-                                <TeamPersonaCard member={m} />
-                            </div>
+                            <TeamPersonaCard key={m.id || i} member={m} />
                         ))}
                     </div>
                 </div>
@@ -682,46 +722,69 @@ const Team = () => {
     );
 };
 
-// --- PREMIUM TEAM CARD (Persona Style) ---
 const TeamPersonaCard = ({ member }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
     return (
-        <div className="group relative aspect-[3/4] bg-transparent rounded-xl md:rounded-2xl border border-white/5 hover:border-acm-cyan/60 hover:scale-110 hover:shadow-[0_0_60px_rgba(100,255,218,0.1)] transition-all duration-500 overflow-hidden select-none touch-manipulation z-10 hover:z-20">
-            {/* LinkedIn Icon */}
+        <div 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`group relative aspect-[3/4.5] bg-[#0A192F] rounded-2xl border transition-all duration-500 overflow-hidden cursor-pointer ${isExpanded ? 'border-acm-cyan ring-1 ring-acm-cyan/50 shadow-[0_0_40px_rgba(100,255,218,0.15)]' : 'border-white/10 hover:border-acm-cyan/40 shadow-xl'}`}
+        >
+            {/* Header Gradient */}
+            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none"></div>
+
+            {/* Profile Image - HANDLED PROPERLY */}
+            <div className="absolute inset-0 z-0 bg-[#050505] overflow-hidden">
+                <img
+                    src={getDirectDriveUrl(member.image)}
+                    alt={member.name}
+                    className={`w-full h-full object-cover transition-all duration-1000 ${isExpanded ? 'scale-110 blur-[2px] opacity-40' : 'grayscale-[20%] group-hover:grayscale-0 scale-100 group-hover:scale-110 opacity-90 group-hover:opacity-100'}`}
+                />
+                {/* Bottom Shadow for Name readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 group-hover:opacity-70 transition-opacity"></div>
+            </div>
+
+            {/* LinkedIn Badge */}
             <a
                 href={member.linkedin || "#"}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute top-3 right-3 md:top-6 md:right-6 z-30 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-white/5 border border-white/10 rounded-lg hover:bg-[#0077b5] hover:text-white text-gray-400 transition-all flex-shrink-0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-4 right-4 z-30 w-9 h-9 flex items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl hover:bg-[#0077b5] text-white transition-all scale-90 hover:scale-110"
             >
-                <svg className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
             </a>
 
-            <div className="relative h-full w-full p-4 md:p-8 flex flex-col z-10 transition-transform duration-500 md:group-hover:-translate-y-1">
-                {/* Name */}
-                <h3 className="text-sm md:text-xl font-['Playfair_Display'] font-bold text-white mb-0.5 md:mb-1 md:group-hover:text-acm-cyan transition-colors leading-tight pr-8 md:pr-10 line-clamp-2" title={member.name}>
-                    {member.name}
-                </h3>
-
-                {/* Role */}
-                <p className="text-acm-cyan font-semibold text-[10px] md:text-sm mb-2 md:mb-3 tracking-wide font-sans">
-                    {member.role} {member.section && <span className="text-[8px] opacity-40 ml-1">[{member.section}]</span>}
-                </p>
-
-                {/* Description — hidden on very small screens to avoid clutter */}
-                <p className="hidden sm:block text-gray-300 text-[10px] md:text-xs leading-relaxed font-sans opacity-80 md:group-hover:opacity-100 transition-opacity line-clamp-3">
-                    {member.desc}
-                </p>
-
-                {/* Persona Image - EMPTY BACKGROUND REQUESTED */}
-                <div className="mt-auto relative w-full h-32 md:h-56 flex justify-center items-end">
-                    <img
-                        src={member.image}
-                        alt={member.name}
-                        className="relative z-10 w-full h-full object-contain object-bottom grayscale md:group-hover:grayscale-0 transition-all duration-700"
-                    />
+            {/* Identity Information */}
+            <div className="absolute inset-0 p-6 flex flex-col justify-end z-20">
+                <div className={`transition-all duration-700 transform ${isExpanded ? '-translate-y-4' : 'translate-y-0'}`}>
+                    <h3 className="text-xl md:text-2xl font-heading font-black text-white leading-tight mb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase">
+                        {member.name}
+                    </h3>
+                    <p className="text-acm-cyan font-mono text-[10px] uppercase tracking-[0.2em] font-bold bg-acm-cyan/10 self-start px-2 py-0.5 rounded border border-acm-cyan/20">
+                        {member.role}
+                    </p>
                 </div>
+
+                {/* Expanded Bio */}
+                <div className={`mt-5 transition-all duration-700 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[12rem] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="h-px bg-acm-cyan/30 w-full mb-4"></div>
+                    <p className="text-xs text-gray-100 font-sans leading-relaxed tracking-wide italic">
+                        {member.desc}
+                    </p>
+                    <button className="mt-6 text-[9px] text-acm-cyan font-mono uppercase tracking-widest border border-acm-cyan/30 px-3 py-1.5 rounded hover:bg-acm-cyan hover:text-black transition-all">COLLAPSE_LOG</button>
+                </div>
+                
+                {!isExpanded && (
+                    <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+                        <span className="w-4 h-[1px] bg-acm-cyan"></span>
+                        <p className="text-[8px] text-acm-cyan font-mono uppercase tracking-[0.3em]">READ_PERSONA</p>
+                    </div>
+                )}
             </div>
 
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full md:group-hover:translate-x-full transition-transform duration-1000"></div>
+            {/* Subtle Shine Animation */}
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-[200%] transition-transform duration-[1500ms] pointer-events-none"></div>
         </div>
     );
 };
@@ -755,6 +818,8 @@ const FusionGallery = () => {
                 x: (Math.random() - 0.5) * (window.innerWidth < 768 ? 20 : 140),
                 y: (Math.random() - 0.5) * (window.innerWidth < 768 ? 80 : 90),
                 rotation: (Math.random() - 0.5) * 40,
+                // Ensure all images from the event are included, or use fallback gradients
+                images: (Array.isArray(event.images) && event.images.length > 0) ? event.images : [],
                 slides: (Array.isArray(event.images) && event.images.length > 0) ? [] : [
                     `from-blue-900/40 to-cyan-900/40`,
                     `from-purple-900/40 to-pink-900/40`,
@@ -768,6 +833,7 @@ const FusionGallery = () => {
                 desc: 'COMMUNITY_CAPTURE',
                 category: img.eventSlug ? `REL: ${img.eventSlug}` : 'STANDALONE',
                 images: [img.src],
+                slides: [],
                 slug: img.eventSlug || '',
                 id: eventItems.length + i,
                 type: 'PHOTO',
@@ -1167,11 +1233,14 @@ const Contact = () => (
 );
 // --- EVENT DETAIL PAGE ---
 const EventDetail = () => {
-    const { slug } = ReactRouterDOM.useParams();
+    const { slug } = useParams();
     
     const event = useMemo(() => {
         try {
-            const stored = JSON.parse(localStorage.getItem('acm_events') || '[]');
+            const storedRaw = localStorage.getItem('acm_events');
+            if (!storedRaw) return null;
+            const stored = JSON.parse(storedRaw);
+            if (!Array.isArray(stored)) return null;
             const found = stored.find(e => e.slug === slug);
             if (found) return found;
         } catch (e) { return null; }
@@ -1277,7 +1346,7 @@ const EventDetail = () => {
                             {eventImages.map((src, i) => (
                                 <div key={i} className="aspect-video overflow-hidden rounded-xl border border-white/10 group cursor-pointer"
                                     onClick={() => window.open(src, '_blank')}>
-                                    <img src={src} alt={`Gallery ${i+1}`}
+                                    <img src={getDirectDriveUrl(src)} alt={`Gallery ${i+1}`}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                 </div>
                             ))}
@@ -1295,13 +1364,25 @@ const EventDetail = () => {
 
             {event.speakers?.length > 0 && (
                 <>
-                    <h2 className="text-xl md:text-3xl font-bold mb-6 md:mb-10">Speakers</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 mb-12 md:mb-20">
+                    <h2 className="text-xl md:text-3xl font-bold mb-6 md:mb-10">Experts & Guests</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 mb-12 md:mb-20">
                         {event.speakers.map((speaker, i) => (
-                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 text-center">
-                                <img src={speaker.image} alt={speaker.name} className="w-16 h-16 md:w-28 md:h-28 mx-auto rounded-full object-cover mb-3 md:mb-4" />
-                                <h3 className="text-sm md:text-xl font-bold">{speaker.name}</h3>
-                                <p className="text-acm-cyan text-xs md:text-sm mt-1 md:mt-2">{speaker.role}</p>
+                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 text-center group">
+                                <div className="relative w-16 h-16 md:w-28 md:h-28 mx-auto mb-3 md:mb-4">
+                                    <img src={getDirectDriveUrl(speaker.image)} alt={speaker.name} className="w-full h-full rounded-full object-cover border-2 border-white/10 group-hover:border-acm-cyan transition-colors" />
+                                    {speaker.type && (
+                                        <span className="absolute -bottom-1 -right-1 bg-acm-cyan text-black font-black text-[8px] md:text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-xl">
+                                            {speaker.type}
+                                        </span>
+                                    )}
+                                </div>
+                                <h3 className="text-sm md:text-xl font-bold truncate">{speaker.name}</h3>
+                                <p className="text-gray-400 text-[10px] md:text-xs mt-1 md:mt-2 uppercase tracking-widest">{speaker.role}</p>
+                                {speaker.link && (
+                                    <a href={speaker.link} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-[10px] text-acm-cyan font-mono hover:underline">
+                                         :: VIEW_INTEL
+                                    </a>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -1325,17 +1406,23 @@ const EventDetail = () => {
 
 // --- CUSTOM EVENT REGISTRATION PAGE ---
 const EventRegister = () => {
-    const { slug } = ReactRouterDOM.useParams();
-    const navigate = ReactRouterDOM.useNavigate();
+    const { slug } = useParams();
+    const navigate = useNavigate();
     const [submitted, setSubmitted] = useState(false);
     const [form, setForm] = useState({ name: '', email: '', phone: '', team: '', year: '', branch: '', college: 'TSEC', message: '' });
 
     const event = useMemo(() => {
-        const staticTitle = eventData[slug]?.title || null;
-        if (staticTitle) return { title: staticTitle, slug };
-        const stored = JSON.parse(localStorage.getItem('acm_events') || '[]');
-        const found = stored.find(e => e.slug === slug);
-        return found ? { title: found.title, slug } : null;
+        try {
+            const storedRaw = localStorage.getItem('acm_events');
+            if (!storedRaw) return null;
+            const stored = JSON.parse(storedRaw);
+            if (!Array.isArray(stored)) return null;
+            const found = stored.find(e => e.slug === slug);
+            return found ? { title: found.title, slug } : null;
+        } catch (e) { 
+            console.error("Error finding event:", e);
+            return null; 
+        }
     }, [slug]);
 
     const handleSubmit = (e) => {
@@ -1662,7 +1749,6 @@ const Management = () => {
 
     // Form States
     const [newEvent, setNewEvent] = useState({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
-    const [jsonEdit, setJsonEdit] = useState('');
     const [newMember, setNewMember] = useState({ name: '', role: '', desc: '', image: '', category: 'CORE_COMMITTEE', linkedin: '' });
     const [newGalleryItem, setNewGalleryItem] = useState({ src: '', caption: '', eventSlug: '' });
     const [editingEventId, setEditingEventId] = useState(null);
@@ -1701,6 +1787,58 @@ const Management = () => {
 
     const logout = () => { sessionStorage.removeItem('acm_admin_token'); navigate('/contact'); };
 
+    const saveEvents = (updated) => { setEvents(updated); localStorage.setItem('acm_events', JSON.stringify(updated)); };
+    const saveTeam = (updated) => { setTeam(updated); localStorage.setItem('acm_team', JSON.stringify(updated)); };
+    const saveGallery = (updated) => { setGallery(updated); localStorage.setItem('acm_gallery', JSON.stringify(updated)); };
+    const saveAbout = (updated) => { setEditAbout(updated); localStorage.setItem('acm_about', JSON.stringify(updated)); };
+
+    // --- IMAGE COMPRESSOR (Fixes localStorage capacity issues) ---
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.6));
+                };
+            };
+        });
+    };
+
+    const handleFileUpload = async (e, mode) => {
+        const files = Array.from(e.target.files);
+        const processed = await Promise.all(files.map(file => compressImage(file)));
+        if (mode === 'event') {
+            setNewEvent(prev => ({ ...prev, images: [...(prev.images || []), ...processed] }));
+        } else if (mode === 'member') {
+            setNewMember(prev => ({ ...prev, image: processed[0] }));
+        }
+        e.target.value = '';
+    };
+
+    const handleGalleryFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const processed = await compressImage(file);
+        setNewGalleryItem({ ...newGalleryItem, src: processed });
+        e.target.value = '';
+    };
+
     // --- RENDER: Auth gate ---
     if (authState === 'checking') return (
         <div className="min-h-screen flex items-center justify-center text-acm-cyan font-mono text-xs">VERIFYING_CREDENTIALS...</div>
@@ -1735,10 +1873,6 @@ const Management = () => {
         </div>
     );
 
-    const saveEvents = (updated) => { setEvents(updated); localStorage.setItem('acm_events', JSON.stringify(updated)); };
-    const saveTeam = (updated) => { setTeam(updated); localStorage.setItem('acm_team', JSON.stringify(updated)); };
-    const saveGallery = (updated) => { setGallery(updated); localStorage.setItem('acm_gallery', JSON.stringify(updated)); };
-
     const addGalleryPhoto = () => {
         if (!newGalleryItem.src) return alert('No image selected');
         const updated = [...gallery, { ...newGalleryItem, id: Date.now() }];
@@ -1756,14 +1890,6 @@ const Management = () => {
         if (target < 0 || target >= updated.length) return;
         [updated[index], updated[target]] = [updated[target], updated[index]];
         saveGallery(updated);
-    };
-
-    const handleGalleryFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => setNewGalleryItem(prev => ({ ...prev, src: ev.target.result }));
-        reader.readAsDataURL(file);
     };
 
     const moveEvent = (index, dir) => {
@@ -1785,18 +1911,12 @@ const Management = () => {
         saveTeam(updated);
     };
 
-    const addEvent = () => {
+    const addEvent = (e) => {
+        if(e) e.preventDefault();
         if (!newEvent.title || !newEvent.slug) return alert('MISSING_REQUIRED_FIELDS');
         
-        // Parse JSON sub-details
-        let technical = { tracks: [], speakers: [], faqs: [] };
-        try {
-            technical = JSON.parse(jsonEdit);
-        } catch(e) { console.warn("JSON Parse Failed", e); }
-
         const finalEvent = {
             ...newEvent,
-            ...technical,
             id: editingEventId || Date.now()
         };
 
@@ -1810,16 +1930,29 @@ const Management = () => {
         setEvents(existing);
         localStorage.setItem('acm_events', JSON.stringify(existing));
         setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
-        setJsonEdit('');
         setEditingEventId(null);
         alert(editingEventId ? "EVENT_UPDATED" : "EVENT_DEPLOYED");
     };
 
     const startEditEvent = (ev) => {
-        setNewEvent(ev);
-        setJsonEdit(JSON.stringify({ tracks: ev.tracks || [], speakers: ev.speakers || [], faqs: ev.faqs || [] }, null, 2));
+        setNewEvent({
+            ...ev,
+            tracks: ev.tracks || [],
+            speakers: (ev.speakers || []).map(s => ({
+                name: s.name || '',
+                role: s.role || '',
+                image: s.image || '',
+                type: s.type || 'SPEAKER',
+                link: s.link || '',
+                isCustomType: !['SPEAKER', 'JUDGE', 'MENTOR', 'GUEST'].includes(s.type?.toUpperCase())
+            })),
+            faqs: (ev.faqs || []).map(f => ({
+                question: f.question || '',
+                answer: f.answer || ''
+            }))
+        });
         setEditingEventId(ev.id);
-        setActiveTab('events'); // Ensure we are on the events tab
+        setActiveTab('events');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -1857,27 +1990,6 @@ const Management = () => {
         setEditingMemberId(m.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    const handleFileUpload = (e, target) => {
-        if (target === 'event') {
-            const files = Array.from(e.target.files);
-            if (!files.length) return;
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    setNewEvent(prev => ({ ...prev, images: [...(Array.isArray(prev.images) ? prev.images : []), ev.target.result] }));
-                };
-                reader.readAsDataURL(file);
-            });
-        } else {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => setNewMember(prev => ({ ...prev, image: ev.target.result }));
-            reader.readAsDataURL(file);
-        }
-        e.target.value = ''; // reset so same files can be re-selected
-    };
 
     const deleteMember = (cat, id) => {
         if(confirm('Remove this member?')) {
@@ -1955,7 +2067,7 @@ const Management = () => {
             </div>
 
             <div className="flex gap-4 mb-10 overflow-x-auto pb-2 border-b border-white/5 font-mono text-xs uppercase tracking-widest no-scrollbar">
-                {['overview', 'events', 'gallery', 'team', 'registrations', 'messages', 'system'].map(tab => (
+                {['overview', 'events', 'gallery', 'team', 'site', 'registrations', 'messages', 'system'].map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-4 px-2 whitespace-nowrap transition-all ${activeTab === tab ? 'text-acm-cyan border-b border-acm-cyan' : 'text-gray-500 hover:text-white'}`}>
                         [ {tab.toUpperCase()} ]
                     </button>
@@ -1995,52 +2107,39 @@ const Management = () => {
 
                         {/* ─── MULTI-IMAGE MANAGER ─── */}
                         <div className="space-y-3 border border-white/10 rounded-xl p-4 bg-black/20">
-                            <p className="text-[10px] text-acm-cyan font-mono tracking-widest">// EVENT_IMAGES ({(Array.isArray(newEvent.images) ? newEvent.images : []).length} attached)</p>
+                            <p className="text-[10px] text-acm-cyan font-mono tracking-widest">// EVENT_MEDIA_POOL ({(Array.isArray(newEvent.images) ? newEvent.images : []).length} attached)</p>
 
-                            {/* URL add */}
-                            <div className="flex gap-2">
-                                <input
-                                    id="urlInput"
-                                    placeholder="Paste image URL and press Add"
-                                    className="flex-1 bg-black border border-white/10 p-2.5 rounded text-xs"
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            const val = e.target.value.trim();
-                                            if (val) { setNewEvent(prev => ({ ...prev, images: [...(Array.isArray(prev.images) ? prev.images : []), val] })); e.target.value = ''; }
-                                        }
-                                    }}
-                                />
-                                <button type="button"
-                                    className="px-3 py-2 text-[10px] border border-acm-cyan/30 text-acm-cyan hover:bg-acm-cyan/10 rounded whitespace-nowrap"
-                                    onClick={() => {
-                                        const inp = document.getElementById('urlInput');
-                                        const val = inp.value.trim();
-                                        if (val) { setNewEvent(prev => ({ ...prev, images: [...(Array.isArray(prev.images) ? prev.images : []), val] })); inp.value = ''; }
-                                    }}
-                                >+ ADD URL</button>
+                            <div className="space-y-3">
+                                {(Array.isArray(newEvent.images) ? newEvent.images : []).map((url, idx) => (
+                                    <div key={idx} className="flex gap-2">
+                                        <input
+                                            value={url}
+                                            onChange={e => {
+                                                const newImgs = [...newEvent.images];
+                                                newImgs[idx] = e.target.value;
+                                                setNewEvent(prev => ({ ...prev, images: newImgs }));
+                                            }}
+                                            placeholder="https://drive.google.com/..."
+                                            className="flex-1 bg-black/60 border border-white/5 p-2 rounded text-[10px] font-mono"
+                                        />
+                                        <button type="button" onClick={() => setNewEvent(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))} className="text-red-500 px-2 text-xs hover:bg-red-500/10 rounded">✕</button>
+                                    </div>
+                                ))}
+                                <button 
+                                    type="button"
+                                    onClick={() => setNewEvent(prev => ({ ...prev, images: [...(Array.isArray(prev.images) ? prev.images : []), ""] }))}
+                                    className="w-full py-2 border border-dashed border-acm-cyan/30 text-[9px] text-acm-cyan/60 font-mono uppercase hover:border-acm-cyan hover:text-acm-cyan transition-all rounded-lg"
+                                >
+                                    [+] ADD_NEURAL_LINK
+                                </button>
                             </div>
 
-                            {/* Multi-file picker */}
-                            <div className="flex items-center gap-3">
-                                <label className="cursor-pointer text-[10px] text-acm-cyan border border-acm-cyan/20 px-3 py-2 rounded hover:bg-acm-cyan/10 transition-all">
-                                    ↑ UPLOAD FILES (multiple)
-                                    <input type="file" accept="image/*" multiple className="hidden" onChange={e => handleFileUpload(e, 'event')}/>
-                                </label>
-                                <span className="text-[9px] text-gray-600 font-mono">Select multiple at once</span>
-                            </div>
-
-                            {/* Preview grid with remove */}
-                            {(Array.isArray(newEvent.images) ? newEvent.images : []).length > 0 && (
-                                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-2">
-                                    {(Array.isArray(newEvent.images) ? newEvent.images : []).map((src, idx) => (
-                                        <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-white/10">
-                                            <img src={src} className="w-full h-full object-cover"/>
-                                            <button
-                                                type="button"
-                                                onClick={() => setNewEvent(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
-                                                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-400 text-lg transition-opacity"
-                                            >✕</button>
+                            {/* Preview grid */}
+                            {(Array.isArray(newEvent.images) ? newEvent.images : []).filter(Boolean).length > 0 && (
+                                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-4 p-2 bg-black/20 rounded-lg">
+                                    {newEvent.images.filter(Boolean).map((src, idx) => (
+                                        <div key={idx} className="relative aspect-square rounded overflow-hidden border border-white/5 opacity-80 hover:opacity-100 transition-opacity">
+                                            <img src={getDirectDriveUrl(src)} className="w-full h-full object-cover"/>
                                         </div>
                                     ))}
                                 </div>
@@ -2065,14 +2164,129 @@ const Management = () => {
                             </div>
 
                             <div>
-                                <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Technical_Details_JSON (Tracks, Speakers, FAQs)</label>
-                                <textarea 
-                                    className="w-full bg-black/40 border border-white/10 px-4 py-2 text-[10px] font-mono rounded-lg text-acm-cyan h-48" 
-                                    value={jsonEdit} 
-                                    onChange={e => setJsonEdit(e.target.value)}
-                                    placeholder='{ "tracks": ["AI"], "speakers": [], "faqs": [] }'
-                                />
-                                <p className="text-[8px] text-gray-600 mt-1 uppercase tracking-tighter italic">Warning: Invalid JSON will result in empty sections.</p>
+                                <label className="text-[10px] text-gray-400 font-mono mb-4 block uppercase tracking-widest">// EVENT_INTEL_SYSTEM</label>
+                                
+                                {/* Tracks Manager */}
+                                <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
+                                    <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: TRACKS_OF_INNOVATION</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(newEvent.tracks || []).map((track, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 bg-acm-cyan/10 border border-acm-cyan/20 px-3 py-2 rounded">
+                                                <input 
+                                                    className="bg-transparent border-none outline-none text-[10px] text-white w-24"
+                                                    value={track}
+                                                    onChange={e => {
+                                                        const nt = [...newEvent.tracks];
+                                                        nt[idx] = e.target.value;
+                                                        setNewEvent({...newEvent, tracks: nt});
+                                                    }}
+                                                />
+                                                <button type="button" onClick={() => setNewEvent({...newEvent, tracks: newEvent.tracks.filter((_, i) => i !== idx)})} className="text-red-500 text-[10px]">✕</button>
+                                            </div>
+                                        ))}
+                                        <button type="button" onClick={() => setNewEvent({...newEvent, tracks: [...(newEvent.tracks || []), "New Track"]})} className="text-[10px] text-gray-500 border border-dashed border-white/10 px-3 py-2 rounded hover:text-acm-cyan hover:border-acm-cyan transition-all">[+] ADD_TRACK</button>
+                                    </div>
+                                </div>
+
+                                {/* Speakers Manager */}
+                                <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
+                                    <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: EXPERT_POOL_DEPOLYMENT (Speakers & Judges)</p>
+                                    <div className="space-y-6">
+                                        {(newEvent.speakers || []).map((s, idx) => (
+                                            <div key={idx} className="p-4 bg-white/2 border border-white/5 rounded-lg relative space-y-4">
+                                                <button type="button" onClick={() => setNewEvent({...newEvent, speakers: newEvent.speakers.filter((_, i) => i !== idx)})} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-lg z-10">✕</button>
+                                                
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[8px] text-gray-500 font-mono">EXPERT_NAME</label>
+                                                        <input placeholder="e.g. Satoshi Nakamoto" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.name} onChange={e => {
+                                                            const ns = [...newEvent.speakers]; ns[idx].name = e.target.value; setNewEvent({...newEvent, speakers: ns});
+                                                        }}/>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[8px] text-gray-500 font-mono">PRIMARY_ROLE</label>
+                                                        <input placeholder="e.g. Lead Dev @ Google" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.role} onChange={e => {
+                                                            const ns = [...newEvent.speakers]; ns[idx].role = e.target.value; setNewEvent({...newEvent, speakers: ns});
+                                                        }}/>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[8px] text-gray-500 font-mono">ASSIGN_ROLE</label>
+                                                        <select className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" 
+                                                            value={['SPEAKER', 'JUDGE', 'MENTOR', 'GUEST'].includes(s.type?.toUpperCase()) ? s.type : 'OTHER_CUSTOM'} 
+                                                            onChange={e => {
+                                                                const val = e.target.value;
+                                                                const ns = [...newEvent.speakers]; 
+                                                                if(val === 'OTHER_CUSTOM') {
+                                                                    ns[idx].isCustomType = true;
+                                                                    ns[idx].type = ''; // Reset for custom entry
+                                                                } else {
+                                                                    ns[idx].isCustomType = false;
+                                                                    ns[idx].type = val;
+                                                                }
+                                                                setNewEvent({...newEvent, speakers: ns});
+                                                            }}>
+                                                            <option value="SPEAKER">SPEAKER</option>
+                                                            <option value="JUDGE">JUDGE</option>
+                                                            <option value="MENTOR">MENTOR</option>
+                                                            <option value="GUEST">GUEST</option>
+                                                            <option value="OTHER_CUSTOM">++ OTHER_CUSTOM ++</option>
+                                                        </select>
+                                                        {s.isCustomType && (
+                                                            <input 
+                                                                placeholder="Enter Custom Type" 
+                                                                className="w-full mt-1 bg-black border border-acm-cyan/30 p-2 rounded text-[9px] text-acm-cyan animate-pulse focus:animate-none"
+                                                                value={s.type}
+                                                                onChange={e => {
+                                                                    const ns = [...newEvent.speakers]; 
+                                                                    ns[idx].type = e.target.value.toUpperCase(); 
+                                                                    setNewEvent({...newEvent, speakers: ns});
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <div className="md:col-span-2 space-y-1">
+                                                        <label className="text-[8px] text-gray-500 font-mono">NEURAL_LINK (LinkedIn / Portfolio)</label>
+                                                        <input placeholder="https://linkedin.com/in/..." className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.link || ''} onChange={e => {
+                                                            const ns = [...newEvent.speakers]; ns[idx].link = e.target.value; setNewEvent({...newEvent, speakers: ns});
+                                                        }}/>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <label className="text-[8px] text-gray-500 font-mono">VISUAL_ASSET_URL</label>
+                                                    <input placeholder="Image URL (Direct Link)" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white font-mono" value={s.image} onChange={e => {
+                                                        const ns = [...newEvent.speakers]; ns[idx].image = e.target.value; setNewEvent({...newEvent, speakers: ns});
+                                                    }}/>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <button type="button" onClick={() => setNewEvent({...newEvent, speakers: [...(newEvent.speakers || []), {name:'', role:'', image:'', type:'SPEAKER', link:''}]})} className="w-full py-3 border border-dashed border-white/10 text-[10px] text-gray-500 hover:text-acm-cyan hover:border-acm-cyan transition-all font-mono">
+                                            [+] INITIALIZE_NEW_EXPERT_PROFILE
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* FAQ Manager */}
+                                <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
+                                    <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: KNOWLEDGE_RECON_FAQS</p>
+                                    <div className="space-y-4">
+                                        {(newEvent.faqs || []).map((f, idx) => (
+                                            <div key={idx} className="space-y-2 p-4 bg-white/2 border border-white/5 rounded-lg relative">
+                                                <button type="button" onClick={() => setNewEvent({...newEvent, faqs: newEvent.faqs.filter((_, i) => i !== idx)})} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-lg">✕</button>
+                                                <input placeholder="Question" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={f.question} onChange={e => {
+                                                    const nf = [...newEvent.faqs]; nf[idx].question = e.target.value; setNewEvent({...newEvent, faqs: nf});
+                                                }}/>
+                                                <textarea placeholder="Response" rows="2" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={f.answer} onChange={e => {
+                                                    const nf = [...newEvent.faqs]; nf[idx].answer = e.target.value; setNewEvent({...newEvent, faqs: nf});
+                                                }}/>
+                                            </div>
+                                        ))}
+                                        <button type="button" onClick={() => setNewEvent({...newEvent, faqs: [...(newEvent.faqs || []), {question:'', answer:''}]})} className="w-full py-2 border border-dashed border-white/10 text-[10px] text-gray-500 hover:text-acm-cyan hover:border-acm-cyan transition-all font-mono">[+] GENERATE_FAQ</button>
+                                    </div>
+                                </div>
                             </div>
                         <button type="submit" className="w-full py-4 bg-acm-cyan text-black font-bold uppercase tracking-widest hover:bg-white transition-all">
                             {editingEventId ? "OVERWRITE_SIGNAL" : "INITIALIZE_UPLINK"}
@@ -2117,28 +2331,33 @@ const Management = () => {
                 <div className="space-y-10">
                     {/* Upload Form */}
                     <div className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-4 max-w-2xl">
-                        <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan">// UPLOAD_GALLERY_PHOTO</h2>
-                        <div className="space-y-2">
-                            <input placeholder="Image URL (optional)" className="w-full bg-black border border-white/10 p-3 rounded text-xs"
-                                value={newGalleryItem.src} onChange={e => setNewGalleryItem({...newGalleryItem, src: e.target.value})}/>
-                            <div className="flex items-center gap-4">
-                                <span className="text-[10px] text-gray-500 font-mono">OR_UPLOAD:</span>
-                                <input type="file" accept="image/*" onChange={handleGalleryFileUpload} className="text-[10px] text-acm-cyan"/>
-                            </div>
+                        <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan">// ARCHIVE_NEURAL_PHOTO</h2>
+                        <div className="space-y-3">
+                            <label className="text-[10px] text-gray-500 font-mono block mb-1">IMAGE_SOURCE (Google Drive Link Recommended):</label>
+                            <input 
+                                placeholder="Paste GDrive or Image URL" 
+                                className="w-full bg-black border border-white/10 p-3 rounded text-xs font-mono text-white"
+                                value={newGalleryItem.src} 
+                                onChange={e => setNewGalleryItem({...newGalleryItem, src: e.target.value})}
+                            />
                         </div>
-                        {newGalleryItem.src && <img src={newGalleryItem.src} className="h-24 rounded border border-white/10 object-cover"/>}
-                        <input placeholder="Caption (optional)" className="w-full bg-black border border-white/10 p-3 rounded text-xs"
+                        {newGalleryItem.src && (
+                            <div className="h-40 rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                                <img src={getDirectDriveUrl(newGalleryItem.src)} className="w-full h-full object-contain"/>
+                            </div>
+                        )}
+                        <input placeholder="Short Caption" className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white"
                             value={newGalleryItem.caption} onChange={e => setNewGalleryItem({...newGalleryItem, caption: e.target.value})}/>
                         <div>
-                            <label className="text-[10px] text-gray-500 font-mono block mb-1">LINK_TO_EVENT (optional):</label>
+                            <label className="text-[10px] text-gray-500 font-mono block mb-1">ASSOCIATED_EVENT:</label>
                             <select className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white"
                                 value={newGalleryItem.eventSlug} onChange={e => setNewGalleryItem({...newGalleryItem, eventSlug: e.target.value})}>
-                                <option value="">-- No Event Link --</option>
+                                <option value="">-- NO_LINK --</option>
                                 {events.map(ev => <option key={ev.slug} value={ev.slug}>{ev.title}</option>)}
                             </select>
                         </div>
                         <button onClick={addGalleryPhoto} className="w-full py-4 bg-acm-cyan text-black font-bold uppercase tracking-widest hover:bg-white transition-all">
-                            ADD_TO_ARCHIVE
+                            SYNC_TO_GALLERY_BUFFER
                         </button>
                     </div>
 
@@ -2188,12 +2407,15 @@ const Management = () => {
                             <input placeholder="LinkedIn URL" className="bg-black border border-white/10 p-3 rounded" value={newMember.linkedin} onChange={e => setNewMember({...newMember, linkedin: e.target.value})}/>
                         </div>
                         <div className="space-y-2">
-                            <input placeholder="Image URL" className="w-full bg-black border border-white/10 p-3 rounded text-xs" value={newMember.image} onChange={e => setNewMember({...newMember, image: e.target.value})}/>
-                            <div className="flex items-center gap-4">
-                                <span className="text-[10px] text-gray-500 font-mono">OR_UPLOAD:</span>
-                                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'member')} className="text-[10px] text-acm-cyan"/>
-                            </div>
-                        </div>
+                             <input placeholder="Image URL (Recommended for Sheets)" className="w-full bg-black border border-white/10 p-3 rounded text-xs" value={newMember.image} onChange={e => setNewMember({...newMember, image: e.target.value})}/>
+                             <div className="flex items-center justify-between gap-4">
+                                 <div className="flex items-center gap-4">
+                                     <span className="text-[10px] text-gray-500 font-mono uppercase">or_local:</span>
+                                     <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'member')} className="text-[10px] text-acm-cyan"/>
+                                 </div>
+                                 <p className="text-[7px] text-gray-600 font-mono italic">// USING_URL_SAVES_SHEET_SPACE</p>
+                             </div>
+                         </div>
                         <textarea required placeholder="Brief Bio (will show on card)" className="w-full bg-black border border-white/10 p-3 rounded h-24 text-xs" value={newMember.desc} onChange={e => setNewMember({...newMember, desc: e.target.value})}/>
                         <button type="submit" className="w-full py-4 bg-acm-cyan text-black font-bold uppercase tracking-widest hover:bg-white transition-all">
                             {editingMemberId ? "SYNC_UPLINK" : "JOIN_FORCE"}
@@ -2231,6 +2453,78 @@ const Management = () => {
                 </div>
             )}
 
+            {activeTab === 'site' && (
+                <div className="space-y-10 pb-20">
+                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
+                        <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan uppercase">// CORE_BRANDING_IDENTITY</h2>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-1">
+                                <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Heading_Line_1</label>
+                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading1 || ''} onChange={e => setEditAbout({...editAbout, homeHeading1: e.target.value.toUpperCase()})}/>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Heading_Line_2</label>
+                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading2 || ''} onChange={e => setEditAbout({...editAbout, homeHeading2: e.target.value.toUpperCase()})}/>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Heading_Line_3</label>
+                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading3 || ''} onChange={e => setEditAbout({...editAbout, homeHeading3: e.target.value.toUpperCase()})}/>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Main_Tagline</label>
+                            <textarea className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-20" value={editAbout.homeDesc || ''} onChange={e => setEditAbout({...editAbout, homeDesc: e.target.value})}/>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Mission_Statement</label>
+                            <textarea className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-24 font-light text-lg italic" value={editAbout.mission || ''} onChange={e => setEditAbout({...editAbout, mission: e.target.value})}/>
+                        </div>
+                    </section>
+
+                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
+                        <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan uppercase">// SYSTEM_METRICS</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {(editAbout.stats || []).map((stat, i) => (
+                                <div key={i} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3">
+                                    <input className="w-full bg-transparent border-b border-white/10 py-1 text-xs text-acm-cyan font-bold" value={stat.label} onChange={e => {
+                                        const n = [...editAbout.stats]; n[i].label = e.target.value.toUpperCase(); setEditAbout({...editAbout, stats: n});
+                                    }}/>
+                                    <input type="number" className="w-full bg-transparent text-2xl font-bold" value={stat.value} onChange={e => {
+                                        const n = [...editAbout.stats]; n[i].value = parseInt(e.target.value)||0; setEditAbout({...editAbout, stats: n});
+                                    }}/>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan uppercase">// LEGACY_ARCHIVE</h2>
+                            <button onClick={() => setEditAbout({...editAbout, legacyLogs: [...(editAbout.legacyLogs||[]), {year:'', title:'', desc:''}]})} className="text-[10px] bg-white/10 px-4 py-2 hover:bg-white/20 transition-all font-mono uppercase tracking-widest">++ APPEND_LOG</button>
+                        </div>
+                        <div className="space-y-4">
+                            {(editAbout.legacyLogs || []).map((log, i) => (
+                                <div key={i} className="p-6 bg-black/40 border border-white/10 rounded-xl relative group">
+                                    <button onClick={() => { const n = editAbout.legacyLogs.filter((_, idx)=>idx!==i); setEditAbout({...editAbout, legacyLogs: n}); }} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                    <div className="grid grid-cols-4 gap-4 mb-3">
+                                        <input placeholder="Year" className="bg-transparent border-b border-white/10 text-xl font-bold text-acm-cyan" value={log.year} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].year = e.target.value; setEditAbout({...editAbout, legacyLogs: n}); }}/>
+                                        <input placeholder="Headline" className="col-span-3 bg-transparent border-b border-white/10 text-xl font-bold" value={log.title} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].title = e.target.value; setEditAbout({...editAbout, legacyLogs: n}); }}/>
+                                    </div>
+                                    <textarea placeholder="Event Description/Impact..." className="w-full bg-transparent text-xs text-gray-400 h-16 resize-none" value={log.desc} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].desc = e.target.value; setEditAbout({...editAbout, legacyLogs: n}); }}/>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <button onClick={() => { saveAbout(editAbout); alert('SITE_METRICS_SERIALIZED_IN_LOCAL_BUFFER :: REMEMBER TO BROADCAST_PUSH'); }} className="w-full py-6 bg-acm-cyan text-black font-black uppercase tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_50px_rgba(100,255,218,0.2)]">
+                        COMMIT_CHANGES_TO_LOCAL_BUFFER
+                    </button>
+                </div>
+            )}
+
             {activeTab === 'registrations' && (
                 <RegistrationsPanel
                     registrations={registrations}
@@ -2262,7 +2556,271 @@ const Management = () => {
             )}
 
             {activeTab === 'system' && (
-                <div className="max-w-xl space-y-12 pb-20">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-20 items-start">
+                    <section className="p-8 bg-[#0A192F]/60 backdrop-blur-xl border border-acm-cyan/20 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                        <h2 className="text-xl font-bold font-heading mb-4 tracking-tighter uppercase text-acm-cyan">Neural_Sheet_Relay</h2>
+                        <p className="text-[10px] text-gray-400 mb-8 font-mono leading-relaxed">
+                            // CONNECT: Use Google Sheets as your global database via Apps Script.
+                            This allows updates from any phone to sync across all visitor devices instantly.
+                        </p>
+                        
+                        <div className="space-y-5 mb-8">
+                            <div className="space-y-1">
+                                <label className="text-[9px] text-acm-cyan font-mono uppercase">Apps_Script_Deployment_URL</label>
+                                <input 
+                                    id="gasUrlInput"
+                                    className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white font-mono" 
+                                    defaultValue={localStorage.getItem('acm_gas_url') || ''} 
+                                    onChange={e => { localStorage.setItem('acm_gas_url', e.target.value); }} 
+                                    placeholder="https://script.google.com/macros/s/.../exec" 
+                                />
+                                <p className="text-[7px] text-gray-600 uppercase mt-1 italic">// LINKED_SHEET: <a href="https://docs.google.com/spreadsheets/d/1ywPsh_TLHx6sEhWstvEFcID7JUpZIzlQ4r9og9Ew6C0/edit" target="_blank" className="underline text-acm-cyan">1ywPsh...og9Ew6C0</a></p>
+                                <p className="text-[7px] text-gray-600 uppercase mt-1 italic">// SETUP_PROTOCOL: 1. Paste script in Sheet &gt; 2. Deploy as Web App &gt; 3. Anyone access &gt; 4. Paste URL above.</p>
+                                <p className="text-[7px] text-acm-cyan uppercase mt-3 font-bold animate-pulse">// INITIALIZATION_REQUIRED: If your sheet is brand new, you MUST click 'Broadcast_Push_Sync' once to setup the structure.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <button 
+                                onClick={async (e) => {
+                                    const currentGasUrl = localStorage.getItem('acm_gas_url');
+                                    if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+                                    const btn = e.currentTarget;
+                                    btn.innerText = "UPLOADING...";
+                                    
+                                    try {
+                                        const events = JSON.parse(localStorage.getItem('acm_events') || '[]');
+                                        const team = JSON.parse(localStorage.getItem('acm_team') || '{}');
+                                        const gallery = JSON.parse(localStorage.getItem('acm_gallery') || '[]');
+                                        const about = JSON.parse(localStorage.getItem('acm_about') || '{}');
+                                        const registrations = JSON.parse(localStorage.getItem('acm_registrations') || '[]');
+                                        const messages = JSON.parse(localStorage.getItem('acm_messages') || '[]');
+
+                                        const payload = { 
+                                            action: 'save',
+                                            data: { events, team, gallery, about, registrations, messages, timestamp: new Date().toISOString() }
+                                        };
+
+                                        await fetch(currentGasUrl, {
+                                            method: 'POST',
+                                            mode: 'no-cors',
+                                            body: JSON.stringify(payload)
+                                        });
+                                        alert('UPLINK_INITIALIZED :: INFRASTRUCTURE_SYNCED\n(Cloud Database Generated Successfully)');
+                                    } catch(err) { 
+                                        console.error("Broadcast Error:", err);
+                                        alert(`BROADCAST_FAILURE: ${err.message}`); 
+                                    }
+                                    btn.innerText = "Broadcast_Push_Sync ↑";
+                                }}
+                                className="flex-1 py-4 bg-acm-cyan text-black font-black text-xs uppercase hover:bg-white transition-all shadow-[0_0_30px_rgba(100,255,218,0.3)]"
+                            >Broadcast_Push_Sync ↑</button>
+                            
+                            <button 
+                                onClick={async (e) => {
+                                    const currentGasUrl = localStorage.getItem('acm_gas_url');
+                                    if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+                                    const btn = e.currentTarget;
+                                    btn.innerText = "DOWNLOADING...";
+                                    try {
+                                        const response = await fetch(`${currentGasUrl}?action=get`);
+                                        const result = await response.json();
+                                        // V4 Response structure: { version: x, data: { ... } }
+                                        const finalData = result.data || result; 
+                                        if(finalData && finalData.events) {
+                                            localStorage.setItem('acm_events', JSON.stringify(finalData.events));
+                                            localStorage.setItem('acm_team', JSON.stringify(finalData.team));
+                                            localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery));
+                                            localStorage.setItem('acm_about', JSON.stringify(finalData.about));
+                                            localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
+                                            localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
+                                            alert('DOWNLINK_ESTABLISHED :: FETCH_COMPLETE :: RE-INITIALIZING');
+                                            window.location.reload();
+                                        } else {
+                                            alert('EMPTY_BUFFER_RECEIVED :: CHECK_SHEET_DATA');
+                                        }
+                                    } catch(err) { alert(`DOWNLINK_FAILURE: ${err.message}`); }
+                                    btn.innerText = "Fetch_Pull ↓";
+                                }}
+                                className="flex-1 py-4 border border-acm-cyan text-acm-cyan font-black text-xs uppercase hover:bg-acm-cyan/10 transition-all"
+                            >Fetch_Pull ↓</button>
+                        </div>
+                        <div className="mt-8 p-4 bg-black/40 border border-white/5 rounded-lg overflow-x-auto">
+                            <p className="text-[7px] font-mono text-gray-500 leading-relaxed uppercase whitespace-pre">
+                                // ELITE_SHEET_ENGINE_V4 (PASTE IN EXTENSIONS &gt; APPS SCRIPT)<br/>
+                                {`
+const MASTER_SHEET = "Sheet1";
+const META_SHEET = "_META";
+const REQUIRED_SHEETS = {
+  "Sheet1": ["MASTER_JSON"],
+  "_META": ["KEY","VALUE"],
+  "TEAM_LOGS": ["CATEGORY","NAME","ROLE","IMAGE_URL","LINKEDIN","DESCRIPTION"],
+  "EVENT_LOGS": ["SLUG","TITLE","DATE","CATEGORY","PRIZE_POOL","IMAGES_COUNT","TRACKS","EXPERTS","FAQS","DESCRIPTION"],
+  "GALLERY_LOGS": ["IMAGE_URL","CAPTION","EVENT_LINK"],
+  "ABOUT_LOGS": ["TYPE","DATA1","DATA2","DATA3"],
+  "REGISTRATION_LOGS": ["NAME","EMAIL","PHONE","YEAR","BRANCH","COLLEGE","TEAM","EVENT","TIMESTAMP","MESSAGE"],
+  "MESSAGE_LOGS": ["USER_ID","EMAIL","TIMESTAMP","CONTENT"]
+};
+function initializeSheets(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  Object.keys(REQUIRED_SHEETS).forEach(name=>{
+    let sheet = ss.getSheetByName(name);
+    if(!sheet) sheet = ss.insertSheet(name);
+    if(sheet.getLastRow()==0){
+      const header = REQUIRED_SHEETS[name];
+      sheet.getRange(1,1,1,header.length).setValues([header]);
+      formatHeader(sheet);
+    }
+  });
+  initializeMeta();
+}
+function initializeMeta(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(META_SHEET);
+  const data = sheet.getRange(2,1,2,2).getValues();
+  if(!data[0][0] || data[0][1] === ""){
+    sheet.getRange(2,1,2,2).setValues([["VERSION", 1], ["LAST_UPDATE", Date.now()]]);
+  }
+}
+function doPost(e){
+  initializeSheets();
+  try{
+    if (!e || !e.postData || !e.postData.contents) throw new Error("BUFFER_EMPTY");
+    const payload = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if(payload.data) {
+      saveMasterJSON(ss, payload.data);
+      processPayload(ss, payload.data);
+      bumpVersion();
+    }
+    return jsonResponse({ status: "SUCCESS" });
+  }catch(err){ return jsonResponse({ status: "ERROR", message: err.toString() }); }
+}
+function doGet(e){
+  initializeSheets();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const meta = ss.getSheetByName(META_SHEET);
+  const currentVersion = meta.getRange("B2").getValue();
+  const clientVersion = e.parameter.version;
+  if(clientVersion && Number(clientVersion) === Number(currentVersion)){
+    return jsonResponse({ status: "NO_UPDATE", version: currentVersion });
+  }
+  const master = ss.getSheetByName(MASTER_SHEET);
+  const rawData = master.getRange("A1").getValue() || "{}";
+  return jsonResponse({ version: currentVersion, data: JSON.parse(rawData) });
+}
+function bumpVersion(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const meta = ss.getSheetByName(META_SHEET);
+  let version = Number(meta.getRange("B2").getValue()) || 0;
+  version++;
+  meta.getRange("B2").setValue(version);
+  meta.getRange("B3").setValue(Date.now());
+}
+function saveMasterJSON(ss, data){
+  const sheet = ss.getSheetByName(MASTER_SHEET);
+  sheet.getRange("A1").setValue(JSON.stringify(data));
+}
+function processPayload(ss, data){
+  if(!data) return;
+  if(data.team) writeTeam(ss, data.team);
+  if(data.events) writeEvents(ss, data.events);
+  if(data.gallery) writeGallery(ss, data.gallery);
+  if(data.about) writeAbout(ss, data.about);
+  if(data.registrations) writeRegistrations(ss, data.registrations);
+  if(data.messages) writeMessages(ss, data.messages);
+}
+function writeTeam(ss, team){
+  const rows = [REQUIRED_SHEETS["TEAM_LOGS"]];
+  Object.keys(team).forEach(cat=>{
+    if(Array.isArray(team[cat])) {
+      team[cat].forEach(m=>{
+        rows.push([cat, m.name||"", m.role||"", m.image||"", m.linkedin||"", m.desc||""]);
+      });
+    }
+  });
+  writeToSheet(ss, "TEAM_LOGS", rows);
+}
+function writeEvents(ss, events){
+  const rows = [REQUIRED_SHEETS["EVENT_LOGS"]];
+  if(Array.isArray(events)) {
+    events.forEach(e=>{
+      rows.push([
+        e.slug||"", 
+        e.title||"", 
+        e.dateText||"", 
+        e.category||"", 
+        e.prizePool||0, 
+        (e.images||[]).length,
+        (e.tracks||[]).join(", "),
+        (e.speakers||[]).map(s => s.name + " (" + (s.type || 'SPEAKER') + " - " + s.role + ") [" + (s.link || 'NO_LINK') + "]").join(" | "),
+        (e.faqs||[]).map(f => "Q: " + f.question + " A: " + f.answer).join(" | "),
+        e.desc||""
+      ]);
+    });
+  }
+  writeToSheet(ss, "EVENT_LOGS", rows);
+}
+function writeGallery(ss, gallery){
+  const rows = [REQUIRED_SHEETS["GALLERY_LOGS"]];
+  if(Array.isArray(gallery)) {
+    gallery.forEach(g=>{
+      rows.push([g.src||"", g.caption||"", g.eventSlug||""]);
+    });
+  }
+  writeToSheet(ss, "GALLERY_LOGS", rows);
+}
+function writeAbout(ss, about){
+  const rows = [REQUIRED_SHEETS["ABOUT_LOGS"]];
+  rows.push(["HOME_HEADING_1", about.homeHeading1||"", "", ""]);
+  rows.push(["HOME_HEADING_2", about.homeHeading2||"", "", ""]);
+  rows.push(["HOME_HEADING_3", about.homeHeading3||"", "", ""]);
+  rows.push(["HOME_TAGLINE", about.homeDesc||"", "", ""]);
+  rows.push(["MISSION_STATEMENT", about.mission||"", "", ""]);
+  if(Array.isArray(about.stats)) about.stats.forEach(s=>rows.push(["STATISTIC", s.label||"", s.value||"", ""]));
+  if(Array.isArray(about.legacyLogs)) about.legacyLogs.forEach(l=>rows.push(["LEGACY_LOG", l.year||"", l.title||"", l.desc||""]));
+  writeToSheet(ss, "ABOUT_LOGS", rows);
+}
+function writeRegistrations(ss, data){
+  const rows = [REQUIRED_SHEETS["REGISTRATION_LOGS"]];
+  if(Array.isArray(data)) {
+    data.forEach(r=>rows.push([r.name||"", r.email||"", r.phone||"", r.year||"", r.branch||"", r.college||"", r.team||"", r.event||"", r.timestamp||"", r.message||""]));
+  }
+  writeToSheet(ss, "REGISTRATION_LOGS", rows);
+}
+function writeMessages(ss, data){
+  const rows = [REQUIRED_SHEETS["MESSAGE_LOGS"]];
+  if(Array.isArray(data)) {
+    data.forEach(m=>rows.push([m.user||"", m.email||"", m.timestamp||"", m.content||""]));
+  }
+  writeToSheet(ss, "MESSAGE_LOGS", rows);
+}
+function writeToSheet(ss, name, rows){
+  let sheet = ss.getSheetByName(name);
+  if(!sheet) sheet = ss.insertSheet(name);
+  sheet.clearContents();
+  if(rows.length > 0) {
+    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+    formatHeader(sheet);
+  }
+}
+function formatHeader(sheet){
+  const lastCol = sheet.getLastColumn();
+  if(lastCol > 0) {
+    const header = sheet.getRange(1, 1, 1, lastCol);
+    header.setFontWeight("bold").setBackground("#f3f3f3");
+    sheet.setFrozenRows(1);
+  }
+}
+function jsonResponse(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+                                `}
+                            </p>
+                        </div>
+                    </section>
+
+                    <div className="space-y-8">
                      <section className="p-8 bg-white/5 border border-white/10 rounded-2xl">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="text-xl font-bold font-heading tracking-tighter uppercase">Security_Access_Log</h2>
@@ -2321,74 +2879,7 @@ const Management = () => {
                             </button>
                         </div>
                     </section>
-
-                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
-                        <h2 className="text-xl font-bold font-heading mb-2 tracking-tighter uppercase">About_Page_Pulse</h2>
-                        <p className="text-[10px] text-gray-500 font-mono leading-relaxed">// Modify main site stats and mission.</p>
-                        
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-[9px] text-acm-cyan font-mono mb-2 block">MISSION_TEXT</label>
-                                <textarea 
-                                    className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-24" 
-                                    value={editAbout.mission} 
-                                    onChange={e => setEditAbout({...editAbout, mission: e.target.value})}
-                                />
-                            </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                {editAbout.stats?.map((s, idx) => (
-                                    <div key={idx}>
-                                        <label className="text-[8px] text-gray-500 font-mono mb-1 block uppercase">{s.label}</label>
-                                        <input 
-                                            type="number"
-                                            className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" 
-                                            value={s.value} 
-                                            onChange={e => {
-                                                const newStats = [...editAbout.stats];
-                                                newStats[idx].value = parseInt(e.target.value) || 0;
-                                                setEditAbout({...editAbout, stats: newStats});
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div>
-                                <label className="text-[9px] text-acm-cyan font-mono mb-2 block uppercase">Legacy_Milestones_JSON</label>
-                                <textarea 
-                                    className="w-full bg-black border border-white/10 p-3 rounded text-[10px] text-gray-400 h-32 font-mono leading-relaxed" 
-                                    value={JSON.stringify(editAbout.legacyLogs, null, 2)} 
-                                    onChange={e => {
-                                        try { setEditAbout({...editAbout, legacyLogs: JSON.parse(e.target.value)}); }
-                                        catch(e) {}
-                                    }}
-                                />
-                                <p className="text-[8px] text-gray-600 mt-1 uppercase tracking-tighter italic">{"// Array of { \"year\": \"2026\", \"title\": \"...\", \"desc\": \"...\" }"}</p>
-                            </div>
-                            <button 
-                                onClick={() => { localStorage.setItem('acm_about', JSON.stringify(editAbout)); alert('ABOUT_PROTOCOL_UPDATED'); }} 
-                                className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-[10px] hover:bg-acm-cyan transition-all"
-                            >
-                                SAVE_CORE_CHANGES
-                            </button>
-                        </div>
-                    </section>
-
-                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl">
-                        <h2 className="text-xl font-bold font-heading mb-6 tracking-tighter uppercase">System_Vault_Export</h2>
-                        <p className="text-xs text-gray-400 mb-6 font-mono leading-relaxed">
-                            Generate a comprehensive .ZIP vault. Includes a master JSON file and an assets folder containing all high-resolution event and team media.
-                        </p>
-                        <button onClick={exportData} className="px-10 py-4 bg-white text-black font-bold uppercase tracking-widest text-xs hover:bg-acm-cyan transition-all">GENERATE_ZIP_VAULT</button>
-                    </section>
-
-                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl">
-                        <h2 className="text-xl font-bold font-heading mb-6 tracking-tighter uppercase">Restore_Archive</h2>
-                        <p className="text-xs text-gray-400 mb-6 font-mono leading-relaxed">
-                            Select a valid .json archive to overwrite the current system buffer. WARNING: This will eradicate current unsaved data.
-                        </p>
-                        <input type="file" accept=".json" onChange={importData} className="text-xs font-mono file:bg-acm-cyan/10 file:border-acm-cyan/20 file:text-acm-cyan file:px-4 file:py-2 file:rounded file:mr-4 file:hover:bg-acm-cyan file:hover:text-black file:transition-all pointer-events-auto" />
-                    </section>
+                    </div>
                 </div>
             )}
         </div>
@@ -2446,7 +2937,11 @@ const App = () => {
         if (!localStorage.getItem('acm_team')) {
             const defaults = {
                 "CORE_COMMITTEE": [
-                    { id: 101, name: "Rushabh Zaveri", role: "Chairperson", desc: "Mastermind behind chapter scaling.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop", category: "CORE_COMMITTEE", linkedin: "#" }
+                    { id: 101, name: "Rushabh Zaveri", role: "Chairperson", desc: "Mastermind behind chapter scaling and strategic growth of the student chapter.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop", category: "CORE_COMMITTEE", linkedin: "#" },
+                    { id: 102, name: "Aditya Devghare", role: "Secretary", desc: "Operations lead ensuring precision in every logistical protocol.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop", category: "CORE_COMMITTEE", linkedin: "#" }
+                ],
+                "TECHNICAL_FORCE": [
+                    { id: 201, name: "Aryan Shah", role: "Tech Head", desc: "Chief Architect for software systems and development sprints.", image: "https://images.unsplash.com/photo-1506794778242-aff5640707c6?q=80&w=400&h=500&fit=crop", category: "TECHNICAL_FORCE", linkedin: "#" }
                 ]
             };
             localStorage.setItem('acm_team', JSON.stringify(defaults));
@@ -2456,6 +2951,10 @@ const App = () => {
         }
         if (!localStorage.getItem('acm_about')) {
             const defaults = {
+                homeHeading1: "FUTURE",
+                homeHeading2: "READY",
+                homeHeading3: "ENGINEERS",
+                homeDesc: "The Official ACM Student Chapter of TSEC.\nWe don't just write code; we architect experiences.",
                 mission: "We are the architects of the digital frontier. TSEC ACM is not just a club; it's an incubator for those who dare to disrupt the status quo.",
                 stats: [
                     { label: "MEMBERS", value: 500 },
@@ -2469,6 +2968,34 @@ const App = () => {
             };
             localStorage.setItem('acm_about', JSON.stringify(defaults));
         }
+
+        // Live Sync: Fetch fresh data on every load if GAS URL exists
+        const syncData = async () => {
+            const gasUrl = localStorage.getItem('acm_gas_url');
+            if (gasUrl) {
+                try {
+                    const response = await fetch(`${gasUrl}?action=get`);
+                    const result = await response.json();
+                    if (result && result.events) {
+                        const newAbout = JSON.stringify(result.about);
+                        const oldAbout = localStorage.getItem('acm_about');
+                        localStorage.setItem('acm_events', JSON.stringify(result.events));
+                        localStorage.setItem('acm_team', JSON.stringify(result.team));
+                        localStorage.setItem('acm_gallery', JSON.stringify(result.gallery));
+                        localStorage.setItem('acm_about', newAbout);
+                        localStorage.setItem('acm_registrations', JSON.stringify(result.registrations || []));
+                        localStorage.setItem('acm_messages', JSON.stringify(result.messages || []));
+                        if (newAbout !== oldAbout) {
+                             setTimeout(() => window.location.reload(), 100);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Live Sync Failed:", err);
+                }
+            }
+        };
+        syncData();
+
     }, []);
 
     return (
