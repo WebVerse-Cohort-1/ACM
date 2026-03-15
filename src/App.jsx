@@ -1881,6 +1881,8 @@ const Management = () => {
     const [newGalleryItem, setNewGalleryItem] = useState({ src: '', caption: '', eventSlug: '' });
     const [editingEventId, setEditingEventId] = useState(null);
     const [editingMemberId, setEditingMemberId] = useState(null);
+    // Crop picker state
+    const [cropPicker, setCropPicker] = useState(null); // { src, onConfirm, aspect }
 
     // --- LOAD DATA (only if auth ok) ---
     useEffect(() => {
@@ -2039,7 +2041,7 @@ const Management = () => {
         if (!url) return '';
         if (url.includes('drive.google.com')) {
             const match = url.match(/\/file\/d\/([^\/]+)/) || url.match(/id=([^\&]+)/);
-            if (match && match[1]) return `https://lh3.googleusercontent.com/u/0/d/${match[1]}`;
+            if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
         }
         return url;
     };
@@ -2108,7 +2110,8 @@ const Management = () => {
         if (confirm('Remove this photo?')) saveGallery(gallery.filter(g => g.id !== id));
     };
 
-    const moveGalleryPhoto = (index, dir) => {
+    const moveGalleryPhoto = (index, dir, e) => {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
         const updated = [...gallery];
         const target = index + dir;
         if (target < 0 || target >= updated.length) return;
@@ -2116,7 +2119,8 @@ const Management = () => {
         saveGallery(updated);
     };
 
-    const moveEvent = (index, dir) => {
+    const moveEvent = (index, dir, e) => {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
         const updated = [...events];
         const target = index + dir;
         if (target < 0 || target >= updated.length) return;
@@ -2124,7 +2128,8 @@ const Management = () => {
         saveEvents(updated);
     };
 
-    const moveMember = (cat, id, dir) => {
+    const moveMember = (cat, id, dir, e) => {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
         const updated = { ...team };
         const list = [...updated[cat]];
         const index = list.findIndex(m => m.id === id);
@@ -2280,8 +2285,113 @@ const Management = () => {
         return acc;
     }, {});
 
+    // ─── IMAGE CROP PICKER MODAL ───
+    const ImageCropPickerModal = () => {
+        const [pos, setPos] = useState({ x: 50, y: 50 });
+        const [scale, setScale] = useState(1.0);
+        const [dragging, setDragging] = useState(false);
+        const [lastMouse, setLastMouse] = useState(null);
+        const frameRef = React.useRef(null);
+        if (!cropPicker) return null;
+        const { src, aspect, label, onConfirm } = cropPicker;
+
+        const handleMouseDown = (e) => {
+            e.preventDefault();
+            setDragging(true);
+            setLastMouse({ x: e.clientX, y: e.clientY });
+        };
+        const handleMouseMove = (e) => {
+            if (!dragging || !lastMouse || !frameRef.current) return;
+            const rect = frameRef.current.getBoundingClientRect();
+            const dx = ((e.clientX - lastMouse.x) / rect.width) * 100 / scale;
+            const dy = ((e.clientY - lastMouse.y) / rect.height) * 100 / scale;
+            setPos(p => ({ x: Math.max(0, Math.min(100, p.x - dx)), y: Math.max(0, Math.min(100, p.y - dy)) }));
+            setLastMouse({ x: e.clientX, y: e.clientY });
+        };
+        const handleMouseUp = () => { setDragging(false); setLastMouse(null); };
+        const handleConfirm = () => {
+            const cropCss = {
+                objectFit: 'cover',
+                objectPosition: `${pos.x}% ${pos.y}%`,
+                transform: `scale(${scale})`,
+                transformOrigin: `${pos.x}% ${pos.y}%`,
+            };
+            onConfirm(cropCss);
+        };
+
+        return (
+            <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+                <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 w-full max-w-lg space-y-5 shadow-2xl">
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-mono text-xs text-acm-cyan tracking-widest uppercase">✂ CROP_EDITOR :: {label}</h3>
+                        <button type="button" onClick={() => setCropPicker(null)} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
+                    </div>
+                    <p className="text-[9px] text-gray-500 font-mono">DRAG image to pan • Use slider to zoom • Frame shows final visible area</p>
+
+                    {/* Preview Frame */}
+                    <div
+                        ref={frameRef}
+                        className="relative overflow-hidden rounded-xl border border-white/20 bg-black/40 select-none"
+                        style={{ aspectRatio: aspect, cursor: dragging ? 'grabbing' : 'grab', maxHeight: '280px' }}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                    >
+                        <img
+                            src={src}
+                            draggable={false}
+                            className="absolute inset-0 w-full h-full pointer-events-none"
+                            style={{
+                                objectFit: 'cover',
+                                objectPosition: `${pos.x}% ${pos.y}%`,
+                                transform: `scale(${scale})`,
+                                transformOrigin: `${pos.x}% ${pos.y}%`,
+                                transition: dragging ? 'none' : 'transform 0.1s',
+                            }}
+                        />
+                        {/* Crosshair guideline */}
+                        <div className="absolute inset-0 pointer-events-none border-2 border-acm-cyan/30 rounded-xl" />
+                        <div className="absolute top-1/2 left-0 right-0 h-px bg-acm-cyan/10 pointer-events-none" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-acm-cyan/10 pointer-events-none" />
+                    </div>
+
+                    {/* Zoom Slider */}
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-[9px] font-mono text-gray-500">
+                            <span>ZOOM</span>
+                            <span className="text-acm-cyan">{scale.toFixed(2)}x</span>
+                        </div>
+                        <input
+                            type="range" min="1.0" max="3.0" step="0.05"
+                            value={scale}
+                            onChange={e => setScale(parseFloat(e.target.value))}
+                            className="w-full accent-cyan-400 h-1 rounded-full"
+                        />
+                        <div className="flex justify-between text-[8px] text-gray-600 font-mono">
+                            <span>1x (no zoom)</span><span>3x (max)</span>
+                        </div>
+                    </div>
+
+                    {/* Position readout */}
+                    <div className="text-[8px] text-gray-600 font-mono flex gap-4">
+                        <span>PAN_X: {pos.x.toFixed(0)}%</span>
+                        <span>PAN_Y: {pos.y.toFixed(0)}%</span>
+                        <button type="button" onClick={() => { setPos({ x: 50, y: 50 }); setScale(1.0); }} className="text-gray-500 hover:text-white underline ml-auto">RESET</button>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button type="button" onClick={() => setCropPicker(null)} className="flex-1 py-3 border border-white/10 text-gray-400 text-xs font-mono uppercase hover:border-white/30 rounded-lg transition-all">CANCEL</button>
+                        <button type="button" onClick={handleConfirm} className="flex-1 py-3 bg-acm-cyan text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-white transition-all">CONFIRM CROP</button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="min-h-screen pt-32 px-4 md:px-20 text-white pb-20">
+            <ImageCropPickerModal />
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b border-white/10 pb-10">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-heading font-bold uppercase tracking-tighter">CHAPTER_MANAGEMENT</h1>
@@ -2547,13 +2657,13 @@ const Management = () => {
                                     </div>
                                     <div className="flex gap-1">
                                         <div className="flex flex-col gap-1 mr-2 border-r border-white/10 pr-2">
-                                            <button onClick={() => moveEvent(i, -1)} className="text-[8px] hover:text-acm-cyan">▲</button>
-                                            <button onClick={() => moveEvent(i, 1)} className="text-[8px] hover:text-acm-cyan">▼</button>
+                                            <button type="button" onClick={(e) => moveEvent(i, -1, e)} className="text-[10px] w-6 h-5 flex items-center justify-center bg-white/5 hover:bg-acm-cyan/20 hover:text-acm-cyan rounded transition-all">▲</button>
+                                            <button type="button" onClick={(e) => moveEvent(i, 1, e)} className="text-[10px] w-6 h-5 flex items-center justify-center bg-white/5 hover:bg-acm-cyan/20 hover:text-acm-cyan rounded transition-all">▼</button>
                                         </div>
-                                        <button onClick={() => startEditEvent(ev)} className="bg-acm-cyan/10 text-acm-cyan hover:bg-acm-cyan hover:text-black p-2 rounded transition-all">
+                                        <button type="button" onClick={() => startEditEvent(ev)} className="bg-acm-cyan/10 text-acm-cyan hover:bg-acm-cyan hover:text-black p-2 rounded transition-all">
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         </button>
-                                        <button onClick={() => deleteEvent(i)} className="text-red-500 hover:bg-red-500/10 p-2 rounded">✕</button>
+                                        <button type="button" onClick={() => deleteEvent(i)} className="text-red-500 hover:bg-red-500/10 p-2 rounded">✕</button>
                                     </div>
                                 </div>
                                 <p className="text-xs text-gray-400 line-clamp-2 mb-4 h-8">{ev.desc}</p>
@@ -2578,12 +2688,29 @@ const Management = () => {
                         <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan">// ARCHIVE_NEURAL_PHOTO</h2>
                         <div className="space-y-3">
                             <label className="text-[10px] text-gray-500 font-mono block mb-1">IMAGE_SOURCE (Google Drive Link Recommended):</label>
-                            <input 
-                                placeholder="Paste GDrive or Image URL" 
-                                className="w-full bg-black border border-white/10 p-3 rounded text-xs font-mono text-white"
-                                value={newGalleryItem.src} 
-                                onChange={e => setNewGalleryItem({...newGalleryItem, src: e.target.value})}
-                            />
+                            <div className="flex gap-2">
+                                <input 
+                                    placeholder="Paste GDrive or Image URL" 
+                                    className="flex-1 bg-black border border-white/10 p-3 rounded text-xs font-mono text-white"
+                                    value={newGalleryItem.src} 
+                                    onChange={e => setNewGalleryItem({...newGalleryItem, src: e.target.value})}
+                                />
+                                {newGalleryItem.src && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCropPicker({
+                                            src: getDirectDriveUrl(newGalleryItem.src),
+                                            aspect: '16/9',
+                                            label: 'GALLERY_PHOTO',
+                                            onConfirm: (cropCss) => {
+                                                setNewGalleryItem(prev => ({ ...prev, cropCss }));
+                                                setCropPicker(null);
+                                            }
+                                        })}
+                                        className="px-3 py-2 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan text-[10px] font-mono rounded hover:bg-acm-cyan/20 whitespace-nowrap"
+                                    >✂ CROP</button>
+                                )}
+                            </div>
                         </div>
                         {newGalleryItem.src && (
                             <div className="h-40 rounded-xl overflow-hidden border border-white/10 bg-black/40">
@@ -2614,9 +2741,9 @@ const Management = () => {
                                     {g.caption && <p className="text-[10px] text-white text-center">{g.caption}</p>}
                                     {g.eventSlug && <p className="text-[8px] text-acm-cyan font-mono">{g.eventSlug}</p>}
                                     <div className="flex gap-2 mt-1">
-                                        <button onClick={() => moveGalleryPhoto(i, -1)} className="text-white text-xs border border-white/20 px-2 py-1 rounded hover:border-acm-cyan">▲</button>
-                                        <button onClick={() => moveGalleryPhoto(i, 1)} className="text-white text-xs border border-white/20 px-2 py-1 rounded hover:border-acm-cyan">▼</button>
-                                        <button onClick={() => deleteGalleryPhoto(g.id)} className="text-red-400 text-xs border border-red-400/20 px-2 py-1 rounded hover:bg-red-500/10">✕</button>
+                                        <button type="button" onClick={(e) => moveGalleryPhoto(i, -1, e)} className="text-white text-xs border border-white/20 px-2 py-1 rounded hover:border-acm-cyan">▲</button>
+                                        <button type="button" onClick={(e) => moveGalleryPhoto(i, 1, e)} className="text-white text-xs border border-white/20 px-2 py-1 rounded hover:border-acm-cyan">▼</button>
+                                        <button type="button" onClick={() => deleteGalleryPhoto(g.id)} className="text-red-400 text-xs border border-red-400/20 px-2 py-1 rounded hover:bg-red-500/10">✕</button>
                                     </div>
                                 </div>
                             </div>
@@ -2651,14 +2778,38 @@ const Management = () => {
                             <input placeholder="LinkedIn URL" className="bg-black border border-white/10 p-3 rounded" value={newMember.linkedin} onChange={e => setNewMember({...newMember, linkedin: e.target.value})}/>
                         </div>
                         <div className="space-y-2">
-                             <input placeholder="Image URL (Recommended for Sheets)" className="w-full bg-black border border-white/10 p-3 rounded text-xs" value={newMember.image} onChange={e => setNewMember({...newMember, image: e.target.value})}/>
-                             <div className="flex items-center justify-between gap-4">
-                                 <div className="flex items-center gap-4">
-                                     <span className="text-[10px] text-gray-500 font-mono uppercase">or_local:</span>
-                                     <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'member')} className="text-[10px] text-acm-cyan"/>
-                                 </div>
-                                 <p className="text-[7px] text-gray-600 font-mono italic">// USING_URL_SAVES_SHEET_SPACE</p>
-                             </div>
+                            <div className="flex gap-2">
+                                <input
+                                    placeholder="Image URL (Google Drive or Direct)"
+                                    className="flex-1 bg-black border border-white/10 p-3 rounded text-xs"
+                                    value={newMember.image}
+                                    onChange={e => setNewMember({...newMember, image: e.target.value})}
+                                />
+                                {newMember.image && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCropPicker({
+                                            src: getDirectDriveUrl(newMember.image),
+                                            aspect: '1/1',
+                                            label: 'MEMBER_PHOTO',
+                                            onConfirm: (cropCss) => {
+                                                setNewMember(prev => ({ ...prev, cropCss }));
+                                                setCropPicker(null);
+                                            }
+                                        })}
+                                        className="px-3 py-2 bg-acm-cyan/10 border border-acm-cyan/30 text-acm-cyan text-[10px] font-mono rounded hover:bg-acm-cyan/20 whitespace-nowrap"
+                                    >✂ CROP</button>
+                                )}
+                            </div>
+                            {newMember.image && (
+                                <div className="w-20 h-20 rounded-full overflow-hidden border border-white/10 bg-black">
+                                    <img
+                                        src={getDirectDriveUrl(newMember.image)}
+                                        className="w-full h-full object-cover"
+                                        style={newMember.cropCss || {}}
+                                    />
+                                </div>
+                            )}
                          </div>
                         <textarea required placeholder="Brief Bio (will show on card)" className="w-full bg-black border border-white/10 p-3 rounded h-24 text-xs" value={newMember.desc} onChange={e => setNewMember({...newMember, desc: e.target.value})}/>
                         <button type="submit" className="w-full py-4 bg-acm-cyan text-black font-bold uppercase tracking-widest hover:bg-white transition-all">
@@ -2675,12 +2826,12 @@ const Management = () => {
                                         <div key={m.id} className="p-3 bg-white/5 border border-white/10 rounded flex flex-col items-center group relative">
                                             <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <div className="flex gap-1 mb-1 border-b border-white/10 pb-1">
-                                                    <button onClick={() => moveMember(cat, m.id, -1)} className="text-[8px] text-gray-400 hover:text-white">▲</button>
-                                                    <button onClick={() => moveMember(cat, m.id, 1)} className="text-[8px] text-gray-400 hover:text-white">▼</button>
+                                                    <button type="button" onClick={(e) => moveMember(cat, m.id, -1, e)} className="text-[10px] w-5 h-5 flex items-center justify-center bg-white/10 hover:bg-acm-cyan/30 hover:text-acm-cyan rounded transition-all">▲</button>
+                                                    <button type="button" onClick={(e) => moveMember(cat, m.id, 1, e)} className="text-[10px] w-5 h-5 flex items-center justify-center bg-white/10 hover:bg-acm-cyan/30 hover:text-acm-cyan rounded transition-all">▼</button>
                                                 </div>
                                                 <div className="flex gap-1">
-                                                    <button onClick={() => startEditMember(m)} className="text-acm-cyan hover:scale-110">✎</button>
-                                                    <button onClick={() => deleteMember(cat, m.id)} className="text-red-500 hover:scale-110">✕</button>
+                                                    <button type="button" onClick={() => startEditMember(m)} className="text-acm-cyan hover:scale-110">✎</button>
+                                                    <button type="button" onClick={() => deleteMember(cat, m.id)} className="text-red-500 hover:scale-110">✕</button>
                                                 </div>
                                             </div>
                                             <div className="w-16 h-16 rounded-full overflow-hidden mb-2 bg-black border border-white/10">
