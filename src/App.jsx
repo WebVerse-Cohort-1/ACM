@@ -1,6 +1,11 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 const { HashRouter, Routes, Route, Link, useLocation, useNavigate, useParams } = ReactRouterDOM;
 
+// --- CONFIG ---
+// This is the primary link between your website and Google Sheets.
+// Hardcoding it here ensures data syncs automatically on any new device.
+const ACM_MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3tGeRdq9YzORYD0xHmYd7Lwh0zfR-GS7T-edTPySnFDvb9E8T5fwivExjw/exec";
+
 
 // --- MEDIA UTILS ---
 const getDirectDriveUrl = (url) => {
@@ -1183,7 +1188,7 @@ const Contact = () => (
 
                             // Submit to cloud
                             const submitToCloud = async (msg) => {
-                                const gasUrl = localStorage.getItem('acm_gas_url');
+                                const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
                                 if (!gasUrl) return;
                                 try {
                                     await fetch(gasUrl, {
@@ -1448,7 +1453,7 @@ const EventRegister = () => {
         
         // Submit to cloud
         const submitToCloud = async (reg) => {
-            const gasUrl = localStorage.getItem('acm_gas_url');
+            const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
             if (!gasUrl) return;
             try {
                 await fetch(gasUrl, {
@@ -1886,7 +1891,7 @@ const Management = () => {
         if (!localStorage.getItem('acm_team')) localStorage.setItem('acm_team', '{}');
         
         // Auto-initialize from cloud if URL exists but data is empty
-        const gasUrl = localStorage.getItem('acm_gas_url');
+        const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (gasUrl && JSON.parse(localStorage.getItem('acm_events')).length === 0) {
            console.log("INITIAL_BOOT :: ATTEMPTING_CLOUD_SYNC");
            // We'll let the user manually trigger Fetch for now to be safe, 
@@ -1916,7 +1921,7 @@ const Management = () => {
             return;
         }
         localStorage.setItem('acm_is_dirty', 'true');
-        const gasUrl = localStorage.getItem('acm_gas_url');
+        const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (!gasUrl) return;
 
         setSyncStatus('SYNCING');
@@ -1928,7 +1933,7 @@ const Management = () => {
 
     // --- CLOUD SYNC ENGINE ---
     const pushToCloud = async (silent = false) => {
-        const gasUrl = localStorage.getItem('acm_gas_url');
+        const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (!gasUrl) return silent ? null : alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
         
         setSyncStatus('SYNCING');
@@ -1965,7 +1970,7 @@ const Management = () => {
     };
 
     const pullFromCloud = async () => {
-        const gasUrl = localStorage.getItem('acm_gas_url');
+        const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (!gasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
         
         setSyncStatus('SYNCING');
@@ -2801,11 +2806,21 @@ const Management = () => {
                         
                         <div className="space-y-5 mb-8">
                             <div className="space-y-1">
-                                <label className="text-[9px] text-acm-cyan font-mono uppercase">Apps_Script_Deployment_URL</label>
+                                <div className="flex justify-between items-end mb-1">
+                                    <label className="text-[9px] text-acm-cyan font-mono uppercase">Apps_Script_Deployment_URL</label>
+                                    <button 
+                                        onClick={() => {
+                                            localStorage.setItem('acm_gas_url', ACM_MASTER_GAS_URL);
+                                            document.getElementById('gasUrlInput').value = ACM_MASTER_GAS_URL;
+                                            alert('RELAY_RESTORED_TO_MASTER_ENGINE');
+                                        }}
+                                        className="text-[7px] text-gray-500 hover:text-white underline font-mono uppercase"
+                                    >Reset_to_Master</button>
+                                </div>
                                 <input 
                                     id="gasUrlInput"
                                     className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white font-mono" 
-                                    defaultValue={localStorage.getItem('acm_gas_url') || ''} 
+                                    defaultValue={localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL} 
                                     onChange={e => { localStorage.setItem('acm_gas_url', e.target.value); }} 
                                     placeholder="https://script.google.com/macros/s/.../exec" 
                                 />
@@ -2818,7 +2833,7 @@ const Management = () => {
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button 
                                 onClick={async (e) => {
-                                    const currentGasUrl = localStorage.getItem('acm_gas_url');
+                                    const currentGasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
                                     if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
                                     const btn = e.currentTarget;
                                     btn.innerText = "UPLOADING...";
@@ -2853,7 +2868,7 @@ const Management = () => {
                             
                             <button 
                                 onClick={async (e) => {
-                                    const currentGasUrl = localStorage.getItem('acm_gas_url');
+                                    const currentGasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
                                     if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
                                     const btn = e.currentTarget;
                                     btn.innerText = "DOWNLOADING...";
@@ -2884,7 +2899,7 @@ const Management = () => {
                         <div className="mt-4">
                             <button 
                                 onClick={async (e) => {
-                                    const currentGasUrl = localStorage.getItem('acm_gas_url');
+                                    const currentGasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
                                     if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
                                     const btn = e.currentTarget;
                                     btn.innerText = "REBUILDING_INDEX...";
@@ -3226,9 +3241,8 @@ const App = () => {
              localStorage.setItem('acm_admin_creds', JSON.stringify({userId:"admin", email:"acmco@tsecmumbai.in", pass:"ACM_SECURE_2026"}));
         }
 
-        const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3tGeRdq9YzORYD0xHmYd7Lwh0zfR-GS7T-edTPySnFDvb9E8T5fwivExjw/exec";
         if (!localStorage.getItem('acm_gas_url')) {
-            localStorage.setItem('acm_gas_url', DEFAULT_GAS_URL);
+            localStorage.setItem('acm_gas_url', ACM_MASTER_GAS_URL);
         }
         if (!localStorage.getItem('acm_about')) {
             const defaults = {
@@ -3258,8 +3272,7 @@ const App = () => {
                 return;
             }
 
-            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3tGeRdq9YzORYD0xHmYd7Lwh0zfR-GS7T-edTPySnFDvb9E8T5fwivExjw/exec";
-            const gasUrl = localStorage.getItem('acm_gas_url') || DEFAULT_GAS_URL;
+            const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
             if (!gasUrl) return;
 
             try {
@@ -3287,8 +3300,9 @@ const App = () => {
                     localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
                     localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
                     localStorage.setItem('acm_version', newVersion);
-
-                    if (oldAbout && newAbout !== oldAbout) {
+                    
+                    // If this was a fresh device (v0), reload to update the whole UI with new data
+                    if (currentVersion === '0' || (oldAbout && newAbout !== oldAbout)) {
                          setTimeout(() => window.location.reload(), 300);
                     }
                 }
