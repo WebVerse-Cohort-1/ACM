@@ -79,13 +79,23 @@ function onEdit(e) {
   }
 }
 
+const AUTH_KEY = "TSEC_ACM_SECURE_ACCESS_2026_##_FORCE"; // SHARED_SECRET
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
     initializeSheets();
     if (!e || !e.postData || !e.postData.contents) throw new Error("BUFFER_EMPTY");
+    
     const payload = JSON.parse(e.postData.contents);
+    
+    // SECURITY_GATE: Verify Secret Token
+    if (payload.authKey !== AUTH_KEY) {
+       logEvent("SECURITY_ALERT", "Unauthorized Access Attempt", "IP_TRACED_LOGGED");
+       return jsonResponse({ status: "UNAUTHORIZED", message: "CREDENTIAL_FAILURE" });
+    }
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
     // Standard 'rebuild' action
@@ -168,6 +178,23 @@ function doGet(e) {
   try {
     initializeSheets();
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "get";
+
+    if (action === "logs") {
+      const sheet = ss.getSheetByName(LOG_SHEET);
+      const values = sheet.getDataRange().getValues();
+      const logs = [];
+      for (let i = 1; i < values.length; i++) {
+        logs.push({
+          timestamp: values[i][0],
+          status: values[i][1],
+          message: values[i][2],
+          payload: values[i][3]
+        });
+      }
+      return jsonResponse({ logs: logs.reverse().slice(0, 100) }); // Top 100 logs
+    }
+
     const meta = ss.getSheetByName(META_SHEET);
     const currentVersion = meta.getRange("B2").getValue();
     const clientVersion = (e && e.parameter && e.parameter.version) ? e.parameter.version : null;

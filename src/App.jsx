@@ -721,7 +721,6 @@ const Team = () => {
         </div>
     );
 };
-
 const TeamPersonaCard = ({ member }) => {
     return (
         <div className="group relative w-[16rem] h-[24rem] bg-[#0A192F] rounded-[2.5rem] overflow-hidden font-sans transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
@@ -1622,7 +1621,7 @@ const EventRegister = () => {
 
 
 // --- REGISTRATIONS PANEL (Admin sub-component) ---
-const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEvent, setFilterEvent }) => {
+const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEvent, setFilterEvent, setIsDirty }) => {
     const [search, setSearch] = useState('');
     const [expandedReg, setExpandedReg] = useState(null);
 
@@ -1635,10 +1634,13 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
 
     const exportCSV = () => {
         const headers = ['Name','Email','Phone','Year','Branch','College','Team','Event','Timestamp','Message'];
-        const rows = registrations.map(r => [r.name,r.email,r.phone,r.year,r.branch,r.college,r.team,r.event,r.timestamp,r.message].map(v => `"${v||''}"`));
+        // Sort registrations by event for better readability in the flat export
+        const sorted = [...registrations].sort((a, b) => (a.event || '').localeCompare(b.event || ''));
+        const rows = sorted.map(r => [r.name,r.email,r.phone,r.year,r.branch,r.college,r.team,r.event,r.timestamp,r.message].map(v => `"${v||''}"`));
         const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+        a.href = URL.createObjectURL(blob);
         a.download = 'all_registrations.csv';
         a.click();
     };
@@ -1711,52 +1713,100 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
 
             <p className="text-[10px] font-mono text-gray-500">{filtered.length} / {registrations.length} RECORDS_SHOWN</p>
 
-            <div className="space-y-2">
+            <div className="space-y-8">
                 {filtered.length === 0 && <div className="py-20 text-center text-gray-600 font-mono text-xs">NO_RECORDS_MATCH_QUERY</div>}
-                {filtered.map((reg, i) => (
-                    <div key={i} className="border border-white/10 rounded-xl overflow-hidden">
-                        <button
-                            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left gap-4"
-                            onClick={() => setExpandedReg(expandedReg === i ? null : i)}
-                        >
-                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                                <div className="w-8 h-8 rounded-full bg-acm-cyan/10 border border-acm-cyan/20 flex items-center justify-center text-acm-cyan text-[10px] font-bold flex-shrink-0">
-                                    {(reg.name || '?')[0].toUpperCase()}
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="font-bold text-sm truncate">{reg.name || '—'}</p>
-                                    <p className="text-[10px] text-gray-500 font-mono truncate">{reg.email}</p>
-                                </div>
-                            </div>
-                            <div className="hidden sm:block text-[10px] text-acm-cyan font-mono text-right flex-shrink-0">{reg.event}</div>
-                            <div className="hidden md:block text-[10px] text-gray-600 font-mono text-right flex-shrink-0">{reg.timestamp}</div>
-                            <span className="text-gray-500 text-xs flex-shrink-0">{expandedReg === i ? '▲' : '▼'}</span>
-                        </button>
+                
+                {Object.entries(
+                    filtered.reduce((acc, reg) => {
+                        const key = reg.event || 'Unknown Event';
+                        if (!acc[key]) acc[key] = [];
+                        acc[key].push(reg);
+                        return acc;
+                    }, {})
+                ).map(([eventName, regs]) => (
+                    <div key={eventName} className="space-y-3">
+                        <div className="flex items-center gap-3 px-2">
+                            <h3 className="text-acm-cyan font-mono text-[10px] tracking-widest uppercase">// {eventName} ({regs.length})</h3>
+                            <div className="flex-1 h-[1px] bg-white/5"></div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-2">
+                            {regs.map((reg, i) => {
+                                const regIndex = registrations.indexOf(reg);
+                                return (
+                                    <div key={regIndex} className="border border-white/10 rounded-xl overflow-hidden bg-white/2">
+                                        <button
+                                            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left gap-4"
+                                            onClick={() => setExpandedReg(expandedReg === regIndex ? null : regIndex)}
+                                        >
+                                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                <div className="w-8 h-8 rounded-full bg-acm-cyan/10 border border-acm-cyan/20 flex items-center justify-center text-acm-cyan text-[10px] font-bold flex-shrink-0">
+                                                    {(reg.name || '?')[0].toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-sm truncate">{reg.name || '—'}</p>
+                                                    <p className="text-[10px] text-gray-500 font-mono truncate">{reg.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="hidden md:block text-[10px] text-gray-600 font-mono text-right flex-shrink-0">{reg.timestamp}</div>
+                                            <span className="text-gray-500 text-xs flex-shrink-0">{expandedReg === regIndex ? '▲' : '▼'}</span>
+                                        </button>
 
-                        {expandedReg === i && (
-                            <div className="bg-black/40 border-t border-white/10 p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {[
-                                    ['Event', reg.event],
-                                    ['Phone', reg.phone],
-                                    ['Year', reg.year],
-                                    ['Branch', reg.branch],
-                                    ['College', reg.college],
-                                    ['Team', reg.team || 'Solo'],
-                                    ['Registered', reg.timestamp],
-                                ].map(([label, val]) => (
-                                    <div key={label}>
-                                        <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-0.5">{label}</p>
-                                        <p className="text-xs text-white font-medium">{val || '—'}</p>
+                                        {expandedReg === regIndex && (
+                                            <div className="bg-black/40 border-t border-white/10 p-5 grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                {[
+                                                    ['Phone', reg.phone],
+                                                    ['Year', reg.year],
+                                                    ['Branch', reg.branch],
+                                                    ['College', reg.college],
+                                                    ['Team', reg.team || 'Solo'],
+                                                    ['Registered', reg.timestamp],
+                                                ].map(([label, val]) => (
+                                                    <div key={label}>
+                                                        <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-0.5">{label}</p>
+                                                        <p className="text-xs text-white font-medium">{val || '—'}</p>
+                                                    </div>
+                                                ))}
+                                                {reg.members && reg.members.length > 0 && (
+                                                    <div className="col-span-2 md:col-span-4 border-t border-white/5 pt-4 mt-2">
+                                                        <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-2">Team Members</p>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            {reg.members.map((m, idx) => (
+                                                                <div key={idx} className="p-2 rounded bg-white/5 border border-white/5">
+                                                                    <p className="text-[10px] text-white font-bold">{m.name}</p>
+                                                                    <p className="text-[9px] text-gray-500 font-mono">{m.email}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {reg.message && (
+                                                    <div className="col-span-2 md:col-span-4 border-t border-white/5 pt-4 mt-2">
+                                                        <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-0.5">Message</p>
+                                                        <p className="text-xs text-gray-300 italic">"{reg.message}"</p>
+                                                    </div>
+                                                )}
+                                                <div className="col-span-2 md:col-span-4 flex justify-end mt-4">
+                                                    <button 
+                                                        onClick={() => {
+                                                            if(confirm('Delete this registration?')) {
+                                                                const updated = registrations.filter((_, idx) => idx !== regIndex);
+                                                                setRegistrations(updated);
+                                                                localStorage.setItem('acm_registrations', JSON.stringify(updated));
+                                                                setIsDirty(true);
+                                                            }
+                                                        }}
+                                                        className="text-[9px] font-mono text-red-500 hover:text-red-400 border border-red-500/20 px-3 py-1 rounded"
+                                                    >
+                                                        [ DELETE_RECORD ]
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
-                                {reg.message && (
-                                    <div className="col-span-2 md:col-span-4">
-                                        <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-0.5">Message</p>
-                                        <p className="text-xs text-gray-300 italic">"{reg.message}"</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                );
+                            })}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -1780,7 +1830,7 @@ const Management = () => {
     const [adminCreds, setAdminCreds] = useState({ userId: 'admin', email: 'acmco@tsecmumbai.in', pass: 'ACM_SECURE_2026' });
     const [showPass, setShowPass] = useState(false);
     const [editAbout, setEditAbout] = useState({ mission: '', stats: [], legacyLogs: [] });
-    const [isDirty, setIsDirty] = useState(false);
+    const [isDirty, setIsDirty] = useState(localStorage.getItem('acm_is_dirty') === 'true');
     const [syncStatus, setSyncStatus] = useState('IDLE'); // 'IDLE' | 'SYNCING' | 'ERROR' | 'SUCCESS'
 
     // --- AUTH GATE: verify sessionStorage token with expiry ---
@@ -1861,14 +1911,18 @@ const Management = () => {
 
     // --- AUTO-PUSH ENGINE (Debounced) ---
     useEffect(() => {
-        if (!isDirty) return;
+        if (!isDirty) {
+            localStorage.removeItem('acm_is_dirty');
+            return;
+        }
+        localStorage.setItem('acm_is_dirty', 'true');
         const gasUrl = localStorage.getItem('acm_gas_url');
         if (!gasUrl) return;
 
-        console.log("AUTO_SYNC_PENDING :: 5s_DEBOUNCE");
+        setSyncStatus('SYNCING');
         const timer = setTimeout(() => {
             pushToCloud(true);
-        }, 5000); 
+        }, 3000); 
         return () => clearTimeout(timer);
     }, [isDirty]);
 
@@ -1899,6 +1953,8 @@ const Management = () => {
             });
             
             setIsDirty(false);
+            localStorage.removeItem('acm_is_dirty');
+            localStorage.setItem('acm_last_sync', new Date().toLocaleTimeString());
             setSyncStatus('SUCCESS');
             if(!silent) alert('UPLINK_SUCCESS :: CLOUD_STORAGE_SYNCHRONIZED');
         } catch (err) {
@@ -2219,9 +2275,25 @@ const Management = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b border-white/10 pb-10">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-heading font-bold uppercase tracking-tighter">CHAPTER_MANAGEMENT</h1>
-                    <p className="text-acm-cyan font-mono text-[10px] tracking-[0.3em] mt-2 opacity-60">:: ACCESS_LEVEL_AUTHORITY :: SECURE_SESSION</p>
+                    <div className="flex items-center gap-4 mt-2">
+                        <p className="text-acm-cyan font-mono text-[10px] tracking-[0.3em] opacity-60">:: ACCESS_LEVEL_AUTHORITY :: SECURE_SESSION</p>
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                            <div className={`w-1.5 h-1.5 rounded-full ${syncStatus === 'SYNCING' ? 'bg-yellow-400 animate-pulse' : syncStatus === 'ERROR' ? 'bg-red-500' : isDirty ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                            <span className="text-[8px] font-mono tracking-[0.2em] text-gray-400 uppercase">
+                                {syncStatus === 'SYNCING' ? 'SYNCING_TO_CLOUD' : 
+                                 syncStatus === 'ERROR' ? 'SYNC_FAILED' : 
+                                 isDirty ? 'CHANGES_READY' : 'CLOUD_SAVED'}
+                            </span>
+                            {localStorage.getItem('acm_last_sync') && (
+                                <span className="text-[8px] font-mono text-gray-600 border-l border-white/10 pl-2 ml-1 uppercase">{localStorage.getItem('acm_last_sync')}</span>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <button onClick={logout} className="text-[10px] font-mono text-red-500 border border-red-500/30 px-6 py-3 uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">TERMINATE</button>
+                <div className="flex items-center gap-3">
+                    <button onClick={() => pushToCloud(false)} className="text-[10px] font-mono text-acm-cyan border border-acm-cyan/30 px-4 py-3 uppercase tracking-widest hover:bg-acm-cyan/10 transition-all">FORCE_PUSH</button>
+                    <button onClick={logout} className="text-[10px] font-mono text-red-500 border border-red-500/30 px-6 py-3 uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">TERMINATE</button>
+                </div>
             </div>
 
             <div className="flex gap-4 mb-10 overflow-x-auto pb-2 border-b border-white/5 font-mono text-xs uppercase tracking-widest no-scrollbar">
@@ -2694,6 +2766,7 @@ const Management = () => {
                     events={events}
                     filterEvent={filterEvent}
                     setFilterEvent={setFilterEvent}
+                    setIsDirty={setIsDirty}
                 />
             )}
 
@@ -2881,10 +2954,10 @@ function doPost(e){
     if(payload.data) {
       saveMasterJSON(ss, payload.data);
       processPayload(ss, payload.data);
-      bumpVersion();
+      const newVersion = bumpVersion();
       logEvent("SUCCESS", "Data sync complete", "Action: " + (payload.action || "save"));
+      return jsonResponse({ status: "SUCCESS", version: newVersion });
     }
-    return jsonResponse({ status: "SUCCESS" });
   } catch(err) {
     logEvent("CRASH", err.toString(), "In doPost");
     return jsonResponse({ status: "ERROR", message: err.toString() });
@@ -2916,6 +2989,7 @@ function bumpVersion(){
   version++;
   meta.getRange("B2").setValue(version);
   meta.getRange("B3").setValue(Date.now());
+  return version;
 }
 function saveMasterJSON(ss, data){
   const sheet = ss.getSheetByName(MASTER_SHEET);
@@ -3178,6 +3252,12 @@ const App = () => {
 
         // Live Sync: Version-Based Backend Sync Engine
         const syncData = async () => {
+            // Prevent sync if we have unsaved local changes to avoid overwriting work
+            if (localStorage.getItem('acm_is_dirty') === 'true') {
+                console.log("[SYNC] Local changes pending. Skipping pull.");
+                return;
+            }
+
             const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3tGeRdq9YzORYD0xHmYd7Lwh0zfR-GS7T-edTPySnFDvb9E8T5fwivExjw/exec";
             const gasUrl = localStorage.getItem('acm_gas_url') || DEFAULT_GAS_URL;
             if (!gasUrl) return;
@@ -3189,11 +3269,7 @@ const App = () => {
                 
                 const result = await response.json();
                 
-                // If backend says NO_UPDATE, exit early to save resources
-                if (result.status === "NO_UPDATE") {
-                    console.log(`[SYNC] Version ${currentVersion} is up to date.`);
-                    return;
-                }
+                if (result.status === "NO_UPDATE") return;
 
                 const finalData = result.data;
                 const newVersion = result.version;
@@ -3204,7 +3280,6 @@ const App = () => {
                     const newAbout = JSON.stringify(finalData.about || {});
                     const oldAbout = localStorage.getItem('acm_about');
                     
-                    // Atomically update local persistence
                     localStorage.setItem('acm_events', JSON.stringify(finalData.events || []));
                     localStorage.setItem('acm_team', JSON.stringify(finalData.team || {}));
                     localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery || []));
@@ -3213,7 +3288,6 @@ const App = () => {
                     localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
                     localStorage.setItem('acm_version', newVersion);
 
-                    // If 'about' data (mission/headings) changed, reload to reflect
                     if (oldAbout && newAbout !== oldAbout) {
                          setTimeout(() => window.location.reload(), 300);
                     }
@@ -3223,10 +3297,7 @@ const App = () => {
             }
         };
 
-        // Initial sync on load
         syncData();
-
-        // Background Check: Every 30 seconds
         const poller = setInterval(syncData, 30000);
         return () => clearInterval(poller);
     }, []);
