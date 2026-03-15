@@ -10,15 +10,30 @@ const ACM_MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3
 // --- MEDIA UTILS ---
 const getDirectDriveUrl = (url) => {
     if (!url) return '';
-    if (url.includes('drive.google.com')) {
+    // Strip crop info if present (e.g., url|50|50|1.2)
+    const cleanUrl = url.split('|')[0];
+    if (cleanUrl.includes('drive.google.com')) {
         // Broad regex to catch any FILE_ID in a typical Google Drive URL
-        const match = url.match(/\/(?:file\/d|d|e)\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+        const match = cleanUrl.match(/\/(?:file\/d|d|e)\/([a-zA-Z0-9_-]+)/) || cleanUrl.match(/id=([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
             // Using the thumbnail endpoint bypasses Google's recent 3rd-party cookie & CORS hotlink blocks
             return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
         }
     }
-    return url;
+    return cleanUrl;
+};
+
+const getImageStyle = (imageStr) => {
+    if (!imageStr || !imageStr.includes('|')) return { objectFit: 'cover' };
+    const parts = imageStr.split('|');
+    if (parts.length < 4) return { objectFit: 'cover' };
+    const [_, x, y, scale] = parts;
+    return {
+        objectFit: 'cover',
+        objectPosition: `${x}% ${y}%`,
+        transform: `scale(${scale})`,
+        transformOrigin: `${x}% ${y}%`
+    };
 };
 
 // --- UTILS ---
@@ -506,7 +521,7 @@ const Events = () => {
                                 
                                 {ev.image && (
                                     <div className="absolute inset-0 z-0 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <img src={ev.image} alt="" className="w-full h-full object-cover" />
+                                        <img src={getDirectDriveUrl(ev.image)} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
                                     </div>
                                 )}
                             </div>
@@ -731,12 +746,13 @@ const Team = () => {
 };
 const TeamPersonaCard = ({ member }) => {
     return (
-        <div className="group relative w-[16rem] h-[24rem] bg-[#0A192F] rounded-[2.5rem] overflow-hidden font-sans transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+        <div className="group relative w-[16rem] h-[24rem] bg-[#0A192F] rounded-xl overflow-hidden font-sans transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
             {/* Background Image - FULL FILL */}
             <img
                 src={getDirectDriveUrl(member.image)}
                 alt={member.name}
-                className="absolute inset-0 w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
+                style={getImageStyle(member.image)}
+                className="absolute inset-0 w-full h-full grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
             />
             
             {/* Darker Gradient Overlay for Text Readability */}
@@ -779,7 +795,7 @@ const TeamPersonaCard = ({ member }) => {
             </section>
 
             {/* Subtle Edge Glow on Hover */}
-            <div className="absolute inset-0 border border-white/5 group-hover:border-white/15 rounded-[2.5rem] pointer-events-none transition-colors duration-500"></div>
+            <div className="absolute inset-0 border border-white/5 group-hover:border-white/15 rounded-xl pointer-events-none transition-colors duration-500"></div>
         </div>
     );
 };
@@ -993,11 +1009,11 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                             {item.images.map((img, i) => (
                                 <img 
                                     key={i} 
-                                    src={img} 
+                                    src={getDirectDriveUrl(img)} 
                                     className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
                                         i === slide ? 'translate-x-0 opacity-100 z-10' : 
                                         i < slide ? '-translate-x-full opacity-0 z-0' : 'translate-x-full opacity-0 z-0'
-                                    }`}
+                                    } ${isActive ? 'grayscale-0' : 'grayscale'}`}
                                     alt="Event"
                                 />
                             ))}
@@ -1364,7 +1380,7 @@ const EventDetail = () => {
                                 <div key={i} className="aspect-video overflow-hidden rounded-xl border border-white/10 group cursor-pointer"
                                     onClick={() => window.open(src, '_blank')}>
                                     <img src={getDirectDriveUrl(src)} alt={`Gallery ${i+1}`}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" />
                                 </div>
                             ))}
                         </div>
@@ -1386,7 +1402,7 @@ const EventDetail = () => {
                         {event.speakers.map((speaker, i) => (
                             <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 text-center group">
                                 <div className="relative w-16 h-16 md:w-28 md:h-28 mx-auto mb-3 md:mb-4">
-                                    <img src={getDirectDriveUrl(speaker.image)} alt={speaker.name} className="w-full h-full rounded-full object-cover border-2 border-white/10 group-hover:border-acm-cyan transition-colors" />
+                                    <img src={getDirectDriveUrl(speaker.image)} alt={speaker.name} className="w-full h-full rounded-full object-cover border-2 border-white/10 grayscale group-hover:grayscale-0 group-hover:border-acm-cyan transition-all duration-500" />
                                     {speaker.type && (
                                         <span className="absolute -bottom-1 -right-1 bg-acm-cyan text-black font-black text-[8px] md:text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-xl">
                                             {speaker.type}
@@ -2144,17 +2160,26 @@ const Management = () => {
         e.preventDefault();
         const updated = { ...team };
         
+        // Serialize crop metadata into the image string if present
+        let finalImage = newMember.image;
+        if (newMember.cropCss && newMember.cropCss.objectPosition) {
+            const pos = newMember.cropCss.objectPosition.replace(/%/g, '').split(' ');
+            const scale = newMember.cropCss.transform.replace(/[scale()]/g, '');
+            finalImage = `${newMember.image.split('|')[0]}|${pos[0]}|${pos[1]}|${scale}`;
+        }
+
+        const memberData = { ...newMember, image: finalImage, section: newMember.category.replace(/_/g, ' ') };
+        delete memberData.cropCss; // Cleaner storage
+
         if (editingMemberId) {
-            // Remove old version if category changed
             Object.keys(updated).forEach(cat => {
                 updated[cat] = updated[cat].filter(m => m.id !== editingMemberId);
             });
-            if (!updated[newMember.category]) updated[newMember.category] = [];
-            updated[newMember.category].push({ ...newMember, section: newMember.category.replace(/_/g, ' '), id: editingMemberId });
+            updated[newMember.category].push({ ...memberData, id: editingMemberId });
             setEditingMemberId(null);
         } else {
             if (!updated[newMember.category]) updated[newMember.category] = [];
-            updated[newMember.category].push({ ...newMember, section: newMember.category.replace(/_/g, ' '), id: Date.now() });
+            updated[newMember.category].push({ ...memberData, id: Date.now() });
         }
         
         saveTeam(updated);
@@ -2163,7 +2188,23 @@ const Management = () => {
     };
 
     const startEditMember = (m) => {
-        setNewMember({ name: m.name, role: m.role, desc: m.desc, image: m.image, category: m.category || 'CORE_COMMITTEE', linkedin: m.linkedin || '' });
+        const [url, x, y, s] = (m.image || '').split('|');
+        const cropCss = x ? {
+            objectFit: 'cover',
+            objectPosition: `${x}% ${y}%`,
+            transform: `scale(${s})`,
+            transformOrigin: `${x}% ${y}%`
+        } : null;
+
+        setNewMember({ 
+            name: m.name, 
+            role: m.role, 
+            desc: m.desc, 
+            image: url, 
+            category: m.category || 'CORE_COMMITTEE', 
+            linkedin: m.linkedin || '',
+            cropCss 
+        });
         setEditingMemberId(m.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -2287,7 +2328,7 @@ const Management = () => {
                         onMouseLeave={handleMouseUp}
                     >
                         <img
-                            src={src}
+                            src={getDirectDriveUrl(src)}
                             draggable={false}
                             className="absolute inset-0 w-full h-full pointer-events-none"
                             style={{
@@ -2618,7 +2659,7 @@ const Management = () => {
                                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                     {(Array.isArray(ev.images) ? ev.images : []).map((img, idx) => (
                                         <div key={idx} className="w-10 h-10 bg-white/5 rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
-                                            <img src={img} className="w-full h-full object-cover" />
+                                            <img src={getDirectDriveUrl(img)} className="w-full h-full object-cover" />
                                         </div>
                                     ))}
                                     {(Array.isArray(ev.images) ? ev.images : []).length === 0 && <span className="text-[8px] text-gray-600 font-mono italic">NO_IMAGES</span>}
@@ -2684,7 +2725,7 @@ const Management = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {gallery.map((g, i) => (
                             <div key={g.id} className="group relative aspect-video rounded-xl overflow-hidden border border-white/10">
-                                <img src={g.src} className="w-full h-full object-cover"/>
+                                <img src={getDirectDriveUrl(g.src)} className="w-full h-full object-cover"/>
                                 <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
                                     {g.caption && <p className="text-[10px] text-white text-center">{g.caption}</p>}
                                     {g.eventSlug && <p className="text-[8px] text-acm-cyan font-mono">{g.eventSlug}</p>}
@@ -2738,7 +2779,7 @@ const Management = () => {
                                         type="button"
                                         onClick={() => setCropPicker({
                                             src: getDirectDriveUrl(newMember.image),
-                                            aspect: '1/1',
+                                            aspect: '2/3',
                                             label: 'MEMBER_PHOTO',
                                             onConfirm: (cropCss) => {
                                                 setNewMember(prev => ({ ...prev, cropCss }));
@@ -2772,18 +2813,20 @@ const Management = () => {
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {members.map((m) => (
                                         <div key={m.id} className="p-3 bg-white/5 border border-white/10 rounded flex flex-col items-center group relative">
-                                            <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="flex gap-1 mb-1 border-b border-white/10 pb-1">
-                                                    <button type="button" onClick={(e) => moveMember(cat, m.id, -1, e)} className="text-[10px] w-5 h-5 flex items-center justify-center bg-white/10 hover:bg-acm-cyan/30 hover:text-acm-cyan rounded transition-all">▲</button>
-                                                    <button type="button" onClick={(e) => moveMember(cat, m.id, 1, e)} className="text-[10px] w-5 h-5 flex items-center justify-center bg-white/10 hover:bg-acm-cyan/30 hover:text-acm-cyan rounded transition-all">▼</button>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    <button type="button" onClick={() => startEditMember(m)} className="text-acm-cyan hover:scale-110">✎</button>
-                                                    <button type="button" onClick={() => deleteMember(cat, m.id)} className="text-red-500 hover:scale-110">✕</button>
-                                                </div>
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <button type="button" onClick={(e) => moveMember(cat, m.id, -1, e)} className="p-1 hover:text-acm-cyan">▲</button>
+                                                <button type="button" onClick={(e) => moveMember(cat, m.id, 1, e)} className="p-1 hover:text-acm-cyan">▼</button>
+                                            </div>
+                                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button type="button" onClick={() => startEditMember(m)} className="p-1.5 bg-black/80 rounded-full hover:text-acm-cyan">✎</button>
+                                                <button type="button" onClick={() => deleteMember(cat, m.id)} className="p-1.5 bg-black/80 rounded-full hover:text-red-500">✕</button>
                                             </div>
                                             <div className="w-16 h-16 rounded-full overflow-hidden mb-2 bg-black border border-white/10">
-                                                <img src={m.image} className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={getDirectDriveUrl(m.image)} 
+                                                    style={getImageStyle(m.image)}
+                                                    className="w-full h-full object-cover" 
+                                                />
                                             </div>
                                             <p className="text-[10px] font-bold text-center truncate w-full">{m.name}</p>
                                             <p className="text-[8px] text-gray-500 uppercase tracking-tighter">{m.role}</p>
