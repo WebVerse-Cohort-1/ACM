@@ -1951,12 +1951,17 @@ const Management = () => {
                 }
             };
             
+            // Use no-cors as Apps Script doesn't support CORS preflight,
+            // but the POST still reaches the server. We verify success via 
+            // the subsequent GET (version will have bumped).
             await fetch(gasUrl, {
                 method: 'POST',
                 mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
             });
             
+            // Mark as synced locally
             setIsDirty(false);
             localStorage.removeItem('acm_is_dirty');
             localStorage.setItem('acm_last_sync', new Date().toLocaleTimeString());

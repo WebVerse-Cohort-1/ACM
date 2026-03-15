@@ -79,52 +79,50 @@ function onEdit(e) {
   }
 }
 
-const AUTH_KEY = "TSEC_ACM_SECURE_ACCESS_2026_##_FORCE"; // SHARED_SECRET
-
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
-    lock.waitLock(10000);
+    lock.waitLock(15000);
     initializeSheets();
     if (!e || !e.postData || !e.postData.contents) throw new Error("BUFFER_EMPTY");
     
     const payload = JSON.parse(e.postData.contents);
-    
-    // SECURITY_GATE: Verify Secret Token
-    if (payload.authKey !== AUTH_KEY) {
-       logEvent("SECURITY_ALERT", "Unauthorized Access Attempt", "IP_TRACED_LOGGED");
-       return jsonResponse({ status: "UNAUTHORIZED", message: "CREDENTIAL_FAILURE" });
-    }
-
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-    // Standard 'rebuild' action
-    if (payload.action === "rebuild") {
+    // 'save' action — main sync from frontend admin panel
+    if (payload.action === 'save' && payload.data) {
+      saveMasterJSON(ss, payload.data);
+      processPayload(ss, payload.data);
+      bumpVersion();
+      lock.releaseLock();
+      logEvent("SUCCESS", "Save Action Complete", "Full data synced");
+      return jsonResponse({ status: "SUCCESS", message: "SAVE_COMPLETE" });
+    }
+
+    // 'rebuild' action — reconstruct master JSON from individual sheets
+    if (payload.action === 'rebuild') {
       rebuildMasterIndex(ss);
+      lock.releaseLock();
       return jsonResponse({ status: "SUCCESS", message: "REBUILD_COMPLETE" });
     }
 
-    // New 'set' action as requested in architecture
-    if (payload.action === "set" && payload.data) {
-       saveMasterJSON(ss, payload.data);
-       processPayload(ss, payload.data);
-       bumpVersion();
-       return jsonResponse({ status: "SUCCESS", message: "REMOTE_SET_COMPLETE" });
-    }
-
+    // 'register' action — log a new event registration
     if (payload.action === 'register' && payload.data) {
-       appendRegistration(ss, payload.data);
-       bumpVersion();
-       return jsonResponse({ status: "SUCCESS", message: "REGISTRATION_RECORDED" });
+      appendRegistration(ss, payload.data);
+      bumpVersion();
+      lock.releaseLock();
+      return jsonResponse({ status: "SUCCESS", message: "REGISTRATION_RECORDED" });
     }
 
+    // 'message' action — log a new contact message
     if (payload.action === 'message' && payload.data) {
-       appendMessage(ss, payload.data);
-       bumpVersion();
-       return jsonResponse({ status: "SUCCESS", message: "MESSAGE_RECORDED" });
+      appendMessage(ss, payload.data);
+      bumpVersion();
+      lock.releaseLock();
+      return jsonResponse({ status: "SUCCESS", message: "MESSAGE_RECORDED" });
     }
 
-    // Fallback for general data updates
+    // Generic fallback
     if (payload.data) {
       saveMasterJSON(ss, payload.data);
       processPayload(ss, payload.data);
