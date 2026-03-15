@@ -10,10 +10,13 @@ const ACM_MASTER_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3
 // --- MEDIA UTILS ---
 const getDirectDriveUrl = (url) => {
     if (!url) return '';
-    // Standard GDrive View Link -> Direct Thumbnail/Raw Link
     if (url.includes('drive.google.com')) {
-        const idMatch = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
-        if (idMatch && idMatch[1]) return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+        // Broad regex to catch any FILE_ID in a typical Google Drive URL
+        const match = url.match(/\/(?:file\/d|d|e)\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+            // Using the thumbnail endpoint bypasses Google's recent 3rd-party cookie & CORS hotlink blocks
+            return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+        }
     }
     return url;
 };
@@ -2035,15 +2038,6 @@ const Management = () => {
                 };
             };
         });
-    };
-
-    const getDirectDriveUrl = (url) => {
-        if (!url) return '';
-        if (url.includes('drive.google.com')) {
-            const match = url.match(/\/file\/d\/([^\/]+)/) || url.match(/id=([^\&]+)/);
-            if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-        }
-        return url;
     };
 
     const handleFileUpload = async (e, mode) => {
