@@ -1187,6 +1187,21 @@ const Contact = () => (
                             };
                             localStorage.setItem('acm_messages', JSON.stringify([newMessage, ...existingMessages]));
 
+                            // Submit to cloud
+                            const submitToCloud = async (msg) => {
+                                const gasUrl = localStorage.getItem('acm_gas_url');
+                                if (!gasUrl) return;
+                                try {
+                                    await fetch(gasUrl, {
+                                        method: 'POST',
+                                        mode: 'no-cors',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ action: 'message', data: msg })
+                                    });
+                                } catch (e) { console.error("Cloud Submit Failed:", e); }
+                            };
+                            submitToCloud(newMessage);
+
                             alert('HANDSHAKE_SENT :: SIGNAL_STRENGTH_GOOD');
                             e.target.reset();
                         }}>
@@ -1409,7 +1424,7 @@ const EventRegister = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const [submitted, setSubmitted] = useState(false);
-    const [form, setForm] = useState({ name: '', email: '', phone: '', team: '', year: '', branch: '', college: 'TSEC', message: '' });
+    const [form, setForm] = useState({ name: '', email: '', phone: '', team: '', year: '', branch: '', college: 'TSEC', message: '', members: [] });
 
     const event = useMemo(() => {
         try {
@@ -1418,7 +1433,7 @@ const EventRegister = () => {
             const stored = JSON.parse(storedRaw);
             if (!Array.isArray(stored)) return null;
             const found = stored.find(e => e.slug === slug);
-            return found ? { title: found.title, slug } : null;
+            return found || null;
         } catch (e) { 
             console.error("Error finding event:", e);
             return null; 
@@ -1436,6 +1451,22 @@ const EventRegister = () => {
         };
         const existing = JSON.parse(localStorage.getItem('acm_registrations') || '[]');
         localStorage.setItem('acm_registrations', JSON.stringify([data, ...existing]));
+        
+        // Submit to cloud
+        const submitToCloud = async (reg) => {
+            const gasUrl = localStorage.getItem('acm_gas_url');
+            if (!gasUrl) return;
+            try {
+                await fetch(gasUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'register', data: reg })
+                });
+            } catch (e) { console.error("Cloud Submit Failed:", e); }
+        };
+        submitToCloud(data);
+
         setSubmitted(true);
     };
 
@@ -1531,6 +1562,51 @@ const EventRegister = () => {
                                 <label className={labelClass}>Team Name (leave blank if solo)</label>
                                 <input type="text" placeholder="Team Binary_Bards" className={inputClass} value={form.team} onChange={e => setForm({...form, team: e.target.value})}/>
                             </div>
+
+                            {/* Dynamic Members */}
+                            {event.maxTeamSize > 1 && (
+                                <div className="space-y-4 border-t border-white/10 pt-4 mt-4">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">// TEAM_MATES ({form.members.length + 1} / {event.maxTeamSize})</p>
+                                        {form.members.length < event.maxTeamSize - 1 && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setForm({...form, members: [...form.members, { name: '', email: '', phone: '' }]})}
+                                                className="text-[10px] text-acm-cyan font-mono border border-acm-cyan/30 px-3 py-1 rounded hover:bg-acm-cyan hover:text-black transition-all"
+                                            >
+                                                [+] ADD_MEMBER
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {form.members.map((member, idx) => (
+                                        <div key={idx} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3 relative">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setForm({...form, members: form.members.filter((_, i) => i !== idx)})}
+                                                className="absolute top-2 right-2 text-red-500 font-bold p-1 hover:bg-red-500/10 rounded"
+                                            >
+                                                ✕
+                                            </button>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[8px] text-gray-600 font-mono mb-1 block uppercase">Name</label>
+                                                    <input required className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" value={member.name} onChange={e => {
+                                                        const nm = [...form.members]; nm[idx].name = e.target.value; setForm({...form, members: nm});
+                                                    }}/>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[8px] text-gray-600 font-mono mb-1 block uppercase">Email</label>
+                                                    <input required type="email" className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" value={member.email} onChange={e => {
+                                                        const nm = [...form.members]; nm[idx].email = e.target.value; setForm({...form, members: nm});
+                                                    }}/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             <div>
                                 <label className={labelClass}>Message / Query (optional)</label>
                                 <textarea placeholder="Any questions or notes for the organizers..." rows="3" className={inputClass + ' resize-none'} value={form.message} onChange={e => setForm({...form, message: e.target.value})}/>
@@ -1709,6 +1785,8 @@ const Management = () => {
     const [adminCreds, setAdminCreds] = useState({ userId: 'admin', email: 'acmco@tsecmumbai.in', pass: 'ACM_SECURE_2026' });
     const [showPass, setShowPass] = useState(false);
     const [editAbout, setEditAbout] = useState({ mission: '', stats: [], legacyLogs: [] });
+    const [isDirty, setIsDirty] = useState(false);
+    const [syncStatus, setSyncStatus] = useState('IDLE'); // 'IDLE' | 'SYNCING' | 'ERROR' | 'SUCCESS'
 
     // --- AUTH GATE: verify sessionStorage token with expiry ---
     useEffect(() => {
@@ -1748,7 +1826,7 @@ const Management = () => {
     };
 
     // Form States
-    const [newEvent, setNewEvent] = useState({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
+    const [newEvent, setNewEvent] = useState({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, maxTeamSize: 1, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
     const [newMember, setNewMember] = useState({ name: '', role: '', desc: '', image: '', category: 'CORE_COMMITTEE', linkedin: '' });
     const [newGalleryItem, setNewGalleryItem] = useState({ src: '', caption: '', eventSlug: '' });
     const [editingEventId, setEditingEventId] = useState(null);
@@ -1758,22 +1836,16 @@ const Management = () => {
     useEffect(() => {
         if (authState !== 'ok') return;
 
-        // --- INITIALIZE DEFAULTS IF EMPTY ---
-        if (!localStorage.getItem('acm_events')) {
-            const defaults = [
-                { id: 1, slug: 'codesprint-26', title: 'CodeSprint 26', category: 'HACKATHON', desc: '48h intensive prototyping sprint.', images: ["https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200"] },
-                { id: 2, slug: 'system-breach', title: 'System_Breach', category: 'CTF', desc: 'Cybersecurity capture the flag.', images: ["https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200"] }
-            ];
-            localStorage.setItem('acm_events', JSON.stringify(defaults));
-        }
-
-        if (!localStorage.getItem('acm_team')) {
-            const defaults = {
-                "CORE_COMMITTEE": [
-                    { id: 101, name: "Rushabh Zaveri", role: "Chairperson", desc: "Mastermind behind chapter scaling.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop", category: "CORE_COMMITTEE" }
-                ]
-            };
-            localStorage.setItem('acm_team', JSON.stringify(defaults));
+        // --- ONLY USE CLOUD DATA, NO DEFAULTS ---
+        if (!localStorage.getItem('acm_events')) localStorage.setItem('acm_events', '[]');
+        if (!localStorage.getItem('acm_team')) localStorage.setItem('acm_team', '{}');
+        
+        // Auto-initialize from cloud if URL exists but data is empty
+        const gasUrl = localStorage.getItem('acm_gas_url');
+        if (gasUrl && JSON.parse(localStorage.getItem('acm_events')).length === 0) {
+           console.log("INITIAL_BOOT :: ATTEMPTING_CLOUD_SYNC");
+           // We'll let the user manually trigger Fetch for now to be safe, 
+           // or we could trigger the fetch function if it was extracted.
         }
 
         setRegistrations(JSON.parse(localStorage.getItem('acm_registrations') || '[]'));
@@ -1787,10 +1859,79 @@ const Management = () => {
 
     const logout = () => { sessionStorage.removeItem('acm_admin_token'); navigate('/contact'); };
 
-    const saveEvents = (updated) => { setEvents(updated); localStorage.setItem('acm_events', JSON.stringify(updated)); };
-    const saveTeam = (updated) => { setTeam(updated); localStorage.setItem('acm_team', JSON.stringify(updated)); };
-    const saveGallery = (updated) => { setGallery(updated); localStorage.setItem('acm_gallery', JSON.stringify(updated)); };
-    const saveAbout = (updated) => { setEditAbout(updated); localStorage.setItem('acm_about', JSON.stringify(updated)); };
+    const saveEvents = (updated) => { setEvents(updated); localStorage.setItem('acm_events', JSON.stringify(updated)); setIsDirty(true); };
+    const saveTeam = (updated) => { setTeam(updated); localStorage.setItem('acm_team', JSON.stringify(updated)); setIsDirty(true); };
+    const saveGallery = (updated) => { setGallery(updated); localStorage.setItem('acm_gallery', JSON.stringify(updated)); setIsDirty(true); };
+    const saveAbout = (updated) => { setEditAbout(updated); localStorage.setItem('acm_about', JSON.stringify(updated)); setIsDirty(true); };
+
+    // --- CLOUD SYNC ENGINE ---
+    const pushToCloud = async (silent = false) => {
+        const gasUrl = localStorage.getItem('acm_gas_url');
+        if (!gasUrl) return silent ? null : alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+        
+        setSyncStatus('SYNCING');
+        try {
+            const payload = {
+                action: 'save',
+                data: {
+                    events: JSON.parse(localStorage.getItem('acm_events') || '[]'),
+                    team: JSON.parse(localStorage.getItem('acm_team') || '{}'),
+                    gallery: JSON.parse(localStorage.getItem('acm_gallery') || '[]'),
+                    about: JSON.parse(localStorage.getItem('acm_about') || '{}'),
+                    registrations: JSON.parse(localStorage.getItem('acm_registrations') || '[]'),
+                    messages: JSON.parse(localStorage.getItem('acm_messages') || '[]'),
+                    timestamp: new Date().toISOString()
+                }
+            };
+            
+            await fetch(gasUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+            
+            setIsDirty(false);
+            setSyncStatus('SUCCESS');
+            if(!silent) alert('UPLINK_SUCCESS :: CLOUD_STORAGE_SYNCHRONIZED');
+        } catch (err) {
+            console.error("Push Failed:", err);
+            setSyncStatus('ERROR');
+            if(!silent) alert(`UPLINK_FAILURE: ${err.message}`);
+        }
+    };
+
+    const pullFromCloud = async () => {
+        const gasUrl = localStorage.getItem('acm_gas_url');
+        if (!gasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+        
+        setSyncStatus('SYNCING');
+        try {
+            const response = await fetch(`${gasUrl}?action=get`);
+            if (!response.ok) throw new Error(`HTTP_${response.status}`);
+            const result = await response.json();
+            const finalData = result.data || result;
+            
+            if (finalData && finalData.events) {
+                localStorage.setItem('acm_events', JSON.stringify(finalData.events));
+                localStorage.setItem('acm_team', JSON.stringify(finalData.team));
+                localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery));
+                localStorage.setItem('acm_about', JSON.stringify(finalData.about));
+                localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
+                localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
+                
+                setSyncStatus('SUCCESS');
+                alert('DOWNLINK_ESTABLISHED :: FETCH_COMPLETE :: RE-INITIALIZING');
+                window.location.reload();
+            } else {
+                setSyncStatus('IDLE');
+                alert('EMPTY_BUFFER_RECEIVED :: CHECK_SHEET_DATA');
+            }
+        } catch (err) {
+            console.error("Pull Failed:", err);
+            setSyncStatus('ERROR');
+            alert(`DOWNLINK_FAILURE: ${err.message}`);
+        }
+    };
 
     // --- IMAGE COMPRESSOR (Fixes localStorage capacity issues) ---
     const compressImage = (file) => {
@@ -1818,6 +1959,15 @@ const Management = () => {
                 };
             };
         });
+    };
+
+    const getDirectDriveUrl = (url) => {
+        if (!url) return '';
+        if (url.includes('drive.google.com')) {
+            const match = url.match(/\/file\/d\/([^\/]+)/) || url.match(/id=([^\&]+)/);
+            if (match && match[1]) return `https://lh3.googleusercontent.com/u/0/d/${match[1]}`;
+        }
+        return url;
     };
 
     const handleFileUpload = async (e, mode) => {
@@ -1929,7 +2079,7 @@ const Management = () => {
         }
         setEvents(existing);
         localStorage.setItem('acm_events', JSON.stringify(existing));
-        setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
+        setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, maxTeamSize: 1, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
         setEditingEventId(null);
         alert(editingEventId ? "EVENT_UPDATED" : "EVENT_DEPLOYED");
     };
@@ -2156,10 +2306,14 @@ const Management = () => {
                                     <input className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.eventDate} onChange={e => setNewEvent({...newEvent, eventDate: e.target.value})}/>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1">
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Prize_Pool (Number)</label>
                                     <input type="number" className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.prizePool} onChange={e => setNewEvent({...newEvent, prizePool: parseInt(e.target.value)||0})}/>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Max_Team_Size</label>
+                                    <input type="number" min="1" className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.maxTeamSize} onChange={e => setNewEvent({...newEvent, maxTeamSize: parseInt(e.target.value)||1})}/>
                                 </div>
                             </div>
 
@@ -2640,29 +2794,57 @@ const Management = () => {
                                             alert('EMPTY_BUFFER_RECEIVED :: CHECK_SHEET_DATA');
                                         }
                                     } catch(err) { alert(`DOWNLINK_FAILURE: ${err.message}`); }
-                                    btn.innerText = "Fetch_Pull ↓";
+                                btn.innerText = "Fetch_Pull ↓";
                                 }}
                                 className="flex-1 py-4 border border-acm-cyan text-acm-cyan font-black text-xs uppercase hover:bg-acm-cyan/10 transition-all"
                             >Fetch_Pull ↓</button>
                         </div>
+                        
+                        <div className="mt-4">
+                            <button 
+                                onClick={async (e) => {
+                                    const currentGasUrl = localStorage.getItem('acm_gas_url');
+                                    if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+                                    const btn = e.currentTarget;
+                                    btn.innerText = "REBUILDING_INDEX...";
+                                    try {
+                                        await fetch(currentGasUrl, {
+                                            method: 'POST',
+                                            mode: 'no-cors',
+                                            body: JSON.stringify({ action: 'rebuild' })
+                                        });
+                                        alert('REBUILD_SIGNAL_SENT :: Cloud reflects Sheet edits now.\n(Recommended: Click Fetch_Pull to see changes)');
+                                    } catch(err) { alert(`REBUILD_FAILURE: ${err.message}`); }
+                                    btn.innerText = "Rebuild_Cloud_Index ⟲";
+                                }}
+                                className="w-full py-4 border border-white/10 text-gray-500 font-mono text-[10px] uppercase hover:text-white hover:bg-white/5 transition-all"
+                            >Rebuild_Cloud_Index ⟲</button>
+                            <p className="text-[7px] text-gray-600 mt-2 italic text-center uppercase">// USE_AFTER_MANUALLY_EDITING_GOOGLE_SHEET_ROWS</p>
+                        </div>
                         <div className="mt-8 p-4 bg-black/40 border border-white/5 rounded-lg overflow-x-auto">
                             <p className="text-[7px] font-mono text-gray-500 leading-relaxed uppercase whitespace-pre">
-                                // ELITE_SHEET_ENGINE_V4 (PASTE IN EXTENSIONS &gt; APPS SCRIPT)<br/>
+                                // ELITE_SHEET_ENGINE_V4_2_GOLD (PASTE IN EXTENSIONS &gt; APPS SCRIPT)<br/>
                                 {`
 const MASTER_SHEET = "Sheet1";
 const META_SHEET = "_META";
+const LOG_SHEET = "DEBUG_LOG";
+
 const REQUIRED_SHEETS = {
   "Sheet1": ["MASTER_JSON"],
   "_META": ["KEY","VALUE"],
+  "DEBUG_LOG": ["TIMESTAMP", "STATUS", "MESSAGE", "PAYLOAD_EXTRACT"],
   "TEAM_LOGS": ["CATEGORY","NAME","ROLE","IMAGE_URL","LINKEDIN","DESCRIPTION"],
-  "EVENT_LOGS": ["SLUG","TITLE","DATE","CATEGORY","PRIZE_POOL","IMAGES_COUNT","TRACKS","EXPERTS","FAQS","DESCRIPTION"],
+  "EVENT_LOGS": ["SLUG","TITLE","DATE","CATEGORY","PRIZE_POOL","MAX_TEAM_SIZE","IMAGES_COUNT","TRACKS","EXPERTS","FAQS","DESCRIPTION"],
   "GALLERY_LOGS": ["IMAGE_URL","CAPTION","EVENT_LINK"],
   "ABOUT_LOGS": ["TYPE","DATA1","DATA2","DATA3"],
   "REGISTRATION_LOGS": ["NAME","EMAIL","PHONE","YEAR","BRANCH","COLLEGE","TEAM","EVENT","TIMESTAMP","MESSAGE"],
   "MESSAGE_LOGS": ["USER_ID","EMAIL","TIMESTAMP","CONTENT"]
 };
+function setupDatabase() { initializeSheets(); }
+
 function initializeSheets(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if(!ss) throw new Error("CRITICAL_ERROR :: SCRIPT_NOT_BOUND_TO_SHEET");
   Object.keys(REQUIRED_SHEETS).forEach(name=>{
     let sheet = ss.getSheetByName(name);
     if(!sheet) sheet = ss.insertSheet(name);
@@ -2677,14 +2859,14 @@ function initializeSheets(){
 function initializeMeta(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(META_SHEET);
-  const data = sheet.getRange(2,1,2,2).getValues();
-  if(!data[0][0] || data[0][1] === ""){
+  const data = sheet.getRange(2,1,1,2).getValues();
+  if(!data[0][0] || data[0][0] !== "VERSION"){
     sheet.getRange(2,1,2,2).setValues([["VERSION", 1], ["LAST_UPDATE", Date.now()]]);
   }
 }
 function doPost(e){
-  initializeSheets();
-  try{
+  try {
+    initializeSheets();
     if (!e || !e.postData || !e.postData.contents) throw new Error("BUFFER_EMPTY");
     const payload = JSON.parse(e.postData.contents);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -2692,22 +2874,32 @@ function doPost(e){
       saveMasterJSON(ss, payload.data);
       processPayload(ss, payload.data);
       bumpVersion();
+      logEvent("SUCCESS", "Data sync complete", "Action: " + (payload.action || "save"));
     }
     return jsonResponse({ status: "SUCCESS" });
-  }catch(err){ return jsonResponse({ status: "ERROR", message: err.toString() }); }
+  } catch(err) {
+    logEvent("CRASH", err.toString(), "In doPost");
+    return jsonResponse({ status: "ERROR", message: err.toString() });
+  }
 }
 function doGet(e){
-  initializeSheets();
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const meta = ss.getSheetByName(META_SHEET);
-  const currentVersion = meta.getRange("B2").getValue();
-  const clientVersion = e.parameter.version;
-  if(clientVersion && Number(clientVersion) === Number(currentVersion)){
-    return jsonResponse({ status: "NO_UPDATE", version: currentVersion });
+  try {
+    initializeSheets();
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const meta = ss.getSheetByName(META_SHEET);
+    const currentVersion = meta.getRange("B2").getValue();
+    const clientVersion = e.parameter.version;
+    if(clientVersion && Number(clientVersion) === Number(currentVersion)){
+      return jsonResponse({ status: "NO_UPDATE", version: currentVersion });
+    }
+    const master = ss.getSheetByName(MASTER_SHEET);
+    let rawData = master.getRange("A1").getValue();
+    if(!rawData || rawData === "") rawData = "{}";
+    return jsonResponse({ version: currentVersion, data: JSON.parse(rawData) });
+  } catch(err) {
+    logEvent("CRASH", err.toString(), "In doGet");
+    return jsonResponse({ status: "ERROR", message: err.toString() });
   }
-  const master = ss.getSheetByName(MASTER_SHEET);
-  const rawData = master.getRange("A1").getValue() || "{}";
-  return jsonResponse({ version: currentVersion, data: JSON.parse(rawData) });
 }
 function bumpVersion(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -2746,12 +2938,7 @@ function writeEvents(ss, events){
   if(Array.isArray(events)) {
     events.forEach(e=>{
       rows.push([
-        e.slug||"", 
-        e.title||"", 
-        e.dateText||"", 
-        e.category||"", 
-        e.prizePool||0, 
-        (e.images||[]).length,
+        e.slug||"", e.title||"", e.dateText||"", e.category||"", e.prizePool||0, (e.images||[]).length,
         (e.tracks||[]).join(", "),
         (e.speakers||[]).map(s => s.name + " (" + (s.type || 'SPEAKER') + " - " + s.role + ") [" + (s.link || 'NO_LINK') + "]").join(" | "),
         (e.faqs||[]).map(f => "Q: " + f.question + " A: " + f.answer).join(" | "),
@@ -2811,6 +2998,13 @@ function formatHeader(sheet){
     header.setFontWeight("bold").setBackground("#f3f3f3");
     sheet.setFrozenRows(1);
   }
+}
+function logEvent(st, msg, pay) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(LOG_SHEET) || ss.insertSheet(LOG_SHEET);
+    sheet.appendRow([new Date(), st, msg, pay]);
+  } catch(e) {}
 }
 function jsonResponse(obj){
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
@@ -2975,18 +3169,28 @@ const App = () => {
             if (gasUrl) {
                 try {
                     const response = await fetch(`${gasUrl}?action=get`);
+                    if (!response.ok) throw new Error(`HTTP_${response.status}`);
                     const result = await response.json();
-                    if (result && result.events) {
-                        const newAbout = JSON.stringify(result.about);
+                    
+                    // Safrly handle nested data: { version: x, data: { ... } }
+                    const finalData = result.data || result;
+                    
+                    if (finalData && finalData.events) {
+                        const newAbout = JSON.stringify(finalData.about || {});
                         const oldAbout = localStorage.getItem('acm_about');
-                        localStorage.setItem('acm_events', JSON.stringify(result.events));
-                        localStorage.setItem('acm_team', JSON.stringify(result.team));
-                        localStorage.setItem('acm_gallery', JSON.stringify(result.gallery));
+                        
+                        // Update all buckets
+                        localStorage.setItem('acm_events', JSON.stringify(finalData.events || []));
+                        localStorage.setItem('acm_team', JSON.stringify(finalData.team || {}));
+                        localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery || []));
                         localStorage.setItem('acm_about', newAbout);
-                        localStorage.setItem('acm_registrations', JSON.stringify(result.registrations || []));
-                        localStorage.setItem('acm_messages', JSON.stringify(result.messages || []));
-                        if (newAbout !== oldAbout) {
-                             setTimeout(() => window.location.reload(), 100);
+                        localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
+                        localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
+                        
+                        // Only reload if the about section (headings/mission) changed to avoid infinite loop
+                        // but ensure current session has latest data for other parts
+                        if (oldAbout && newAbout !== oldAbout) {
+                             setTimeout(() => window.location.reload(), 300);
                         }
                     }
                 } catch (err) {
