@@ -14,7 +14,7 @@ const REQUIRED_SHEETS = {
   "_META": ["KEY","VALUE"],
   "DEBUG_LOG": ["TIMESTAMP", "STATUS", "MESSAGE", "PAYLOAD_EXTRACT"],
   "TEAM_LOGS": ["CATEGORY","NAME","ROLE","IMAGE_URL","LINKEDIN","DESCRIPTION"],
-  "EVENT_LOGS": ["SLUG","TITLE","DATE","CATEGORY","PRIZE_POOL","IMAGES_COUNT","TRACKS","EXPERTS","FAQS","DESCRIPTION"],
+  "EVENT_LOGS": ["SLUG","TITLE","DATE_TEXT","CATEGORY","PRIZE_POOL","MAX_TEAM_SIZE","IMAGES_JSON","TRACKS_JSON","EXPERTS_JSON","FAQS_JSON","DESCRIPTION","COUNTDOWN_ISO"],
   "GALLERY_LOGS": ["IMAGE_URL","CAPTION","EVENT_LINK"],
   "ABOUT_LOGS": ["TYPE","DATA1","DATA2","DATA3"],
   "REGISTRATION_LOGS": ["NAME","EMAIL","PHONE","YEAR","BRANCH","COLLEGE","TEAM","EVENT","TIMESTAMP","MESSAGE"],
@@ -235,12 +235,36 @@ function saveMasterJSON(ss, data) {
 
 function processPayload(ss, data) {
   if (!data) return;
-  if (data.team) writeTeam(ss, data.team);
-  if (data.events) writeEvents(ss, data.events);
-  if (data.gallery) writeGallery(ss, data.gallery);
-  if (data.about) writeAbout(ss, data.about);
-  if (data.registrations) writeRegistrations(ss, data.registrations);
-  if (data.messages) writeMessages(ss, data.messages);
+  logEvent("INFO", "Processing Payload", `Keys: ${Object.keys(data).join(",")}`);
+  try {
+    if (data.team) {
+       writeTeam(ss, data.team);
+       logEvent("INFO", "Team Logs Updated", "");
+    }
+    if (data.events) {
+       writeEvents(ss, data.events);
+       logEvent("INFO", "Event Logs Updated", `Count: ${data.events.length}`);
+    }
+    if (data.gallery) {
+       writeGallery(ss, data.gallery);
+       logEvent("INFO", "Gallery Logs Updated", "");
+    }
+    if (data.about) {
+       writeAbout(ss, data.about);
+       logEvent("INFO", "About Logs Updated", "");
+    }
+    if (data.registrations) {
+       writeRegistrations(ss, data.registrations);
+       logEvent("INFO", "Registrations Logs Updated", "");
+    }
+    if (data.messages) {
+       writeMessages(ss, data.messages);
+       logEvent("INFO", "Messages Logs Updated", "");
+    }
+  } catch(e) {
+    logEvent("ERROR", "ProcessPayload Failed", e.toString());
+    throw e;
+  }
 }
 
 function writeTeam(ss, team) {
@@ -260,11 +284,13 @@ function writeEvents(ss, events) {
   if (Array.isArray(events)) {
     events.forEach(function(e) {
       rows.push([
-        e.slug||"", e.title||"", e.dateText||"", e.category||"", e.prizePool||0, e.maxTeamSize||1, (e.images||[]).length,
-        (e.tracks||[]).join(", "),
-        (e.speakers||[]).map(function(s) { return s.name + " (" + (s.type || 'SPEAKER') + " - " + s.role + ") [" + (s.link || 'NO_LINK') + "]"; }).join(" | "),
-        (e.faqs||[]).map(function(f) { return "Q: " + f.question + " A: " + f.answer; }).join(" | "),
-        e.desc||""
+        e.slug||"", e.title||"", e.dateText||"", e.category||"", e.prizePool||0, e.maxTeamSize||1,
+        JSON.stringify(e.images||[]),
+        JSON.stringify(e.tracks||[]),
+        JSON.stringify(e.speakers||[]),
+        JSON.stringify(e.faqs||[]),
+        e.desc||"",
+        e.eventDate||""
       ]);
     });
   }
@@ -327,16 +353,42 @@ function readEvents(ss) {
   for (let i = 1; i < values.length; i++) {
     const row = values[i];
     events.push({
-      slug: row[0], title: row[1], dateText: row[2], category: row[3], 
-      prizePool: row[4], maxTeamSize: row[5],
-      images: [], // Images are separate in detailed logic usually, but here we keep count
-      tracks: row[7] ? row[7].split(", ").filter(x=>x) : [],
-      speakers: [], // Complex to parse back from string perfectly
-      faqs: [],
-      desc: row[10]
+      slug: row[0], 
+      title: row[1], 
+      dateText: row[2], 
+      category: row[3], 
+      prizePool: row[4], 
+      maxTeamSize: row[5],
+      images: safeJSONParse(row[6], []),
+      tracks: safeJSONParse(row[7], []),
+      speakers: safeJSONParse(row[8], []),
+      faqs: safeJSONParse(row[9], []),
+      desc: row[10],
+      eventDate: row[11]
     });
   }
   return events;
+}
+
+function safeJSONParse(val, fallback) {
+  if (!val || val === "") return fallback;
+  if (typeof val !== 'string') return val;
+  try {
+    return JSON.parse(val);
+  } catch(e) {
+    // If it's a list expected field, try to handle comma separated strings
+    if (Array.isArray(fallback)) {
+      if (val.indexOf('http') === 0 || val.indexOf('/') === 0) {
+        // Likely a single URL or path
+        return [val.trim()];
+      }
+      if (val.indexOf(',') !== -1) {
+        return val.split(',').map(function(s) { return s.trim(); });
+      }
+      return [val.trim()];
+    }
+    return val;
+  }
 }
 
 function readTeam(ss) {
@@ -404,12 +456,20 @@ function readMessages(ss) {
 }
 
 function writeToSheet(ss, name, rows) {
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) sheet = ss.insertSheet(name);
-  sheet.clearContents();
-  if (rows.length > 0) {
-    sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-    formatHeader(sheet);
+  try {
+    let sheet = ss.getSheetByName(name);
+    if (!sheet) {
+      sheet = ss.insertSheet(name);
+      logEvent("INFO", `Created new sheet: ${name}`, "");
+    }
+    sheet.clearContents();
+    if (rows.length > 0) {
+      sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+      formatHeader(sheet);
+    }
+  } catch(e) {
+    logEvent("ERROR", `WriteToSheet Failed [${name}]`, e.toString());
+    throw e;
   }
 }
 
