@@ -462,9 +462,9 @@ const Events = () => {
                 <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 md:mt-0 uppercase font-semibold">:: UPCOMING_OPERATIONS</p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
                 {events.map((ev) => (
-                    <Link key={ev.slug} to={`/events/${ev.slug}`} className="block w-full sm:w-[calc(50%-2rem)] lg:w-[calc(33.33%-3rem)]">
+                    <Link key={ev.slug} to={`/events/${ev.slug}`} className="block">
                         <TiltCard className="group aspect-video cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-white/2 hover:scale-110 hover:shadow-[0_0_80px_rgba(100,255,218,0.15)] transition-all duration-500 z-10 hover:z-20">
                             <div className="relative h-full w-full p-5 md:p-8 flex flex-col justify-between z-10 transition-all duration-500 group-hover:bg-acm-cyan/5">
 
@@ -711,7 +711,7 @@ const Team = () => {
                         <span className="text-[10px] opacity-20">[{members.length}_NODES]</span>
                     </h3>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-12">
+                    <div className="flex flex-wrap gap-8 md:gap-14 justify-center px-4">
                         {members.map((m, i) => (
                             <TeamPersonaCard key={m.id || i} member={m} />
                         ))}
@@ -723,71 +723,60 @@ const Team = () => {
 };
 
 const TeamPersonaCard = ({ member }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
     return (
-        <div 
-            onClick={() => setIsExpanded(!isExpanded)}
-            className={`group relative aspect-[3/4.5] bg-[#0A192F] rounded-2xl border transition-all duration-500 overflow-hidden cursor-pointer ${isExpanded ? 'border-acm-cyan ring-1 ring-acm-cyan/50 shadow-[0_0_40px_rgba(100,255,218,0.15)]' : 'border-white/10 hover:border-acm-cyan/40 shadow-xl'}`}
-        >
-            {/* Header Gradient */}
-            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none"></div>
+        <div className="group relative w-[16rem] h-[24rem] bg-[#0A192F] rounded-[2.5rem] overflow-hidden font-sans transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            {/* Background Image - FULL FILL */}
+            <img
+                src={getDirectDriveUrl(member.image)}
+                alt={member.name}
+                className="absolute inset-0 w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
+            />
+            
+            {/* Darker Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent group-hover:from-black/90 opacity-100 transition-all duration-500"></div>
 
-            {/* Profile Image - HANDLED PROPERLY */}
-            <div className="absolute inset-0 z-0 bg-[#050505] overflow-hidden">
-                <img
-                    src={getDirectDriveUrl(member.image)}
-                    alt={member.name}
-                    className={`w-full h-full object-cover transition-all duration-1000 ${isExpanded ? 'scale-110 blur-[2px] opacity-40' : 'grayscale-[20%] group-hover:grayscale-0 scale-100 group-hover:scale-110 opacity-90 group-hover:opacity-100'}`}
-                />
-                {/* Bottom Shadow for Name readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 group-hover:opacity-70 transition-opacity"></div>
-            </div>
-
-            {/* LinkedIn Badge */}
-            <a
-                href={member.linkedin || "#"}
-                onClick={(e) => e.stopPropagation()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute top-4 right-4 z-30 w-9 h-9 flex items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl hover:bg-[#0077b5] text-white transition-all scale-90 hover:scale-110"
-            >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-            </a>
-
-            {/* Identity Information */}
-            <div className="absolute inset-0 p-6 flex flex-col justify-end z-20">
-                <div className={`transition-all duration-700 transform ${isExpanded ? '-translate-y-4' : 'translate-y-0'}`}>
-                    <h3 className="text-xl md:text-2xl font-heading font-black text-white leading-tight mb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase">
+            {/* Content Section Overlay */}
+            <section className="absolute inset-0 p-6 flex flex-col justify-end z-20 pointer-events-none">
+                <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <h2 className="text-xl font-bold text-white mb-0.5 uppercase tracking-tighter">
                         {member.name}
-                    </h3>
-                    <p className="text-acm-cyan font-mono text-[10px] uppercase tracking-[0.2em] font-bold bg-acm-cyan/10 self-start px-2 py-0.5 rounded border border-acm-cyan/20">
-                        {member.role}
+                    </h2>
+                    <p className="text-acm-cyan font-mono text-[9px] uppercase tracking-widest opacity-80">
+                        // {member.role}
                     </p>
                 </div>
 
-                {/* Expanded Bio */}
-                <div className={`mt-5 transition-all duration-700 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[12rem] opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="h-px bg-acm-cyan/30 w-full mb-4"></div>
-                    <p className="text-xs text-gray-100 font-sans leading-relaxed tracking-wide italic">
+                {/* Description - slides in on hover */}
+                <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:mt-4">
+                    <p className="overflow-hidden text-gray-300 text-[10px] leading-relaxed italic">
                         {member.desc}
                     </p>
-                    <button className="mt-6 text-[9px] text-acm-cyan font-mono uppercase tracking-widest border border-acm-cyan/30 px-3 py-1.5 rounded hover:bg-acm-cyan hover:text-black transition-all">COLLAPSE_LOG</button>
                 </div>
-                
-                {!isExpanded && (
-                    <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
-                        <span className="w-4 h-[1px] bg-acm-cyan"></span>
-                        <p className="text-[8px] text-acm-cyan font-mono uppercase tracking-[0.3em]">READ_PERSONA</p>
-                    </div>
-                )}
-            </div>
 
-            {/* Subtle Shine Animation */}
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-[200%] transition-transform duration-[1500ms] pointer-events-none"></div>
+                {/* Footer Controls */}
+                <div className="mt-6 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-500 delay-150 transform translate-y-2 group-hover:translate-y-0">
+                    <div className="text-[10px] text-white/40 font-mono flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-acm-cyan animate-pulse"></div>
+                        V.NODE
+                    </div>
+
+                    <a
+                        href={member.linkedin || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pointer-events-auto py-2.5 px-6 rounded-full text-[9px] font-black tracking-widest transition-all duration-300 bg-white/10 text-white hover:bg-acm-cyan hover:text-black hover:scale-105"
+                    >
+                        CONNECT
+                    </a>
+                </div>
+            </section>
+
+            {/* Subtle Edge Glow on Hover */}
+            <div className="absolute inset-0 border border-white/5 group-hover:border-white/15 rounded-[2.5rem] pointer-events-none transition-colors duration-500"></div>
         </div>
     );
 };
+
 
 
 
@@ -998,7 +987,10 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                                 <img 
                                     key={i} 
                                     src={img} 
-                                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${i === slide ? 'opacity-100' : 'opacity-0'}`}
+                                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
+                                        i === slide ? 'translate-x-0 opacity-100 z-10' : 
+                                        i < slide ? '-translate-x-full opacity-0 z-0' : 'translate-x-full opacity-0 z-0'
+                                    }`}
                                     alt="Event"
                                 />
                             ))}
@@ -1007,7 +999,10 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                         item.slides.map((gradient, i) => (
                             <div 
                                 key={i} 
-                                className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-opacity duration-1000 ${i === slide ? 'opacity-100' : 'opacity-0'}`} 
+                                className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all duration-1000 ${
+                                    i === slide ? 'translate-x-0 opacity-100 z-10' : 
+                                    i < slide ? '-translate-x-full opacity-0 z-0' : 'translate-x-full opacity-0 z-0'
+                                }`} 
                             />
                         ))
                     )}
@@ -1864,6 +1859,19 @@ const Management = () => {
     const saveGallery = (updated) => { setGallery(updated); localStorage.setItem('acm_gallery', JSON.stringify(updated)); setIsDirty(true); };
     const saveAbout = (updated) => { setEditAbout(updated); localStorage.setItem('acm_about', JSON.stringify(updated)); setIsDirty(true); };
 
+    // --- AUTO-PUSH ENGINE (Debounced) ---
+    useEffect(() => {
+        if (!isDirty) return;
+        const gasUrl = localStorage.getItem('acm_gas_url');
+        if (!gasUrl) return;
+
+        console.log("AUTO_SYNC_PENDING :: 5s_DEBOUNCE");
+        const timer = setTimeout(() => {
+            pushToCloud(true);
+        }, 5000); 
+        return () => clearTimeout(timer);
+    }, [isDirty]);
+
     // --- CLOUD SYNC ENGINE ---
     const pushToCloud = async (silent = false) => {
         const gasUrl = localStorage.getItem('acm_gas_url');
@@ -2077,8 +2085,8 @@ const Management = () => {
         } else {
             existing.push(finalEvent);
         }
-        setEvents(existing);
-        localStorage.setItem('acm_events', JSON.stringify(existing));
+        
+        saveEvents(existing);
         setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, maxTeamSize: 1, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
         setEditingEventId(null);
         alert(editingEventId ? "EVENT_UPDATED" : "EVENT_DEPLOYED");
@@ -3143,6 +3151,11 @@ const App = () => {
         if (!localStorage.getItem('acm_admin_creds')) {
              localStorage.setItem('acm_admin_creds', JSON.stringify({userId:"admin", email:"acmco@tsecmumbai.in", pass:"ACM_SECURE_2026"}));
         }
+
+        const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3tGeRdq9YzORYD0xHmYd7Lwh0zfR-GS7T-edTPySnFDvb9E8T5fwivExjw/exec";
+        if (!localStorage.getItem('acm_gas_url')) {
+            localStorage.setItem('acm_gas_url', DEFAULT_GAS_URL);
+        }
         if (!localStorage.getItem('acm_about')) {
             const defaults = {
                 homeHeading1: "FUTURE",
@@ -3163,43 +3176,59 @@ const App = () => {
             localStorage.setItem('acm_about', JSON.stringify(defaults));
         }
 
-        // Live Sync: Fetch fresh data on every load if GAS URL exists
+        // Live Sync: Version-Based Backend Sync Engine
         const syncData = async () => {
-            const gasUrl = localStorage.getItem('acm_gas_url');
-            if (gasUrl) {
-                try {
-                    const response = await fetch(`${gasUrl}?action=get`);
-                    if (!response.ok) throw new Error(`HTTP_${response.status}`);
-                    const result = await response.json();
-                    
-                    // Safrly handle nested data: { version: x, data: { ... } }
-                    const finalData = result.data || result;
-                    
-                    if (finalData && finalData.events) {
-                        const newAbout = JSON.stringify(finalData.about || {});
-                        const oldAbout = localStorage.getItem('acm_about');
-                        
-                        // Update all buckets
-                        localStorage.setItem('acm_events', JSON.stringify(finalData.events || []));
-                        localStorage.setItem('acm_team', JSON.stringify(finalData.team || {}));
-                        localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery || []));
-                        localStorage.setItem('acm_about', newAbout);
-                        localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
-                        localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
-                        
-                        // Only reload if the about section (headings/mission) changed to avoid infinite loop
-                        // but ensure current session has latest data for other parts
-                        if (oldAbout && newAbout !== oldAbout) {
-                             setTimeout(() => window.location.reload(), 300);
-                        }
-                    }
-                } catch (err) {
-                    console.error("Live Sync Failed:", err);
+            const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxDtzQ8WmDF3tGeRdq9YzORYD0xHmYd7Lwh0zfR-GS7T-edTPySnFDvb9E8T5fwivExjw/exec";
+            const gasUrl = localStorage.getItem('acm_gas_url') || DEFAULT_GAS_URL;
+            if (!gasUrl) return;
+
+            try {
+                const currentVersion = localStorage.getItem('acm_version') || '0';
+                const response = await fetch(`${gasUrl}?action=get&version=${currentVersion}`);
+                if (!response.ok) throw new Error(`HTTP_${response.status}`);
+                
+                const result = await response.json();
+                
+                // If backend says NO_UPDATE, exit early to save resources
+                if (result.status === "NO_UPDATE") {
+                    console.log(`[SYNC] Version ${currentVersion} is up to date.`);
+                    return;
                 }
+
+                const finalData = result.data;
+                const newVersion = result.version;
+                
+                if (finalData && finalData.events) {
+                    console.log(`[SYNC] Updating to version ${newVersion}...`);
+                    
+                    const newAbout = JSON.stringify(finalData.about || {});
+                    const oldAbout = localStorage.getItem('acm_about');
+                    
+                    // Atomically update local persistence
+                    localStorage.setItem('acm_events', JSON.stringify(finalData.events || []));
+                    localStorage.setItem('acm_team', JSON.stringify(finalData.team || {}));
+                    localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery || []));
+                    localStorage.setItem('acm_about', newAbout);
+                    localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
+                    localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
+                    localStorage.setItem('acm_version', newVersion);
+
+                    // If 'about' data (mission/headings) changed, reload to reflect
+                    if (oldAbout && newAbout !== oldAbout) {
+                         setTimeout(() => window.location.reload(), 300);
+                    }
+                }
+            } catch (err) {
+                console.error("[SYNC] Engine Error:", err);
             }
         };
+
+        // Initial sync on load
         syncData();
 
+        // Background Check: Every 30 seconds
+        const poller = setInterval(syncData, 30000);
+        return () => clearInterval(poller);
     }, []);
 
     return (

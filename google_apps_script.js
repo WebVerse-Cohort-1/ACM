@@ -61,18 +61,45 @@ function initializeMeta() {
   }
 }
 
+/**
+ * onEdit(e) trigger - Automatically rebuilds JSON and bumps version
+ * whenever someone edits the spreadsheet manually.
+ */
+function onEdit(e) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    rebuildMasterIndex(ss);
+    logEvent("SUCCESS", "Manual Edit Rebuilt Master Index", "Version Incremented");
+    lock.releaseLock();
+  } catch (err) {
+    if (lock.hasLock()) lock.releaseLock();
+    logEvent("ERROR", "onEdit Rebuild Failed", err.toString());
+  }
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
-    lock.waitLock(5000);
+    lock.waitLock(10000);
     initializeSheets();
     if (!e || !e.postData || !e.postData.contents) throw new Error("BUFFER_EMPTY");
     const payload = JSON.parse(e.postData.contents);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
+    // Standard 'rebuild' action
     if (payload.action === "rebuild") {
       rebuildMasterIndex(ss);
       return jsonResponse({ status: "SUCCESS", message: "REBUILD_COMPLETE" });
+    }
+
+    // New 'set' action as requested in architecture
+    if (payload.action === "set" && payload.data) {
+       saveMasterJSON(ss, payload.data);
+       processPayload(ss, payload.data);
+       bumpVersion();
+       return jsonResponse({ status: "SUCCESS", message: "REMOTE_SET_COMPLETE" });
     }
 
     if (payload.action === 'register' && payload.data) {
@@ -87,12 +114,13 @@ function doPost(e) {
        return jsonResponse({ status: "SUCCESS", message: "MESSAGE_RECORDED" });
     }
 
+    // Fallback for general data updates
     if (payload.data) {
       saveMasterJSON(ss, payload.data);
       processPayload(ss, payload.data);
       bumpVersion();
-      logEvent("SUCCESS", "Data sync complete", "Action: save");
     }
+    
     lock.releaseLock();
     return jsonResponse({ status: "SUCCESS" });
   } catch (err) {
