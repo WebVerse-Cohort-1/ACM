@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>TSEC ACM | Student Chapter</title>
     
     <!-- Fonts: Inter (Professional Sans) -->
@@ -48,62 +49,103 @@
     <script crossorigin src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
     <script crossorigin src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Global Reset & Foundation */
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        /* Foundation */
         body { 
-            margin: 0; 
-            background-color: #020C1B; 
-            color: #8892b0;
-            overflow-x: hidden; /* Prevent horizontal scroll mess */
-            width: 100vw;
-            position: relative;
-        }
-        
-        /* Proper Breakpoints (Foundation) */
-        
-        /* Desktop */
-        @media (min-width: 1024px) { }
-
-        /* Tablet */
-        @media (max-width: 1024px) { }
-
-        /* Mobile */
-        @media (max-width: 768px) {
-            h1 { font-size: clamp(2rem, 8vw, 3rem) !important; }
-            h2 { font-size: clamp(1.5rem, 6vw, 2rem) !important; }
-            .row { flex-direction: column !important; }
-            .container { padding: 0 20px !important; width: 100% !important; }
+            background: #020C1B; 
+            color: #E2E8F0; 
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
         }
 
-        /* Small mobile */
-        @media (max-width: 480px) {
-             h1 { font-size: 1.75rem !important; }
-        }
+        .font-heading { font-family: 'Inter', sans-serif; font-weight: 800; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Smooth Scroll */
-        html { scroll-behavior: smooth; }
-        
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #020C1B; }
-        ::-webkit-scrollbar-thumb { background: #112240; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64ffda; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0A192F; }
+        ::-webkit-scrollbar-thumb { background: #64ffda; border-radius: 10px; }
 
-        /* Utilities */
-        .glass-panel {
-            background: rgba(17, 34, 64, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(136, 146, 176, 0.1);
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-20px) rotate(2deg); }
         }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to bottom, transparent, #64ffda, transparent);
+            opacity: 0.1;
+            position: absolute;
+            animation: scanline 4s linear infinite;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(10, 25, 47, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(2, 12, 27, 0.4);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(10, 25, 47, 0.6);
+            border-color: rgba(100, 255, 218, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px -10px rgba(2,12,27,0.5);
+        }
+
+        /* Neural Background */
+        .neural-grid {
+            mask-image: radial-gradient(circle at center, black, transparent);
+            background-size: 50px 50px;
+            background-image: linear-gradient(to right, rgba(100, 255, 218, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(100, 255, 218, 0.05) 1px, transparent 1px);
+        }
+
+        /* Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* No Scrollbar Utility */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
