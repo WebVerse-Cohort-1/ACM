@@ -697,21 +697,21 @@ const About = () => {
     const [objRef, objVisible] = useScrollReveal();
 
     return (
-        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-7xl mx-auto pb-32">
+        <div className="min-h-screen pt-24 md:pt-32 px-4 md:px-20 max-w-7xl mx-auto pb-16 md:pb-32">
 
             {/* === HERO SECTION === */}
-            <div className="mb-32 relative">
-                <h1 className="text-8xl md:text-[10rem] font-heading font-bold opacity-[0.03] absolute -top-10 -left-4 pointer-events-none select-none z-0">
+            <div className="mb-12 md:mb-32 relative">
+                <h1 className="hidden md:block text-8xl md:text-[10rem] font-heading font-bold opacity-[0.03] absolute -top-10 -left-4 pointer-events-none select-none z-0">
                     ABOUT
                 </h1>
                 <div className="relative z-10">
-                    <p className="text-acm-cyan font-mono text-xs tracking-[0.5em] mb-6 animate-pulse">
+                    <p className="text-acm-cyan font-mono text-xs tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-6 animate-pulse">
                         :: SYSTEM_PROFILE_LOADED
                     </p>
-                    <h2 className="text-5xl md:text-7xl font-heading font-bold text-white mb-4">
+                    <h2 className="text-4xl md:text-7xl font-heading font-bold text-white mb-3 md:mb-4">
                         WHO_WE<span className="text-acm-cyan">_ARE</span>
                     </h2>
-                    <p className="text-xl md:text-2xl text-gray-400 max-w-3xl leading-relaxed border-l-2 border-acm-cyan/30 pl-6">
+                    <p className="text-base md:text-2xl text-gray-400 max-w-3xl leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6">
                         We are the <span className="text-white font-bold">architects</span> of the digital frontier.
                         TSEC ACM is not just a club; it's an incubator for those who dare to
                         <span className="italic text-acm-cyan/80"> disrupt</span> the status quo.
@@ -738,7 +738,7 @@ const About = () => {
             {/* === STATS COUNTER === */}
             <div
                 ref={statsRef}
-                className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 mb-40"
+                className="grid grid-cols-3 gap-4 md:gap-16 mb-12 md:mb-40"
             >
                 {stats.map((stat, i) => (
                     <div
@@ -746,7 +746,7 @@ const About = () => {
                         className="text-center group transition-transform duration-500 hover:-translate-y-3 relative"
                     >
                         <div className="absolute inset-0 bg-acm-cyan/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-                        <h3 className="text-6xl md:text-7xl font-heading font-bold text-acm-cyan relative mb-2">
+                        <h3 className="text-4xl md:text-7xl font-heading font-bold text-acm-cyan relative mb-2">
                             {counts[i]}+
                             <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
                         </h3>
@@ -758,7 +758,7 @@ const About = () => {
             </div>
 
             {/* === VISION SECTION === */}
-            <div ref={visionRef} className={`mb-40 transition-all duration-1000 ${visionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+            <div ref={visionRef} className={`mb-12 md:mb-40 transition-all duration-1000 ${visionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
                 <div className="flex items-center gap-6 mb-10">
                     <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-acm-cyan rounded-full animate-pulse shadow-[0_0_15px_rgba(100,255,218,0.5)]" />
@@ -774,7 +774,7 @@ const About = () => {
                     {/* Glow backdrop */}
                     <div className="absolute -inset-4 bg-gradient-to-r from-acm-cyan/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-                    <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-8 md:p-14 backdrop-blur-md group-hover:border-acm-cyan/30 transition-all duration-700 overflow-hidden">
+                    <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-5 md:p-14 backdrop-blur-md group-hover:border-acm-cyan/30 transition-all duration-700 overflow-hidden">
                         {/* Decorative corner brackets */}
                         <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-acm-cyan/30 rounded-tl-sm" />
                         <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-acm-cyan/30 rounded-br-sm" />
@@ -784,7 +784,7 @@ const About = () => {
 
                         <p className="font-mono text-[10px] text-acm-cyan/60 tracking-[0.4em] mb-6">// CORE_DIRECTIVE</p>
 
-                        <blockquote className="text-2xl md:text-4xl font-light leading-relaxed text-white/90">
+                        <blockquote className="text-lg md:text-4xl font-light leading-relaxed text-white/90">
                             <span className="text-acm-cyan text-5xl font-serif leading-none mr-2">"</span>
                             To build a <span className="text-acm-cyan font-semibold">future-ready community</span> of innovators who leverage computing to solve{' '}
                             <span className="text-white font-semibold">real-world problems</span> and drive meaningful{' '}
@@ -804,7 +804,7 @@ const About = () => {
             </div>
 
             {/* === MISSION SECTION === */}
-            <div ref={missionRef} className={`mb-40 transition-all duration-1000 delay-200 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+            <div ref={missionRef} className={`mb-12 md:mb-40 transition-all duration-1000 delay-200 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
                 <div className="flex items-center gap-6 mb-12">
                     <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
@@ -848,7 +848,7 @@ const About = () => {
             </div>
 
             {/* === OBJECTIVES SECTION === */}
-            <div ref={objRef} className={`mb-40 transition-all duration-1000 delay-300 ${objVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+            <div ref={objRef} className={`mb-12 md:mb-40 transition-all duration-1000 delay-300 ${objVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
                 <div className="flex items-center gap-6 mb-12">
                     <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(192,132,252,0.5)]" />
@@ -995,27 +995,27 @@ const Team = () => {
     };
 
     return (
-        <div className="min-h-screen pt-40 px-6 md:px-20 max-w-7xl mx-auto pb-32">
-            <h1 className="text-8xl md:text-[12rem] font-['Playfair_Display'] italic font-bold mb-32 opacity-[0.03] fixed -z-10 top-20 right-0 pointer-events-none select-none">
+        <div className="min-h-screen pt-28 md:pt-40 px-4 md:px-20 max-w-7xl mx-auto pb-16 md:pb-32">
+            <h1 className="hidden md:block text-8xl md:text-[12rem] font-['Playfair_Display'] italic font-bold mb-32 opacity-[0.03] fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 Leadership
             </h1>
 
             {Object.entries(teamData).map(([category, members]) => (
-                <div key={category} className="mb-40">
-                    <div className="flex items-center gap-6 md:gap-10 mb-16 px-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-2.5 h-2.5 bg-acm-cyan rounded-full shadow-[0_0_12px_rgba(100,255,218,0.5)] animate-pulse" />
-                            <h3 className="text-2xl md:text-4xl font-heading font-bold tracking-[0.15em] text-white uppercase">
+                <div key={category} className="mb-16 md:mb-40">
+                    <div className="flex items-center gap-3 md:gap-10 mb-8 md:mb-16 px-2 md:px-4">
+                        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                            <div className="w-2 h-2 md:w-2.5 md:h-2.5 flex-shrink-0 bg-acm-cyan rounded-full shadow-[0_0_12px_rgba(100,255,218,0.5)] animate-pulse" />
+                            <h3 className="text-base md:text-4xl font-heading font-bold tracking-[0.05em] md:tracking-[0.15em] text-white uppercase truncate">
                                 {category.split('_').join(' ')}
                             </h3>
                         </div>
                         <div className="flex-1 h-px bg-gradient-to-r from-acm-cyan/20 to-transparent"></div>
-                        <span className="font-mono text-[10px] text-acm-cyan tracking-[0.5em] bg-acm-cyan/5 border border-acm-cyan/15 px-3 py-1.5 rounded-full">
-                            {members.length} MEMBERS
+                        <span className="font-mono text-[9px] md:text-[10px] text-acm-cyan tracking-[0.2em] md:tracking-[0.5em] bg-acm-cyan/5 border border-acm-cyan/15 px-2 md:px-3 py-1 md:py-1.5 rounded-full whitespace-nowrap">
+                            {members.length}M
                         </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-x-3 md:gap-x-8 gap-y-6 md:gap-y-16">
                         {members.map((m, i) => (
                             <TeamPersonaCard key={m.id || i} member={m} />
                         ))}
@@ -1028,9 +1028,9 @@ const Team = () => {
 
 const TeamPersonaCard = ({ member }) => {
     return (
-        <TiltCard className="group relative aspect-[10/14] bg-[#030712] rounded-2xl border border-white/5 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl">
+        <TiltCard className="group relative aspect-[10/14] bg-[#030712] rounded-xl md:rounded-2xl border border-white/5 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-xl md:shadow-2xl">
             {/* Persona Media (Image/Video) */}
-            <div className="absolute top-0 left-0 w-full h-[72%] overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-[70%] overflow-hidden">
                 {member.image.toLowerCase().endsWith('.mp4') ? (
                     <video
                         src={member.image}
@@ -1047,35 +1047,34 @@ const TeamPersonaCard = ({ member }) => {
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                        style={getImageStyle(member.image)}
                     />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent"></div>
             </div>
 
-            {/* LinkedIn Float */}
+            {/* LinkedIn Float — always visible on mobile, hover on desktop */}
             {member.linkedin && member.linkedin !== "#" && (
                 <a
                     href={member.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full hover:bg-[#0077b5] hover:border-[#0077b5] hover:text-white transition-all duration-500 opacity-0 group-hover:opacity-100"
+                    className="absolute top-2 right-2 md:top-4 md:right-4 z-30 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center bg-black/60 backdrop-blur-xl border border-white/20 rounded-full hover:bg-[#0077b5] hover:border-[#0077b5] hover:text-white transition-all duration-500 opacity-80 md:opacity-0 md:group-hover:opacity-100"
                 >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+                    <svg className="w-3 h-3 md:w-4 md:h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
                 </a>
             )}
 
             {/* Content Section */}
-            <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col items-start bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent">
-                <p className="text-[9px] font-mono text-acm-cyan tracking-[0.4em] uppercase mb-2 opacity-60">
+            <div className="absolute bottom-0 left-0 w-full p-3 md:p-6 flex flex-col items-start bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent">
+                <p className="text-[7px] md:text-[9px] font-mono text-acm-cyan tracking-[0.2em] md:tracking-[0.4em] uppercase mb-1 md:mb-2 opacity-60 truncate w-full">
                     {member.role}
                 </p>
-                <h3 className="text-2xl md:text-2xl font-['Playfair_Display'] font-serif text-white mb-2 group-hover:text-acm-cyan transition-colors duration-500">
+                <h3 className="text-sm md:text-xl font-['Playfair_Display'] font-serif text-white mb-1 md:mb-2 group-hover:text-acm-cyan transition-colors duration-500 leading-tight">
                     {member.name}
                 </h3>
-                
-                <div className="w-6 h-[1px] bg-white/20 group-hover:w-full group-hover:bg-acm-cyan/40 transition-all duration-700 mb-4"></div>
-                
-                <p className="text-[11px] leading-relaxed text-gray-400 font-sans line-clamp-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-y-2 group-hover:translate-y-0">
+                <div className="w-4 md:w-6 h-[1px] bg-white/20 group-hover:w-full group-hover:bg-acm-cyan/40 transition-all duration-700 mb-2 md:mb-4"></div>
+                <p className="hidden md:block text-[11px] leading-relaxed text-gray-400 font-sans line-clamp-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-y-2 group-hover:translate-y-0">
                     {member.desc}
                 </p>
             </div>
