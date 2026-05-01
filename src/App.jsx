@@ -525,6 +525,55 @@ const Events = () => {
     );
 };
 
+// --- SCROLL REVEAL HOOK ---
+const useScrollReveal = (threshold = 0.15) => {
+    const ref = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
+            { threshold }
+        );
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, []);
+    return [ref, isVisible];
+};
+
+// --- TYPING EFFECT COMPONENT ---
+const TerminalTyping = ({ text, delay = 0, className = "" }) => {
+    const [displayed, setDisplayed] = useState("");
+    const [started, setStarted] = useState(false);
+    const [ref, isVisible] = useScrollReveal(0.3);
+
+    useEffect(() => {
+        if (isVisible && !started) {
+            const timer = setTimeout(() => setStarted(true), delay);
+            return () => clearTimeout(timer);
+        }
+    }, [isVisible, started, delay]);
+
+    useEffect(() => {
+        if (!started) return;
+        let i = 0;
+        const interval = setInterval(() => {
+            setDisplayed(text.slice(0, i + 1));
+            i++;
+            if (i >= text.length) clearInterval(interval);
+        }, 30);
+        return () => clearInterval(interval);
+    }, [started, text]);
+
+    return (
+        <span ref={ref} className={className}>
+            {displayed}
+            {started && displayed.length < text.length && (
+                <span className="inline-block w-2 h-5 bg-acm-cyan ml-1 animate-pulse" />
+            )}
+        </span>
+    );
+};
+
 const About = () => {
     const stats = [
         { label: "MEMBERS", value: 500 },
@@ -571,188 +620,367 @@ const About = () => {
 
         return () => observer.disconnect();
     }, [hasAnimated]);
-    const aboutRef = useRef(null);
-    const [progress, setProgress] = useState(0);
 
+    const objectives = [
+        { id: "01", title: "Enhance Technical Competence", desc: "Strengthen students' core knowledge in programming, algorithms, AI, and emerging technologies through workshops, coding contests, and hands-on sessions.", icon: "⚡" },
+        { id: "02", title: "Promote Innovation & Problem-Solving", desc: "Encourage students to develop innovative solutions for real-world challenges through hackathons, projects, and research-driven activities.", icon: "💡" },
+        { id: "03", title: "Foster Research & Development Culture", desc: "Motivate students to explore research, publish papers, and participate in technical conferences and competitions.", icon: "🔬" },
+        { id: "04", title: "Build a Collaborative Tech Community", desc: "Create a platform for peer learning, knowledge sharing, and collaboration among students, faculty, and industry professionals.", icon: "🤝" },
+        { id: "05", title: "Develop Leadership & Teamwork Skills", desc: "Provide opportunities for students to lead, organize, and manage technical and non-technical events.", icon: "🚀" },
+        { id: "06", title: "Bridge Academia and Industry", desc: "Connect students with industry experts through guest lectures, mentorship programs, and internships.", icon: "🌉" },
+        { id: "07", title: "Encourage Socially Relevant Computing", desc: "Use technology for solving societal issues through projects, awareness drives, and community-focused initiatives.", icon: "🌍" },
+        { id: "08", title: "Promote Inclusivity & Equal Opportunities", desc: "Ensure participation from students of all backgrounds and encourage diversity in technology fields.", icon: "♾️" },
+        { id: "09", title: "Support Open Source & Continuous Learning", desc: "Encourage contributions to open-source projects and promote lifelong learning through continuous upskilling.", icon: "📖" },
+        { id: "10", title: "Enhance Communication & Technical Expression", desc: "Develop students' ability to present ideas, explain concepts, and communicate technical knowledge effectively.", icon: "🎯" },
+    ];
+
+    const missions = [
+        { text: "To cultivate critical thinking and technical excellence through hands-on learning, competitions, and collaborative projects.", icon: "🧠" },
+        { text: "To promote innovation and research by encouraging students to explore emerging technologies and build impactful solutions.", icon: "🔭" },
+        { text: "To nurture leadership, entrepreneurship, and teamwork through diverse technical and creative initiatives.", icon: "⭐" },
+        { text: "To create a strong tech community that bridges academia, industry, and society.", icon: "🔗" },
+    ];
+
+    const taglines = [
+        "Innovate. Integrate. Impact.",
+        "Building Coders. Creating Innovators.",
+        "Think Tech. Build the Future.",
+        "From Code to Change."
+    ];
+
+    const [activeTagline, setActiveTagline] = useState(0);
     useEffect(() => {
-        const handleScroll = () => {
-            if (!aboutRef.current) return;
-
-            const rect = aboutRef.current.getBoundingClientRect();
-            const sectionHeight = aboutRef.current.offsetHeight;
-            const visible = Math.min(
-                Math.max((window.innerHeight - rect.top) / sectionHeight, 0),
-                1
-            );
-
-            setProgress(visible);
-        };
-
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
+        const interval = setInterval(() => {
+            setActiveTagline(prev => (prev + 1) % taglines.length);
+        }, 3000);
+        return () => clearInterval(interval);
     }, []);
 
+    const [visionRef, visionVisible] = useScrollReveal();
+    const [missionRef, missionVisible] = useScrollReveal();
+    const [objRef, objVisible] = useScrollReveal();
+
     return (
-        <div
-            ref={aboutRef}
-            className="min-h-screen pt-32 px-8 md:px-20 flex flex-col md:flex-row gap-20"
-        >
-            <div className="md:w-1/3 flex items-start justify-center relative">
-                <div className="sticky top-32 space-y-6">
-                    {["WHO", "WE", "ARE"].map((word, i) => {
-                        const threshold = (i + 1) / 3;
+        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-7xl mx-auto pb-32">
 
-                        const isActive = progress >= threshold;
+            {/* === HERO SECTION === */}
+            <div className="mb-32 relative">
+                <h1 className="text-8xl md:text-[10rem] font-heading font-bold opacity-[0.03] absolute -top-10 -left-4 pointer-events-none select-none z-0">
+                    ABOUT
+                </h1>
+                <div className="relative z-10">
+                    <p className="text-acm-cyan font-mono text-xs tracking-[0.5em] mb-6 animate-pulse">
+                        :: SYSTEM_PROFILE_LOADED
+                    </p>
+                    <h2 className="text-5xl md:text-7xl font-heading font-bold text-white mb-4">
+                        WHO_WE<span className="text-acm-cyan">_ARE</span>
+                    </h2>
+                    <p className="text-xl md:text-2xl text-gray-400 max-w-3xl leading-relaxed border-l-2 border-acm-cyan/30 pl-6">
+                        We are the <span className="text-white font-bold">architects</span> of the digital frontier.
+                        TSEC ACM is not just a club; it's an incubator for those who dare to
+                        <span className="italic text-acm-cyan/80"> disrupt</span> the status quo.
+                    </p>
 
-                        return (
+                    {/* Rotating Tagline */}
+                    <div className="mt-8 h-12 relative overflow-hidden">
+                        {taglines.map((t, i) => (
                             <div
                                 key={i}
-                                className={`text-6xl md:text-8xl font-heading font-bold transition-all duration-500 ${isActive
-                                        ? "text-acm-cyan scale-110"
-                                        : "text-gray-700 scale-100"
-                                    }`}
+                                className={`absolute left-0 font-mono text-sm tracking-[0.2em] transition-all duration-700 ${
+                                    i === activeTagline
+                                        ? 'opacity-100 translate-y-0 text-acm-cyan'
+                                        : 'opacity-0 translate-y-8 text-gray-600'
+                                }`}
                             >
-                                {word}
+                                <span className="text-gray-600 mr-2">&gt;&gt;</span> "{t}"
                             </div>
-                        );
-                    })}
-
-                    {/* Vertical progress line */}
-                    <div className="absolute -left-6 top-0 h-full w-[2px] bg-white/10">
-                        <div
-                            className="w-full bg-acm-cyan transition-all duration-300"
-                            style={{ height: `${progress * 100}%` }}
-                        />
+                        ))}
                     </div>
                 </div>
             </div>
 
-            <div className="md:w-2/3 space-y-32">
-                <section>
-                    <h2 className="text-2xl text-acm-cyan font-mono mb-6">
-                        :: MISSION_STATEMENT
-                    </h2>
-                    <p className="text-2xl md:text-4xl font-light leading-snug">
-                        We are the <span className="text-white font-bold">architects</span> of the digital frontier.
-                        TSEC ACM is not just a club; it's an incubator for those who dare to
-                        <span className="italic text-gray-400"> disrupt</span> the status quo.
-                    </p>
-                </section>
+            {/* === STATS COUNTER === */}
+            <div
+                ref={statsRef}
+                className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 mb-40"
+            >
+                {stats.map((stat, i) => (
+                    <div
+                        key={i}
+                        className="text-center group transition-transform duration-500 hover:-translate-y-3 relative"
+                    >
+                        <div className="absolute inset-0 bg-acm-cyan/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+                        <h3 className="text-6xl md:text-7xl font-heading font-bold text-acm-cyan relative mb-2">
+                            {counts[i]}+
+                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
+                        </h3>
+                        <p className="text-xs tracking-[0.3em] text-gray-500 mt-3 font-mono">
+                            {stat.label}
+                        </p>
+                    </div>
+                ))}
+            </div>
 
-                <div
-                    ref={statsRef}
-                    className="grid grid-cols-2 md:grid-cols-3 gap-10 mt-20"
-                >
-                    {stats.map((stat, i) => (
+            {/* === VISION SECTION === */}
+            <div ref={visionRef} className={`mb-40 transition-all duration-1000 ${visionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+                <div className="flex items-center gap-6 mb-10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-acm-cyan rounded-full animate-pulse shadow-[0_0_15px_rgba(100,255,218,0.5)]" />
+                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
+                            VISION<span className="text-acm-cyan">_</span>
+                        </h2>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-acm-cyan/30 to-transparent" />
+                    <span className="font-mono text-[9px] text-acm-cyan/40 tracking-[0.5em] hidden md:block">MODULE_01</span>
+                </div>
+
+                <div className="relative group">
+                    {/* Glow backdrop */}
+                    <div className="absolute -inset-4 bg-gradient-to-r from-acm-cyan/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                    <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-8 md:p-14 backdrop-blur-md group-hover:border-acm-cyan/30 transition-all duration-700 overflow-hidden">
+                        {/* Decorative corner brackets */}
+                        <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-acm-cyan/30 rounded-tl-sm" />
+                        <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-acm-cyan/30 rounded-br-sm" />
+
+                        {/* Scan line animation */}
+                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-acm-cyan/40 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[movedown_3s_linear_infinite]" />
+
+                        <p className="font-mono text-[10px] text-acm-cyan/60 tracking-[0.4em] mb-6">// CORE_DIRECTIVE</p>
+
+                        <blockquote className="text-2xl md:text-4xl font-light leading-relaxed text-white/90">
+                            <span className="text-acm-cyan text-5xl font-serif leading-none mr-2">"</span>
+                            To build a <span className="text-acm-cyan font-semibold">future-ready community</span> of innovators who leverage computing to solve{' '}
+                            <span className="text-white font-semibold">real-world problems</span> and drive meaningful{' '}
+                            <span className="bg-gradient-to-r from-acm-cyan to-blue-400 bg-clip-text text-transparent font-semibold">societal impact</span>.
+                            <span className="text-acm-cyan text-5xl font-serif leading-none ml-1">"</span>
+                        </blockquote>
+
+                        <div className="mt-8 flex flex-wrap gap-4">
+                            {["Innovation", "Real-World Impact", "Societal Progress"].map((tag, i) => (
+                                <span key={i} className="px-4 py-1.5 border border-acm-cyan/20 rounded-full text-[10px] font-mono tracking-[0.2em] text-acm-cyan/70 bg-acm-cyan/5 hover:bg-acm-cyan/10 hover:border-acm-cyan/40 transition-all duration-300 cursor-default">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* === MISSION SECTION === */}
+            <div ref={missionRef} className={`mb-40 transition-all duration-1000 delay-200 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+                <div className="flex items-center gap-6 mb-12">
+                    <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
+                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
+                            MISSION<span className="text-blue-400">_</span>
+                        </h2>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-blue-400/30 to-transparent" />
+                    <span className="font-mono text-[9px] text-blue-400/40 tracking-[0.5em] hidden md:block">MODULE_02</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {missions.map((m, i) => (
                         <div
                             key={i}
-                            className="text-center group transition-transform duration-500 hover:-translate-y-2"
+                            className="group relative"
+                            style={{ animationDelay: `${i * 150}ms` }}
                         >
-                            <h3 className="text-5xl md:text-6xl font-heading font-bold text-acm-cyan relative">
-                                {counts[i]}+
-                                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
-                            </h3>
-                            <p className="text-xs tracking-[0.3em] text-gray-500 mt-3">
-                                {stat.label}
-                            </p>
+                            {/* Hover glow */}
+                            <div className="absolute -inset-2 bg-blue-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                            <div className="relative bg-white/[0.03] border border-white/10 rounded-xl p-6 md:p-8 h-full group-hover:border-blue-400/30 group-hover:bg-white/[0.05] transition-all duration-500 overflow-hidden">
+                                {/* Top accent bar */}
+                                <div className="absolute top-0 left-0 w-0 h-[2px] bg-gradient-to-r from-blue-400 to-acm-cyan group-hover:w-full transition-all duration-700" />
+
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 w-12 h-12 bg-blue-500/10 border border-blue-400/20 rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-500">
+                                        {m.icon}
+                                    </div>
+                                    <div className="flex-1">
+                                        <span className="font-mono text-[9px] text-blue-400/50 tracking-[0.3em] block mb-2">M{i + 1}_DIRECTIVE</span>
+                                        <p className="text-gray-300 text-sm md:text-base leading-relaxed group-hover:text-white/90 transition-colors duration-500">
+                                            {m.text}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
-
-                <section>
-                    <h2 className="text-2xl text-acm-blue font-mono mb-6">
-                        :: LEGACY_LOGS
-                    </h2>
-                    <div className="border-l border-white/20 pl-10 space-y-16">
-                        <div>
-                            <span className="text-4xl font-heading font-bold opacity-30">2025</span>
-                            <h3 className="text-2xl font-bold mt-2">National Apex</h3>
-                            <p className="text-gray-400 mt-2">
-                                Awarded Best Student Chapter nationwide.
-                            </p>
-                        </div>
-                        <div>
-                            <span className="text-4xl font-heading font-bold opacity-30">2023</span>
-                            <h3 className="text-2xl font-bold mt-2">Source Code</h3>
-                            <p className="text-gray-400 mt-2">
-                                Launched open-source initiative with 500+ PRs.
-                            </p>
-                        </div>
-                    </div>
-                </section><br /><br /><br />
             </div>
+
+            {/* === OBJECTIVES SECTION === */}
+            <div ref={objRef} className={`mb-40 transition-all duration-1000 delay-300 ${objVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+                <div className="flex items-center gap-6 mb-12">
+                    <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(192,132,252,0.5)]" />
+                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
+                            OBJECTIVES<span className="text-purple-400">_</span>
+                        </h2>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-purple-400/30 to-transparent" />
+                    <span className="font-mono text-[9px] text-purple-400/40 tracking-[0.5em] hidden md:block">MODULE_03</span>
+                </div>
+
+                {/* Objectives Terminal Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {objectives.map((obj, i) => {
+                        const [objItemRef, objItemVisible] = useScrollReveal(0.1);
+                        return (
+                            <div
+                                key={obj.id}
+                                ref={objItemRef}
+                                className={`group relative transition-all duration-700 ${objItemVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                                style={{ transitionDelay: `${i * 80}ms` }}
+                            >
+                                <div className="relative bg-white/[0.02] border border-white/[0.06] rounded-lg p-5 md:p-6 hover:border-purple-400/30 hover:bg-white/[0.04] transition-all duration-500 overflow-hidden h-full">
+                                    {/* Left accent */}
+                                    <div className="absolute left-0 top-0 w-[2px] h-0 bg-gradient-to-b from-purple-400 to-acm-cyan group-hover:h-full transition-all duration-700" />
+
+                                    <div className="flex items-start gap-4 pl-2">
+                                        <div className="flex-shrink-0">
+                                            <span className="text-2xl block mb-1 group-hover:scale-125 transition-transform duration-500">{obj.icon}</span>
+                                            <span className="font-mono text-[10px] text-purple-400/60 tracking-widest">{obj.id}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm md:text-base font-bold text-white/90 mb-2 group-hover:text-purple-300 transition-colors duration-500">
+                                                {obj.title}
+                                            </h4>
+                                            <p className="text-xs md:text-sm text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors duration-500">
+                                                {obj.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Terminal Footer */}
+                <div className="mt-8 text-center">
+                    <p className="font-mono text-[10px] text-gray-600 tracking-[0.4em] animate-pulse">
+                        :: {objectives.length}_OBJECTIVES_LOADED :: STATUS_ACTIVE ::
+                    </p>
+                </div>
+            </div>
+
+            {/* === LEGACY LOGS === */}
+            <div className="mb-20">
+                <div className="flex items-center gap-6 mb-12">
+                    <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
+                            LEGACY<span className="text-amber-400">_</span>LOGS
+                        </h2>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-amber-400/30 to-transparent" />
+                    <span className="font-mono text-[9px] text-amber-400/40 tracking-[0.5em] hidden md:block">MODULE_04</span>
+                </div>
+
+                <div className="border-l-2 border-white/10 pl-8 md:pl-12 space-y-16 relative">
+                    {/* Animated Pulse on timeline */}
+                    <div className="absolute left-[-5px] top-0 w-2 h-2 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-ping" />
+
+                    <div className="group">
+                        <span className="text-5xl font-heading font-bold text-white/10 group-hover:text-amber-400/30 transition-colors duration-500">2025</span>
+                        <h3 className="text-2xl font-bold mt-2 text-white group-hover:text-amber-300 transition-colors duration-500">National Apex</h3>
+                        <p className="text-gray-400 mt-2 group-hover:text-gray-300 transition-colors duration-500">
+                            Awarded Best Student Chapter nationwide.
+                        </p>
+                    </div>
+                    <div className="group">
+                        <span className="text-5xl font-heading font-bold text-white/10 group-hover:text-amber-400/30 transition-colors duration-500">2023</span>
+                        <h3 className="text-2xl font-bold mt-2 text-white group-hover:text-amber-300 transition-colors duration-500">Source Code</h3>
+                        <p className="text-gray-400 mt-2 group-hover:text-gray-300 transition-colors duration-500">
+                            Launched open-source initiative with 500+ PRs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 };
 
 const Team = () => {
     const teamData = {
-        "FACULTY_SPONSORS": [
-            { name: "Dr. Aarti Deshpande", role: "Faculty Sponsor", desc: "Guiding TSEC ACM towards excellence with strategic vision and academic leadership.", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=500&fit=crop" },
-            { name: "Prof. S. Waghmare", role: "Faculty Incharge", desc: "Overseeing chapter operations and student engagement initiatives.", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&h=500&fit=crop" },
-            { name: "Prof. Mani J.", role: "Faculty Incharge", desc: "Mentoring project teams and fostering technical innovation.", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&h=500&fit=crop" },
-            { name: "Prof. K. Patel", role: "Faculty Incharge", desc: "Supporting student growth through industry-aligned mentorship.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&h=500&fit=crop" },
+        "CHIEF_PATRON": [
+            { name: "Vaishali Rane", role: "Chief Patron", desc: "Leading with strategic vision and providing overarching support for the chapter's mission.", image: "./Photoshot ACM/vaishali rane.jpeg" },
         ],
-        "CORE_COMMITTEE": [
-            { name: "Taran Shetty", role: "Chairperson", desc: "Leading the chapter with a focus on community building and global tech standards.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop" },
-            { name: "Ananya Rai", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
-            { name: "Rahul Varma", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
-            { name: "Ishani Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&h=500&fit=crop" },
+        "SPONSORS_AND_COORDINATORS": [
+            { name: "Smita Dandge", role: "Faculty Sponsor", desc: "Guiding the chapter with academic leadership and professional mentorship.", image: "./Photoshot ACM/smita dange.jpeg" },
+            { name: "Kashif Sheikh", role: "Faculty Co-Sponsor", desc: "Providing strategic guidance and support for chapter initiatives.", image: "./Photoshot ACM/kashif sheikh.jpeg" },
+            { name: "Manish Salvi", role: "Faculty Co-Ordinator", desc: "Overseeing chapter operations and student engagement.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&h=500&fit=crop" },
         ],
-        "TECHNICAL_FORCE": [
-            { name: "Devansh Mehta", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400&h=500&fit=crop" },
-            { name: "Tanvi Kulkarni", role: "Technical Head", desc: "Specializing in cloud architecture and system design patterns.", image: "https://images.unsplash.com/photo-1554151228-14d9def656e4?q=80&w=400&h=500&fit=crop" },
+        "CHAIRPERSONS": [
+            { name: "Aaditya Devghare", role: "Chairperson", desc: "Leading the chapter with a focus on community building and global tech standards.", image: "./Photoshot ACM/aditya devghare.jpeg" },
+            { name: "Ishika Mehta", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "./Photoshot ACM/ishika mehta.jpeg" },
+            { name: "Nigam Tiwari", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
         ],
-        "WEB_ARCHITECTS": [
-            { name: "Sahil Shah", role: "Webmaster", desc: "Building immersive digital experiences with modern web stacks.", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=500&fit=crop" },
-            { name: "Nitya Iyer", role: "Webmaster", desc: "Optimizing web performance and maintaining digital infrastructure.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=500&fit=crop" },
+        "TREASURER_AND_SECRETARY": [
+            { name: "Sagar Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "./Photoshot ACM/sagar gupta.jpeg" },
+            { name: "Aditya Mishra", role: "Secretary", desc: "Overseeing administrative tasks and maintaining chapter records.", image: "./Photoshot ACM/aditya mishra.jpeg" },
         ],
-        "DESIGN_SQUAD": [
-            { name: "Arjun Khanna", role: "Creative Designer", desc: "Visual storytelling through high-impact graphic design.", image: "https://images.unsplash.com/photo-1521119989659-a83eee488004?q=80&w=400&h=500&fit=crop" },
-            { name: "Pooja Hegde", role: "Creative Designer", desc: "Crafting visual identities that resonate with our tech community.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
-            { name: "Mehak Chawla", role: "UI/UX Designer", desc: "Designing user-centric interfaces for seamless digital navigation.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
+        "TECHNICAL_TEAM": [
+            { name: "Shivam Pal", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "./Photoshot ACM/shivam pal.jpeg" },
+            { name: "Aman Mandal", role: "Technical Head", desc: "Specializing in software architecture and technical implementation.", image: "./Photoshot ACM/aman mandal.jpeg" },
+            { name: "Rushab Singh", role: "Webmaster", desc: "Building immersive digital experiences with modern web stacks.", image: "./Photoshot ACM/rushabh singh.jpeg" },
+            { name: "Subham Singh", role: "Webmaster", desc: "Optimizing web performance and maintaining digital infrastructure.", image: "./Photoshot ACM/shubham singh.jpeg" },
         ],
-        "CONTENT_STRATEGISTS": [
-            { name: "Rohan Deshmukh", role: "Editorial Incharge", desc: "Overseeing all published content and thematic consistency.", image: "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?q=80&w=400&h=500&fit=crop" },
-            { name: "Kiara Advani", role: "Newsletter Editor", desc: "Curating the latest tech news for our weekly subscriber base.", image: "https://images.unsplash.com/photo-1567532939604-b6c5b0ad2e01?q=80&w=400&h=500&fit=crop" },
-            { name: "Kabir Singh", role: "Content Writer", desc: "Translating complex tech concepts into engaging written narratives.", image: "https://images.unsplash.com/photo-1552058544-f2b08422138a?q=80&w=400&h=500&fit=crop" },
+        "CREATIVE_TEAM": [
+            { name: "Krishi Oza", role: "Creative Designer", desc: "Visual storytelling through high-impact graphic design.", image: "./Photoshot ACM/krishi oza.jpeg" },
+            { name: "Janish Dave", role: "Creative Designer", desc: "Crafting visual identities that resonate with our tech community.", image: "./Photoshot ACM/jainish dave.jpeg" },
+            { name: "Samhita Hejmadi", role: "UI/UX Designer", desc: "Designing user-centric interfaces for seamless digital navigation.", image: "./Photoshot ACM/samhita hejmadi.jpeg" },
+            { name: "Sahir Sheikh", role: "UI/UX Designer", desc: "Creating intuitive user journeys and aesthetic digital interfaces.", image: "./Photoshot ACM/sahir sheikh.jpeg" },
         ],
-        "MEDIA_TEAM": [
-            { name: "Varun Dhawan", role: "Cinematographer", desc: "Capturing the essence of events through dynamic visual lenses.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
-            { name: "Kriti Sanon", role: "Video Editor", desc: "Post-processing visual assets into premium brand stories.", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=500&fit=crop" },
-            { name: "Ayush Khurana", role: "Social Media Manager", desc: "Managing our digital footprint and community engagement.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=500&fit=crop" },
-            { name: "Sara Ali", role: "Social Media Manager", desc: "Curating viral content and handling channel outreach.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=500&fit=crop" },
+        "DOCUMENTATION": [
+            { name: "Amaan Sheikh", role: "Newsletter Editor", desc: "Curating the latest tech news for our weekly subscriber base.", image: "./Photoshot ACM/amaan sheikh.jpeg" },
+            { name: "Aadiish Shukla", role: "Content Writer", desc: "Translating complex tech concepts into engaging written narratives.", image: "./Photoshot ACM/aadish shukla.jpeg" },
         ],
-        "MANAGEMENT_CREW": [
-            { name: "Aditya Roy", role: "Operational Head", desc: "Ensuring smooth execution of all logistical and back-end pipelines.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
-            { name: "Tara Sutaria", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=500&fit=crop" },
-            { name: "Ishaan Khatter", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=500&fit=crop" },
-            { name: "Alaya F", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "https://images.unsplash.com/photo-1517841905240-472988bad197?q=80&w=400&h=500&fit=crop" },
+        "PHOTOGRAPHY_TEAM": [
+            { name: "Shivam Tiwari", role: "Cinematographer", desc: "Capturing the essence of events through dynamic visual lenses.", image: "./Photoshot ACM/shivam tiwari.jpeg" },
+        ],
+        "SOCIAL_MEDIA_TEAM": [
+            { name: "Aditya Bhatt", role: "Social Media Manager", desc: "Managing our digital footprint and community engagement.", image: "./Photoshot ACM/aditya bhat.jpg" },
+            { name: "Ayushi Labde", role: "Social Media Manager", desc: "Curating viral content and handling channel outreach.", image: "./Photoshot ACM/ayushi labde.jpeg" },
+        ],
+        "EVENT_COORDINATORS": [
+            { name: "Sonal Tripathi", role: "Operational Head", desc: "Ensuring smooth execution of all logistical and back-end pipelines.", image: "./Photoshot ACM/sonal  tripathi.jpeg" },
+            { name: "Asmita Chauhan", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "./Photoshot ACM/asmita chauhan.jpeg" },
+            { name: "Samriddhi Singh", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "./Photoshot ACM/sammriddhi singh.jpeg" },
+            { name: "Nidhi Lad", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "./Photoshot ACM/nidhi lad.jpeg" },
+        ],
+        "MARKETING_TEAM": [
+            { name: "Arushi Singh", role: "Marketing Manager", desc: "Developing strategies to expand chapter visibility and reach.", image: "./Photoshot ACM/arushi singh.jpeg" },
+            { name: "Jaya Yadav", role: "Marketing Manager", desc: "Driving brand growth through targeted outreach and communication.", image: "./Photoshot ACM/jaya yadav.jpeg" },
         ],
     };
 
     return (
-        <div className="min-h-screen pt-32 px-6 md:px-20 max-w-7xl mx-auto pb-20">
-            <h1 className="text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
-                COMMAND
+        <div className="min-h-screen pt-40 px-6 md:px-20 max-w-7xl mx-auto pb-32">
+            <h1 className="text-8xl md:text-[12rem] font-['Playfair_Display'] italic font-bold mb-32 opacity-[0.03] fixed -z-10 top-20 right-0 pointer-events-none select-none">
+                Leadership
             </h1>
 
-            <div className="flex flex-col md:flex-row items-baseline justify-between mb-10 border-b border-white/10 pb-8 backdrop-blur-sm">
-                <h2 className="text-4xl md:text-6xl font-heading font-bold text-white">
-                    PROTOCOL_<span className="text-acm-cyan">LEADERS</span>
-                </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-4 md:mt-0 uppercase">:: Core committee & vertical heads</p>
-            </div>
-
             {Object.entries(teamData).map(([category, members]) => (
-                <div key={category} className="mb-24">
-                    <h3 className="text-2xl font-mono text-acm-cyan/80 mb-12 tracking-[.3em] flex items-center gap-4">
-                        <span className="w-8 h-px bg-acm-cyan/40"></span>
-                        {category}
-                        <span className="text-[10px] opacity-30 mt-1">({members.length}_NODES)</span>
-                    </h3>
+                <div key={category} className="mb-40">
+                    <div className="flex items-center gap-6 md:gap-10 mb-16 px-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2.5 h-2.5 bg-acm-cyan rounded-full shadow-[0_0_12px_rgba(100,255,218,0.5)] animate-pulse" />
+                            <h3 className="text-2xl md:text-4xl font-heading font-bold tracking-[0.15em] text-white uppercase">
+                                {category.split('_').join(' ')}
+                            </h3>
+                        </div>
+                        <div className="flex-1 h-px bg-gradient-to-r from-acm-cyan/20 to-transparent"></div>
+                        <span className="font-mono text-[10px] text-acm-cyan tracking-[0.5em] bg-acm-cyan/5 border border-acm-cyan/15 px-3 py-1.5 rounded-full">
+                            {members.length} MEMBERS
+                        </span>
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
                         {members.map((m, i) => (
                             <TeamPersonaCard key={i} member={m} />
                         ))}
@@ -763,56 +991,61 @@ const Team = () => {
     );
 };
 
-// --- PREMUM TEAM CARD (Persona Style) ---
 const TeamPersonaCard = ({ member }) => {
     return (
-        <TiltCard className="group relative aspect-[4/5] bg-[#020c1b] rounded-2xl border border-white/5 hover:border-acm-cyan/40 transition-all duration-500 overflow-hidden">
-            {/* LinkedIn Icon Top Right */}
+        <TiltCard className="group relative aspect-[10/14] bg-[#030712] rounded-2xl border border-white/5 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl">
+            {/* Persona Media (Image/Video) */}
+            <div className="absolute top-0 left-0 w-full h-[72%] overflow-hidden">
+                {member.image.toLowerCase().endsWith('.mp4') ? (
+                    <video
+                        src={member.image}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                    />
+                ) : (
+                    <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                    />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent"></div>
+            </div>
+
+            {/* LinkedIn Float */}
             <a
                 href="#"
-                className="absolute top-6 right-6 z-30 w-8 h-8 flex items-center justify-center bg-[#0077b5]/10 border border-[#0077b5]/30 rounded-lg hover:bg-[#0077b5] hover:text-white text-[#0077b5] transition-all"
+                className="absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full hover:bg-white hover:text-black transition-all duration-500 opacity-0 group-hover:opacity-100"
             >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
             </a>
 
-            <div className="relative h-full w-full p-8 flex flex-col z-10 transition-transform duration-500 group-hover:-translate-y-2">
-                {/* Name - Playfair Display (Serif) */}
-                <h3 className="text-3xl md:text-2xl font-['Playfair_Display'] font-bold text-white mb-1 group-hover:text-acm-cyan transition-colors leading-tight">
-                    {member.name}
-                </h3>
-
-                {/* Role */}
-                <p className="text-acm-cyan font-semibold text-sm mb-4 tracking-wide font-sans">
+            {/* Content Section */}
+            <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col items-start bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent">
+                <p className="text-[9px] font-mono text-acm-cyan tracking-[0.4em] uppercase mb-2 opacity-60">
                     {member.role}
                 </p>
-
-                {/* Description */}
-                <p className="text-gray-300 text-xs leading-relaxed font-sans opacity-80 group-hover:opacity-100 transition-opacity">
+                <h3 className="text-2xl md:text-2xl font-['Playfair_Display'] font-serif text-white mb-2 group-hover:text-acm-cyan transition-colors duration-500">
+                    {member.name}
+                </h3>
+                
+                <div className="w-6 h-[1px] bg-white/20 group-hover:w-full group-hover:bg-acm-cyan/40 transition-all duration-700 mb-4"></div>
+                
+                <p className="text-[11px] leading-relaxed text-gray-400 font-sans line-clamp-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-y-2 group-hover:translate-y-0">
                     {member.desc}
                 </p>
-
-                {/* Persona Image at Bottom */}
-                <div className="mt-auto relative w-full h-56 md:h-48 flex justify-center items-end overflow-hidden">
-                    {/* Shadow behind person */}
-                    <div className="absolute bottom-0 w-40 h-40 bg-acm-cyan/10 rounded-full blur-3xl opacity-40 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-                    <img
-                        src={member.image}
-                        alt={member.name}
-                        className="relative z-10 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700 transform origin-bottom scale-[1.1] group-hover:scale-[1.15]"
-                        style={{
-                            WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 30%, black 100%)',
-                            maskImage: 'linear-gradient(to top, transparent 0%, black 30%, black 100%)'
-                        }}
-                    />
-                </div>
             </div>
 
-            {/* Shine effect */}
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            {/* Subtle Overlay Glow */}
+            <div className="absolute inset-0 border border-white/5 pointer-events-none group-hover:border-acm-cyan/20 transition-colors duration-700"></div>
         </TiltCard>
     );
 };
+
+
 
 
 
