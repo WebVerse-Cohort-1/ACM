@@ -908,54 +908,53 @@ const About = () => {
 const Team = () => {
     const teamData = {
         "CHIEF_PATRON": [
-            { name: "Vaishali Rane", role: "Chief Patron", desc: "Leading with strategic vision and providing overarching support for the chapter's mission.", image: "./Photoshot ACM/vaishali rane.jpeg" },
+            { name: "Vaishali Rane", role: "Chief Patron", desc: "Leading with strategic vision and providing overarching support for the chapter's mission.", image: "./Photoshot ACM/vaishali rane.jpeg", linkedin: "#" },
         ],
         "SPONSORS_AND_COORDINATORS": [
-            { name: "Smita Dandge", role: "Faculty Sponsor", desc: "Guiding the chapter with academic leadership and professional mentorship.", image: "./Photoshot ACM/smita dange.jpeg" },
-            { name: "Kashif Sheikh", role: "Faculty Co-Sponsor", desc: "Providing strategic guidance and support for chapter initiatives.", image: "./Photoshot ACM/kashif sheikh.jpeg" },
-            { name: "Manish Salvi", role: "Faculty Co-Ordinator", desc: "Overseeing chapter operations and student engagement.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&h=500&fit=crop" },
+            { name: "Smita Dandge", role: "Faculty Sponsor", desc: "Guiding the chapter with academic leadership and professional mentorship.", image: "./Photoshot ACM/smita dange.jpeg", linkedin: "#" },
+            { name: "Kashif Sheikh", role: "Faculty Co-Sponsor", desc: "Providing strategic guidance and support for chapter initiatives.", image: "./Photoshot ACM/kashif sheikh.jpeg", linkedin: "#" },
         ],
         "CHAIRPERSONS": [
-            { name: "Aaditya Devghare", role: "Chairperson", desc: "Leading the chapter with a focus on community building and global tech standards.", image: "./Photoshot ACM/aditya devghare.jpeg" },
-            { name: "Ishika Mehta", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "./Photoshot ACM/ishika mehta.jpeg" },
-            { name: "Nigam Tiwari", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=500&fit=crop" },
+            { name: "Aaditya Devghare", role: "Chairperson", desc: "Leading the chapter with a focus on community building and global tech standards.", image: "./Photoshot ACM/aditya devghare.jpeg", linkedin: "https://www.linkedin.com/in/aaditya-devghare" },
+            { name: "Ishika Mehta", role: "Vice Chairperson", desc: "Driving internal operations and coordinating between diverse team verticals.", image: "./Photoshot ACM/ishika mehta.jpeg", linkedin: "https://www.linkedin.com/in/ishika-mehta-" },
+            { name: "Nigam Tiwari", role: "Membership Chair", desc: "Expanding our reach and ensuring value for every TSEC ACM member.", image: "./Photoshot ACM/nigam tiwari.png", linkedin: "https://www.linkedin.com/in/nigam-tiwari-8a76233a3" },
         ],
         "TREASURER_AND_SECRETARY": [
-            { name: "Sagar Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "./Photoshot ACM/sagar gupta.jpeg" },
-            { name: "Aditya Mishra", role: "Secretary", desc: "Overseeing administrative tasks and maintaining chapter records.", image: "./Photoshot ACM/aditya mishra.jpeg" },
+            { name: "Sagar Gupta", role: "Treasurer", desc: "Managing chapter finances with precision and strategic allocation.", image: "./Photoshot ACM/sagar gupta.jpeg", linkedin: "https://www.linkedin.com/in/sagar-gupta-8788052ab" },
+            { name: "Aditya Mishra", role: "Secretary", desc: "Overseeing administrative tasks and maintaining chapter records.", image: "./Photoshot ACM/aditya mishra.jpeg", linkedin: "https://www.linkedin.com/in/aditya-mishra-b76b7436a" },
         ],
         "TECHNICAL_TEAM": [
-            { name: "Shivam Pal", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "./Photoshot ACM/shivam pal.jpeg" },
-            { name: "Aman Mandal", role: "Technical Head", desc: "Specializing in software architecture and technical implementation.", image: "./Photoshot ACM/aman mandal.jpeg" },
-            { name: "Rushab Singh", role: "Webmaster", desc: "Building immersive digital experiences with modern web stacks.", image: "./Photoshot ACM/rushabh singh.jpeg" },
-            { name: "Subham Singh", role: "Webmaster", desc: "Optimizing web performance and maintaining digital infrastructure.", image: "./Photoshot ACM/shubham singh.jpeg" },
+            { name: "Shivam Pal", role: "Technical Head", desc: "Architecting codebases and leading technical research initiatives.", image: "./Photoshot ACM/shivam pal.jpeg", linkedin: "https://www.linkedin.com/in/shivampal7" },
+            { name: "Aman Mandal", role: "Technical Head", desc: "Specializing in software architecture and technical implementation.", image: "./Photoshot ACM/aman mandal.jpeg", linkedin: "https://www.linkedin.com/in/amanmandal35" },
+            { name: "Rushab Singh", role: "Webmaster", desc: "Building immersive digital experiences with modern web stacks.", image: "./Photoshot ACM/rushabh singh.jpeg", linkedin: "#" },
+            { name: "Subham Singh", role: "Webmaster", desc: "Optimizing web performance and maintaining digital infrastructure.", image: "./Photoshot ACM/shubham singh.jpeg", linkedin: "https://www.linkedin.com/in/shubham-singh-564602314" },
         ],
         "CREATIVE_TEAM": [
-            { name: "Krishi Oza", role: "Creative Designer", desc: "Visual storytelling through high-impact graphic design.", image: "./Photoshot ACM/krishi oza.jpeg" },
-            { name: "Janish Dave", role: "Creative Designer", desc: "Crafting visual identities that resonate with our tech community.", image: "./Photoshot ACM/jainish dave.jpeg" },
-            { name: "Samhita Hejmadi", role: "UI/UX Designer", desc: "Designing user-centric interfaces for seamless digital navigation.", image: "./Photoshot ACM/samhita hejmadi.jpeg" },
-            { name: "Sahir Sheikh", role: "UI/UX Designer", desc: "Creating intuitive user journeys and aesthetic digital interfaces.", image: "./Photoshot ACM/sahir sheikh.jpeg" },
+            { name: "Krishi Oza", role: "Creative Designer", desc: "Visual storytelling through high-impact graphic design.", image: "./Photoshot ACM/krishi oza.jpeg", linkedin: "https://www.linkedin.com/in/krishi-oza-86399a3b2" },
+            { name: "Janish Dave", role: "Creative Designer", desc: "Crafting visual identities that resonate with our tech community.", image: "./Photoshot ACM/jainish dave.jpeg", linkedin: "#" },
+            { name: "Samhita Hejmadi", role: "UI/UX Designer", desc: "Designing user-centric interfaces for seamless digital navigation.", image: "./Photoshot ACM/samhita hejmadi.jpeg", linkedin: "https://www.linkedin.com/in/samhita-hejmadi-7a0892262" },
+            { name: "Sahir Sheikh", role: "UI/UX Designer", desc: "Creating intuitive user journeys and aesthetic digital interfaces.", image: "./Photoshot ACM/sahir sheikh.jpeg", linkedin: "https://www.linkedin.com/in/sahir-shaikh-b19b90281" },
         ],
         "DOCUMENTATION": [
-            { name: "Amaan Sheikh", role: "Newsletter Editor", desc: "Curating the latest tech news for our weekly subscriber base.", image: "./Photoshot ACM/amaan sheikh.jpeg" },
-            { name: "Aadiish Shukla", role: "Content Writer", desc: "Translating complex tech concepts into engaging written narratives.", image: "./Photoshot ACM/aadish shukla.jpeg" },
+            { name: "Amaan Sheikh", role: "Newsletter Editor", desc: "Curating the latest tech news for our weekly subscriber base.", image: "./Photoshot ACM/amaan sheikh.jpeg", linkedin: "https://www.linkedin.com/in/mohammed-amaan-shaikh-2a5518346" },
+            { name: "Aadiish Shukla", role: "Content Writer", desc: "Translating complex tech concepts into engaging written narratives.", image: "./Photoshot ACM/aadish shukla.jpeg", linkedin: "#" },
         ],
         "PHOTOGRAPHY_TEAM": [
-            { name: "Shivam Tiwari", role: "Cinematographer", desc: "Capturing the essence of events through dynamic visual lenses.", image: "./Photoshot ACM/shivam tiwari.jpeg" },
+            { name: "Shivam Tiwari", role: "Cinematographer", desc: "Capturing the essence of events through dynamic visual lenses.", image: "./Photoshot ACM/shivam tiwari.jpeg", linkedin: "https://www.linkedin.com/in/shivam-tiwari-381872337" },
         ],
         "SOCIAL_MEDIA_TEAM": [
-            { name: "Aditya Bhatt", role: "Social Media Manager", desc: "Managing our digital footprint and community engagement.", image: "./Photoshot ACM/aditya bhat.jpg" },
-            { name: "Ayushi Labde", role: "Social Media Manager", desc: "Curating viral content and handling channel outreach.", image: "./Photoshot ACM/ayushi labde.jpeg" },
+            { name: "Aditya Bhatt", role: "Social Media Manager", desc: "Managing our digital footprint and community engagement.", image: "./Photoshot ACM/aditya bhat.jpg", linkedin: "https://www.linkedin.com/in/aditya-bhatt-1710123a5" },
+            { name: "Ayushi Labde", role: "Social Media Manager", desc: "Curating viral content and handling channel outreach.", image: "./Photoshot ACM/ayushi labde.jpeg", linkedin: "https://www.linkedin.com/in/ayushi-labde-74872931b" },
         ],
         "EVENT_COORDINATORS": [
-            { name: "Sonal Tripathi", role: "Operational Head", desc: "Ensuring smooth execution of all logistical and back-end pipelines.", image: "./Photoshot ACM/sonal  tripathi.jpeg" },
-            { name: "Asmita Chauhan", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "./Photoshot ACM/asmita chauhan.jpeg" },
-            { name: "Samriddhi Singh", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "./Photoshot ACM/sammriddhi singh.jpeg" },
-            { name: "Nidhi Lad", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "./Photoshot ACM/nidhi lad.jpeg" },
+            { name: "Sonal Tripathi", role: "Operational Head", desc: "Ensuring smooth execution of all logistical and back-end pipelines.", image: "./Photoshot ACM/sonal  tripathi.jpeg", linkedin: "https://www.linkedin.com/in/sonaltripathi20" },
+            { name: "Asmita Chauhan", role: "Event Head", desc: "Conceptualizing and managing large-scale flagship hackathons.", image: "./Photoshot ACM/asmita chauhan.jpeg", linkedin: "https://www.linkedin.com/in/asmita-chauhan-8083682a0" },
+            { name: "Samriddhi Singh", role: "Event Head", desc: "Coordinating workshop logistics and speaker onboarding.", image: "./Photoshot ACM/sammriddhi singh.jpeg", linkedin: "https://www.linkedin.com/in/samriddhi-singh-0a770238a" },
+            { name: "Nidhi Lad", role: "Event Head", desc: "Managing onsite operations and attendee experience metrics.", image: "./Photoshot ACM/nidhi lad.jpeg", linkedin: "https://www.linkedin.com/in/nidhi-lad-6187a8354" },
         ],
         "MARKETING_TEAM": [
-            { name: "Arushi Singh", role: "Marketing Manager", desc: "Developing strategies to expand chapter visibility and reach.", image: "./Photoshot ACM/arushi singh.jpeg" },
-            { name: "Jaya Yadav", role: "Marketing Manager", desc: "Driving brand growth through targeted outreach and communication.", image: "./Photoshot ACM/jaya yadav.jpeg" },
+            { name: "Arushi Singh", role: "Marketing Manager", desc: "Developing strategies to expand chapter visibility and reach.", image: "./Photoshot ACM/arushi singh.jpeg", linkedin: "https://www.linkedin.com/in/arushi-singh-b327643a3" },
+            { name: "Jaya Yadav", role: "Marketing Manager", desc: "Driving brand growth through targeted outreach and communication.", image: "./Photoshot ACM/jaya yadav.jpeg", linkedin: "https://www.linkedin.com/in/jaya-yadav-560a103a1" },
         ],
     };
 
@@ -1009,6 +1008,8 @@ const TeamPersonaCard = ({ member }) => {
                     <img
                         src={member.image}
                         alt={member.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
                     />
                 )}
@@ -1016,12 +1017,16 @@ const TeamPersonaCard = ({ member }) => {
             </div>
 
             {/* LinkedIn Float */}
-            <a
-                href="#"
-                className="absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full hover:bg-white hover:text-black transition-all duration-500 opacity-0 group-hover:opacity-100"
-            >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-            </a>
+            {member.linkedin && member.linkedin !== "#" && (
+                <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-4 right-4 z-30 w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full hover:bg-[#0077b5] hover:border-[#0077b5] hover:text-white transition-all duration-500 opacity-0 group-hover:opacity-100"
+                >
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+                </a>
+            )}
 
             {/* Content Section */}
             <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col items-start bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent">
