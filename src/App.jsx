@@ -1,5 +1,6 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 const { HashRouter, Routes, Route, Link, useLocation, useNavigate, useParams } = ReactRouterDOM;
+const motion = window.Motion.motion;
 
 // --- CONFIG ---
 // This is the primary link between your website and Google Sheets.
@@ -454,6 +455,7 @@ const Home = () => {
 
 const Events = () => {
     const [events, setEvents] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const location = useLocation();
 
     useEffect(() => {
@@ -469,65 +471,115 @@ const Events = () => {
             }));
             setEvents(data);
         } catch (e) { setEvents([]); }
-    }, [location.pathname]); // Reload when navigating
+    }, [location.pathname]);
+
+    const handleNext = () => setCurrentIndex(prev => Math.min(prev + 1, events.length - 1));
+    const handlePrev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
 
     return (
-        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 max-w-8xl mx-auto pb-20">
+        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 max-w-8xl mx-auto pb-20 relative overflow-hidden">
 
             <h1 className="hidden md:block text-6xl md:text-9xl font-heading font-bold mb-16 opacity-5 fixed -z-10 top-20 right-0 pointer-events-none select-none">
                 TIMELINE
             </h1>
 
-            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between mb-8 md:mb-16 border-b border-white/10 pb-6 md:pb-8">
-                <h2 className="text-3xl md:text-6xl font-heading font-bold text-white uppercase tracking-tighter">
-                    EVENT_<span className="text-acm-cyan">LOGS</span>
-                </h2>
-                <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 md:mt-0 uppercase font-semibold">:: UPCOMING_OPERATIONS</p>
+            <div className="flex flex-col md:flex-row items-start justify-between mb-12">
+                <div>
+                    <h2 className="text-4xl md:text-6xl font-heading font-bold text-white uppercase tracking-tighter">
+                        Event Card <span className="text-acm-cyan">Template</span>
+                    </h2>
+                    <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 uppercase font-semibold">:: UPCOMING_OPERATIONS</p>
+                </div>
+                
+                {/* Navigation Controls */}
+                <div className="flex items-center gap-4 mt-6 md:mt-0">
+                    <button 
+                        onClick={handlePrev} 
+                        disabled={currentIndex === 0}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/20 transition-all ${currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 hover:border-white/50 text-white'}`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <button 
+                        onClick={handleNext} 
+                        disabled={currentIndex === events.length - 1}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/20 transition-all ${currentIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 hover:border-white/50 text-white'}`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-                {events.map((ev) => (
-                    <Link key={ev.slug} to={`/events/${ev.slug}`} className="block">
-                        <TiltCard className="group aspect-video cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-white/2 hover:scale-110 hover:shadow-[0_0_80px_rgba(100,255,218,0.15)] transition-all duration-500 z-10 hover:z-20">
-                            <div className="relative h-full w-full p-5 md:p-8 flex flex-col justify-between z-10 transition-all duration-500 group-hover:bg-acm-cyan/5">
+            {/* Carousel Container */}
+            <div className="relative w-full flex items-center justify-center min-h-[35rem] md:min-h-[40rem]">
+                <div className="flex items-center justify-center relative w-full max-w-6xl h-full">
+                    {events.map((ev, index) => {
+                        // Calculate relative position (-2, -1, 0, 1, 2)
+                        const relativeIndex = index - currentIndex;
+                        const isVisible = Math.abs(relativeIndex) <= 2;
+                        
+                        if (!isVisible) return null;
+                        
+                        // Compute transforms based on relative index
+                        let translateX = relativeIndex * 60; // 60% overlap logic roughly
+                        let scale = 1 - Math.abs(relativeIndex) * 0.15;
+                        let zIndex = 50 - Math.abs(relativeIndex) * 10;
+                        let opacity = 1 - Math.abs(relativeIndex) * 0.4;
+                        
+                        return (
+                            <div 
+                                key={ev.slug} 
+                                onClick={() => setCurrentIndex(index)}
+                                className={`absolute transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] cursor-pointer overflow-hidden rounded-2xl bg-[#111] border ${relativeIndex === 0 ? 'border-white/20 shadow-[0_0_80px_rgba(100,255,218,0.1)]' : 'border-white/5'} flex-shrink-0 w-[280px] sm:w-[340px] h-[400px] sm:h-[480px]`}
+                                style={{
+                                    transform: `translateX(${translateX}%) scale(${scale})`,
+                                    zIndex: zIndex,
+                                    opacity: opacity
+                                }}
+                            >
+                                {/* Background Glow */}
+                                <div className={`absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl ${ev.color.replace('from-acm-cyan/40', 'from-acm-cyan').replace('to-black', 'to-transparent')} opacity-20 blur-[80px] pointer-events-none`}></div>
 
-                                {/* Date Badge */}
-                                <div className="flex justify-between items-start">
-                                    <span className="font-mono text-lg md:text-xl font-bold text-white border-b-2 border-acm-cyan pb-1">
-                                        {ev.date}
-                                    </span>
-                                    <span className="font-mono text-[10px] font-semibold border border-white/20 px-2 py-1 rounded text-gray-400 tracking-wider">
-                                        {ev.tag}
-                                    </span>
-                                </div>
-
-                                {/* Central Glow */}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none">
-                                    <div className={`w-32 md:w-48 h-32 md:h-48 rounded-full bg-gradient-to-br ${ev.color} blur-[100px]`}></div>
-                                </div>
-
-                                {/* Content */}
-                                <div className="z-20">
-                                    <h3 className="text-xl md:text-2xl font-heading font-black text-white mb-1 uppercase tracking-tight">
-                                        {ev.title}
-                                    </h3>
-                                    <p className="text-[10px] md:text-xs text-gray-400 font-mono mb-4 border-l border-acm-cyan/30 pl-3 line-clamp-2">
-                                        {ev.desc}
-                                    </p>
-                                    <div className="text-[10px] font-bold text-acm-cyan uppercase tracking-[0.2em] group-hover:translate-x-2 transition-transform duration-300">
-                                        UPLINK_PROTOCOL →
-                                    </div>
-                                </div>
-                                
+                                {/* Masked Image Overlay */}
                                 {ev.image && (
-                                    <div className="absolute inset-0 z-0 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <img src={getDirectDriveUrl(ev.image)} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                                    <div 
+                                        className="absolute inset-y-0 right-0 w-3/4 pointer-events-none transition-all duration-700" 
+                                        style={{ 
+                                            maskImage: 'linear-gradient(to right, transparent 0%, black 50%)', 
+                                            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%)' 
+                                        }}
+                                    >
+                                        <img src={getDirectDriveUrl(ev.image)} className={`w-full h-full object-contain mix-blend-screen opacity-80 ${relativeIndex === 0 ? 'grayscale-0' : 'grayscale'}`} />
                                     </div>
                                 )}
+
+                                {/* Content */}
+                                <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-between z-10">
+                                    <div>
+                                        <span className="text-acm-cyan font-bold text-[10px] uppercase tracking-[0.2em]">{ev.tag}</span>
+                                        <h3 className="text-white font-heading font-black text-2xl sm:text-4xl leading-[1.1] mt-3 line-clamp-3 w-[85%] shadow-black drop-shadow-2xl relative z-20">{ev.title}</h3>
+                                        
+                                        <div className="mt-6 sm:mt-8 relative z-20">
+                                            <span className="text-white font-bold text-sm block shadow-black drop-shadow-md">Live Event</span>
+                                            <span className="text-gray-300 text-[10px] sm:text-xs font-mono shadow-black drop-shadow-md">{ev.date}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-end relative z-20">
+                                        <Link 
+                                            to={`/events/${ev.slug}`} 
+                                            onClick={(e) => relativeIndex !== 0 && e.preventDefault()}
+                                            className={`inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold transition-all border border-white/10 ${relativeIndex !== 0 ? 'pointer-events-none opacity-50' : ''}`}
+                                        >
+                                            Read More
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
-                        </TiltCard>
-                    </Link>
-                ))}
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
@@ -658,23 +710,23 @@ const About = () => {
     }, [hasAnimated]);
 
     const objectives = [
-        { id: "01", title: "Enhance Technical Competence", desc: "Strengthen students' core knowledge in programming, algorithms, AI, and emerging technologies through workshops, coding contests, and hands-on sessions.", icon: "⚡" },
-        { id: "02", title: "Promote Innovation & Problem-Solving", desc: "Encourage students to develop innovative solutions for real-world challenges through hackathons, projects, and research-driven activities.", icon: "💡" },
-        { id: "03", title: "Foster Research & Development Culture", desc: "Motivate students to explore research, publish papers, and participate in technical conferences and competitions.", icon: "🔬" },
-        { id: "04", title: "Build a Collaborative Tech Community", desc: "Create a platform for peer learning, knowledge sharing, and collaboration among students, faculty, and industry professionals.", icon: "🤝" },
-        { id: "05", title: "Develop Leadership & Teamwork Skills", desc: "Provide opportunities for students to lead, organize, and manage technical and non-technical events.", icon: "🚀" },
-        { id: "06", title: "Bridge Academia and Industry", desc: "Connect students with industry experts through guest lectures, mentorship programs, and internships.", icon: "🌉" },
-        { id: "07", title: "Encourage Socially Relevant Computing", desc: "Use technology for solving societal issues through projects, awareness drives, and community-focused initiatives.", icon: "🌍" },
-        { id: "08", title: "Promote Inclusivity & Equal Opportunities", desc: "Ensure participation from students of all backgrounds and encourage diversity in technology fields.", icon: "♾️" },
-        { id: "09", title: "Support Open Source & Continuous Learning", desc: "Encourage contributions to open-source projects and promote lifelong learning through continuous upskilling.", icon: "📖" },
-        { id: "10", title: "Enhance Communication & Technical Expression", desc: "Develop students' ability to present ideas, explain concepts, and communicate technical knowledge effectively.", icon: "🎯" },
+        { id: "01", title: "Enhance Technical Competence", desc: "Strengthen students' core knowledge in programming, algorithms, AI, and emerging technologies through workshops, coding contests, and hands-on sessions.", icon: "generic" },
+        { id: "02", title: "Promote Innovation & Problem-Solving", desc: "Encourage students to develop innovative solutions for real-world challenges through hackathons, projects, and research-driven activities.", icon: "generic" },
+        { id: "03", title: "Foster Research & Development Culture", desc: "Motivate students to explore research, publish papers, and participate in technical conferences and competitions.", icon: "generic" },
+        { id: "04", title: "Build a Collaborative Tech Community", desc: "Create a platform for peer learning, knowledge sharing, and collaboration among students, faculty, and industry professionals.", icon: "generic" },
+        { id: "05", title: "Develop Leadership & Teamwork Skills", desc: "Provide opportunities for students to lead, organize, and manage technical and non-technical events.", icon: "generic" },
+        { id: "06", title: "Bridge Academia and Industry", desc: "Connect students with industry experts through guest lectures, mentorship programs, and internships.", icon: "generic" },
+        { id: "07", title: "Encourage Socially Relevant Computing", desc: "Use technology for solving societal issues through projects, awareness drives, and community-focused initiatives.", icon: "generic" },
+        { id: "08", title: "Promote Inclusivity & Equal Opportunities", desc: "Ensure participation from students of all backgrounds and encourage diversity in technology fields.", icon: "generic" },
+        { id: "09", title: "Support Open Source & Continuous Learning", desc: "Encourage contributions to open-source projects and promote lifelong learning through continuous upskilling.", icon: "generic" },
+        { id: "10", title: "Enhance Communication & Technical Expression", desc: "Develop students' ability to present ideas, explain concepts, and communicate technical knowledge effectively.", icon: "generic" },
     ];
 
     const missions = [
-        { text: "To cultivate critical thinking and technical excellence through hands-on learning, competitions, and collaborative projects.", icon: "🧠" },
-        { text: "To promote innovation and research by encouraging students to explore emerging technologies and build impactful solutions.", icon: "🔭" },
-        { text: "To nurture leadership, entrepreneurship, and teamwork through diverse technical and creative initiatives.", icon: "⭐" },
-        { text: "To create a strong tech community that bridges academia, industry, and society.", icon: "🔗" },
+        { text: "To cultivate critical thinking and technical excellence through hands-on learning, competitions, and collaborative projects.", icon: "generic" },
+        { text: "To promote innovation and research by encouraging students to explore emerging technologies and build impactful solutions.", icon: "generic" },
+        { text: "To nurture leadership, entrepreneurship, and teamwork through diverse technical and creative initiatives.", icon: "generic" },
+        { text: "To create a strong tech community that bridges academia, industry, and society.", icon: "generic" },
     ];
 
     const taglines = [
@@ -1551,181 +1603,365 @@ const Contact = () => (
     </div>
 );
 // --- EVENT DETAIL PAGE ---
+
+const ShapeIcon = ({ type }) => {
+    const svgProps = { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", className: "w-8 h-8" };
+    switch (type) {
+        case 'users':
+            return (
+                <svg {...svgProps}>
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            );
+        case 'venue':
+            return (
+                <svg {...svgProps}>
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+            );
+        case 'duration':
+            return (
+                <svg {...svgProps}>
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            );
+        case 'prize':
+        case 'award':
+            return (
+                <svg {...svgProps}>
+                    <path d="M8 21h8" />
+                    <path d="M12 17v4" />
+                    <path d="M7 4h10" />
+                    <path d="M17 4v8a5 5 0 0 1-10 0V4" />
+                    <path d="M7 9H4.5A2.5 2.5 0 0 1 2 6.5C2 5.12 3.12 4 4.5 4H7" />
+                    <path d="M17 9h2.5A2.5 2.5 0 0 0 22 6.5C22 5.12 20.88 4 19.5 4H17" />
+                </svg>
+            );
+        case 'tech':
+        case 'code':
+            return (
+                <svg {...svgProps}>
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                </svg>
+            );
+        case 'idea':
+        case 'zap':
+            return (
+                <svg {...svgProps}>
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+            );
+        case 'star':
+            return (
+                <svg {...svgProps}>
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+            );
+        default:
+            return (
+                <svg {...svgProps}>
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                </svg>
+            );
+    }
+}
+
+const StatCard = ({ icon, label, value }) => (
+    <motion.div 
+        whileHover={{ y: -5 }}
+        className="p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm relative overflow-hidden group"
+    >
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="text-acm-cyan mb-4 flex items-center h-8">
+            <ShapeIcon type={icon} />
+        </div>
+        <div className="text-gray-400 text-xs uppercase tracking-widest font-mono mb-1">{label}</div>
+        <div className="text-xl md:text-2xl font-bold text-white">{value}</div>
+    </motion.div>
+);
+
 const EventDetail = () => {
     const { slug } = useParams();
     
+    // Clear localStorage to force data reset for the demo
+    useEffect(() => {
+        if(localStorage.getItem('acm_events_reset_v4') !== 'true') {
+            localStorage.removeItem('acm_events');
+            localStorage.setItem('acm_events_reset_v4', 'true');
+            window.location.reload();
+        }
+    }, []);
+
     const event = useMemo(() => {
         try {
             const storedRaw = localStorage.getItem('acm_events');
             if (!storedRaw) return null;
             const stored = JSON.parse(storedRaw);
-            if (!Array.isArray(stored)) return null;
-            const found = stored.find(e => e.slug === slug);
-            if (found) return found;
+            return stored.find(e => e.slug === slug);
         } catch (e) { return null; }
-        return null;
     }, [slug]);
-
-    const [prize, setPrize] = useState(0);
-    const [timeLeft, setTimeLeft] = useState({});
-    const [activeFAQ, setActiveFAQ] = useState(null);
-    const [showRegister, setShowRegister] = useState(false);
-
-    // Prize Animation
-    useEffect(() => {
-        if (!event?.prizePool) return;
-        let start = 0;
-        const duration = 1500;
-        const increment = event.prizePool / (duration / 16);
-        const counter = setInterval(() => {
-            start += increment;
-            if (start >= event.prizePool) {
-                start = event.prizePool;
-                clearInterval(counter);
-            }
-            setPrize(Math.floor(start));
-        }, 16);
-        return () => clearInterval(counter);
-    }, [event]);
-
-    useEffect(() => {
-        if (!event?.eventDate) return;
-        const interval = setInterval(() => {
-            const eventDt = new Date(event.eventDate);
-            if (isNaN(eventDt.getTime())) {
-                clearInterval(interval);
-                return;
-            }
-            const difference = eventDt - new Date();
-            if (difference <= 0) {
-                setTimeLeft({});
-                clearInterval(interval);
-                return;
-            }
-            setTimeLeft({
-                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-                minutes: Math.floor((difference / (1000 * 60)) % 60),
-                seconds: Math.floor((difference / 1000) % 60)
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [event?.eventDate]);
 
     if (!event) return <div className="min-h-screen flex items-center justify-center text-white text-3xl">Event Not Found</div>;
 
     return (
-        <div className="min-h-screen pt-28 md:pt-32 px-4 md:px-20 text-white max-w-6xl mx-auto pb-20 md:pb-32">
-            
-            <div className="flex flex-col md:flex-row justify-between items-start gap-10">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen pt-28 md:pt-32 px-4 md:px-10 lg:px-20 text-white max-w-[1400px] mx-auto pb-20"
+        >
+            {/* 1. HERO SECTION */}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-24">
                 <div className="flex-1">
-                    <h1 className="text-3xl sm:text-5xl md:text-7xl font-heading font-bold mb-3 md:mb-4">{event.title}</h1>
-                    <p className="text-acm-cyan font-mono text-xs md:text-base mb-5 md:mb-8">{event.dateText}</p>
-                    <p className="text-gray-300 text-sm md:text-lg mb-8 md:mb-12 max-w-3xl leading-relaxed">{event.desc}</p>
+                    <motion.div 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                    >
+                        <h1 className="text-4xl sm:text-6xl md:text-8xl font-heading font-black mb-4 tracking-tight leading-[1.1]">{event.title}</h1>
+                        <p className="text-acm-cyan font-mono text-sm md:text-lg mb-8 tracking-widest">{event.tagline || event.dateText}</p>
+                    </motion.div>
                     
-                    <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-6">🏆 Prize Pool</h2>
-                    <div className="text-4xl md:text-6xl font-heading font-bold text-acm-cyan mb-10 md:mb-16">₹ {prize.toLocaleString()}</div>
+                    <motion.div 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12"
+                    >
+                        <StatCard icon="users" label="Participants" value={event.statistics?.participants || "0"} />
+                        <StatCard icon="venue" label="Venue" value={event.venue || "TSEC"} />
+                        <StatCard icon="duration" label="Duration" value={event.statistics?.duration || "TBD"} />
+                        {event.statistics?.prizePool && <StatCard icon="prize" label="Prize Pool" value={event.statistics.prizePool} />}
+                    </motion.div>
                 </div>
 
-                <div className="w-full md:w-80 sticky top-32 space-y-4">
-                    <Link to={`/events/${slug}/register`}>
-                        <MagneticButton as="div" className="w-full py-5 bg-white text-black font-bold tracking-widest hover:bg-acm-cyan transition-colors shadow-[0_0_30px_rgba(255,255,255,0.1)] text-center">
-                            REGISTER_NOW
-                        </MagneticButton>
-                    </Link>
-                    <div className="p-4 border border-white/10 bg-white/5 rounded-xl text-[10px] font-mono text-gray-500 uppercase leading-loose">
-                        :: Status: Registration Open<br/>
-                        :: Verified: TSEC Chapters<br/>
-                        :: Entry Code: ACM_ENCRYPT_26
+                {/* 2. EVENT STATUS & 3. INFO PANEL */}
+                <motion.div 
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="w-full md:w-[350px] shrink-0 sticky top-32"
+                >
+                    <div className="p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl space-y-6">
+                        <div className="flex items-center gap-3 text-green-400 font-bold mb-6">
+                            <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
+                            Successfully Conducted
+                        </div>
+                        
+                        <div className="space-y-4 text-sm">
+                            <div className="flex justify-between border-b border-white/10 pb-3">
+                                <span className="text-gray-400">Date</span>
+                                <span className="font-mono">{new Date(event.eventDate).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-white/10 pb-3">
+                                <span className="text-gray-400">Organizers</span>
+                                <span className="text-right">{event.organizers?.join(', ') || 'ACM'}</span>
+                            </div>
+                            {event.statistics?.certificates && (
+                                <div className="flex justify-between pb-3">
+                                    <span className="text-gray-400">Certificates</span>
+                                    <span className="text-acm-cyan font-bold">{event.statistics.certificates}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="pt-4 space-y-3">
+                            <button className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-acm-cyan transition-colors">
+                                VIEW GALLERY
+                            </button>
+                            <button className="w-full py-4 bg-transparent border border-white/20 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">
+                                DOWNLOAD REPORT
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
-            {timeLeft.days !== undefined && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 text-center mb-12 md:mb-20">
-                    {Object.entries(timeLeft).map(([key, value]) => (
-                        <div key={key} className="p-3 md:p-6 bg-white/5 border border-white/10 rounded-xl">
-                            <div className="text-2xl md:text-4xl font-bold text-acm-cyan">{value}</div>
-                            <div className="text-[10px] md:text-sm uppercase tracking-widest text-gray-400 mt-1">{key}</div>
-                        </div>
-                    ))}
-                </div>
+            {/* 4. ABOUT THE EVENT */}
+            <motion.section 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="mb-24 max-w-4xl"
+            >
+                <h2 className="text-3xl md:text-5xl font-bold mb-8 font-heading">About the Event</h2>
+                <p className="text-xl md:text-2xl text-gray-400 leading-relaxed font-light">
+                    {event.desc}
+                </p>
+            </motion.section>
+
+            {/* 5. EVENT HIGHLIGHTS */}
+            {event.highlights && (
+                <section className="mb-24">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-10 font-heading">Highlights</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {event.highlights.map((h, i) => (
+                            <motion.div 
+                                key={i}
+                                whileHover={{ scale: 1.02 }}
+                                className="p-8 bg-white/5 border border-white/10 rounded-3xl hover:border-acm-cyan/50 transition-colors"
+                            >
+                                <div className="text-acm-cyan mb-6 h-8 flex items-center"><ShapeIcon type={h.icon} /></div>
+                                <h3 className="text-xl font-bold mb-4">{h.title}</h3>
+                                <p className="text-gray-400 leading-relaxed">{h.desc}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </section>
             )}
 
-            {/* === EVENT IMAGE GALLERY === */}
-            {(() => {
-                let storedGallery = [];
-                try {
-                    storedGallery = JSON.parse(localStorage.getItem('acm_gallery') || '[]');
-                } catch(e) { storedGallery = []; }
-                
-                const eventGallery = Array.isArray(storedGallery) ? storedGallery : [];
-                const eventImages = [
-                    ...(Array.isArray(event.images) ? event.images : []),
-                    ...eventGallery.filter(g => g.eventSlug === slug).map(g => g.src)
-                ].filter(Boolean);
-
-                if (eventImages.length === 0) return null;
-                return (
-                    <div className="mb-12 md:mb-20">
-                        <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-8">📸 Event Gallery</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                            {eventImages.map((src, i) => (
-                                <div key={i} className="aspect-video overflow-hidden rounded-xl border border-white/10 group cursor-pointer"
-                                    onClick={() => window.open(src, '_blank')}>
-                                    <img src={getDirectDriveUrl(src)} alt={`Gallery ${i+1}`}
-                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })()}
-
-            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-8">Tracks</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 mb-12 md:mb-20">
-                {event.tracks?.map((track, i) => (
-                    <div key={i} className="p-4 md:p-6 bg-white/5 border border-white/10 rounded-xl text-sm md:text-base">{track}</div>
-                ))}
-            </div>
-
-            {event.speakers?.length > 0 && (
-                <>
-                    <h2 className="text-xl md:text-3xl font-bold mb-6 md:mb-10">Experts & Guests</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 mb-12 md:mb-20">
-                        {event.speakers?.map((speaker, i) => (
-                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 text-center group">
-                                <div className="relative w-16 h-16 md:w-28 md:h-28 mx-auto mb-3 md:mb-4">
-                                    <img src={getDirectDriveUrl(speaker.image)} alt={speaker.name} className="w-full h-full rounded-full object-cover border-2 border-white/10 grayscale group-hover:grayscale-0 group-hover:border-acm-cyan transition-all duration-500" />
-                                    {speaker.type && (
-                                        <span className="absolute -bottom-1 -right-1 bg-acm-cyan text-black font-black text-[8px] md:text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-xl">
-                                            {speaker.type}
+            {/* 6. LEARNING TRACKS */}
+            {event.tracks && (
+                <section className="mb-24">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-10 font-heading">Tracks & Technologies</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {event.tracks.map((t, i) => (
+                            <div key={i} className="p-8 bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-3xl">
+                                <h3 className="text-2xl font-bold mb-4">{t.title}</h3>
+                                <p className="text-gray-400 mb-8">{t.desc}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {t.tech?.map((tech, j) => (
+                                        <span key={j} className="px-4 py-2 bg-black/50 border border-white/10 rounded-full text-xs font-mono text-acm-cyan">
+                                            {tech}
                                         </span>
-                                    )}
+                                    ))}
                                 </div>
-                                <h3 className="text-sm md:text-xl font-bold truncate">{speaker.name}</h3>
-                                <p className="text-gray-400 text-[10px] md:text-xs mt-1 md:mt-2 uppercase tracking-widest">{speaker.role}</p>
-                                {speaker.link && (
-                                    <a href={speaker.link} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-[10px] text-acm-cyan font-mono hover:underline">
-                                         :: VIEW_INTEL
-                                    </a>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 7. EVENT TIMELINE */}
+            {event.timeline && (
+                <section className="mb-24">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-16 font-heading text-center">Flow of Events</h2>
+                    <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-0">
+                        {event.timeline.map((step, i) => (
+                            <React.Fragment key={i}>
+                                <div className="flex flex-col items-center text-center relative group">
+                                    <div className="w-16 h-16 rounded-full bg-white/5 border-2 border-white/20 flex items-center justify-center text-xl font-bold z-10 group-hover:border-acm-cyan group-hover:bg-acm-cyan/10 transition-all">
+                                        {i + 1}
+                                    </div>
+                                    <div className="mt-6">
+                                        <div className="text-acm-cyan font-mono text-sm mb-2">{step.time}</div>
+                                        <div className="font-bold text-lg w-32">{step.title}</div>
+                                    </div>
+                                </div>
+                                {i < event.timeline.length - 1 && (
+                                    <div className="h-12 w-0.5 md:w-24 md:h-0.5 bg-white/20 md:-mt-16" />
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 8. EVENT GALLERY */}
+            {event.images && (
+                <section className="mb-24">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-10 font-heading">Gallery</h2>
+                    <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                        {event.images.map((img, i) => (
+                            <motion.div 
+                                key={i}
+                                whileHover={{ scale: 1.02 }}
+                                className="break-inside-avoid overflow-hidden rounded-3xl border border-white/10"
+                            >
+                                <img src={img} alt="Event Gallery" loading="lazy" className="w-full h-auto object-contain hover:scale-110 transition-transform duration-700" />
+                            </motion.div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 9. SPEAKERS / JUDGES */}
+            {event.speakers && event.speakers.length > 0 && (
+                <section className="mb-20">
+                    <h2 className="text-xl font-bold mb-6 font-mono text-gray-400 uppercase tracking-widest">Experts & Guests</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {event.speakers.map((s, i) => (
+                            <div key={i} className="flex items-center gap-4 group cursor-pointer">
+                                <img src={s.image} alt={s.name} className="w-12 h-12 rounded-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" />
+                                <div>
+                                    <h3 className="text-lg font-bold text-white/90 group-hover:text-white transition-colors">{s.name}</h3>
+                                    <p className="text-gray-500 text-sm font-mono">{s.role}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 10. WINNERS */}
+            {event.winners && event.winners.length > 0 && (
+                <section className="mb-20">
+                    <h2 className="text-xl font-bold mb-6 font-mono text-gray-400 uppercase tracking-widest">Hall of Fame</h2>
+                    <div className="border-t border-white/10">
+                        {event.winners.map((w, i) => (
+                            <div key={i} className="flex items-center justify-between py-5 border-b border-white/5 hover:bg-white/[0.02] transition-colors px-4 -mx-4 rounded-lg">
+                                <div className="flex items-center gap-6">
+                                    <div className="text-acm-cyan font-mono text-sm w-6">{i === 0 ? '01' : `0${i + 1}`}</div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white/90">{w.name}</h3>
+                                        <p className="text-gray-500 text-sm">{w.title}</p>
+                                    </div>
+                                </div>
+                                {w.prize && (
+                                    <div className="text-right">
+                                        <span className="px-3 py-1 bg-white/5 rounded-full text-xs font-mono text-gray-300 border border-white/10">
+                                            {w.prize}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                         ))}
                     </div>
-                </>
+                </section>
             )}
 
-            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-8">FAQs</h2>
-            <div className="space-y-3 md:space-y-6">
-                {event.faqs?.map((faq, i) => (
-                    <div key={i} className="border border-white/10 rounded-xl overflow-hidden">
-                        <button onClick={() => setActiveFAQ(activeFAQ === i ? null : i)} className="w-full text-left p-4 md:p-6 bg-white/5 text-sm md:text-base">{faq.question}</button>
-                        {activeFAQ === i && <div className="p-4 md:p-6 bg-black/40 text-gray-300 text-sm">{faq.answer}</div>}
+            {/* 11. OUTCOMES */}
+            {event.outcomes && (
+                <section className="mb-24">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-10 font-heading">Key Outcomes</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {event.outcomes.map((o, i) => (
+                            <div key={i} className="flex items-center gap-4 p-6 bg-white/5 border border-white/10 rounded-2xl">
+                                <div className="text-acm-cyan text-xl">✔</div>
+                                <div className="text-lg">{o}</div>
+                            </div>
+                        ))}
                     </div>
-                ))}
+                </section>
+            )}
+
+            {/* 13. ORGANIZERS */}
+            <section className="mb-32 text-center">
+                <h2 className="text-2xl font-bold mb-8 text-gray-500">Organized By</h2>
+                <div className="flex flex-wrap justify-center gap-4">
+                    {(event.organizers || ["ACM Student Chapter"]).map((org, i) => (
+                        <div key={i} className="px-6 py-3 bg-white/10 rounded-full font-bold text-gray-300 border border-white/10">
+                            {org}
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 14. FOOTER CTA */}
+            <div className="flex justify-between items-center border-t border-white/10 pt-10">
+                <Link to="/events" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                    ← Back to Events
+                </Link>
+                <div className="text-acm-cyan font-bold cursor-pointer hover:underline">
+                    Explore More Events →
+                </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
@@ -3871,48 +4107,224 @@ function jsonResponse(obj) {
 const App = () => {
     // --- GLOBAL DATA SEEDER (Seeds defaults if localStorage is empty) ---
     useEffect(() => {
+        const checkEvents = JSON.parse(localStorage.getItem('acm_events') || '[]');
+        const needsEventReset = checkEvents.length > 0 && 
+            (!checkEvents.find(e => e.slug === 'internship-gap') || 
+             !checkEvents.find(e => e.slug === 'ai-tools-quiz')?.images.includes('assets/events/ai-quiz-2.jpg') ||
+             checkEvents.find(e => e.slug === 'ai-tools-quiz')?.images.includes('assets/events/ai-quiz-1.jpg') ||
+             !checkEvents.find(e => e.slug === 'ai-tools-workshop')?.images.includes('assets/events/ai-workshop-1.jpg'));
+             
+        if (needsEventReset) {
+            localStorage.removeItem('acm_events');
+            localStorage.setItem('acm_is_dirty', 'true');
+        }
+        
+        const checkGallery = JSON.parse(localStorage.getItem('acm_gallery') || '[]');
+        const needsGalleryReset = checkGallery.length > 0 && 
+            (!checkGallery.find(img => img.src === 'assets/events/ai-quiz-2.jpg') ||
+             checkGallery.find(img => img.src === 'assets/events/ai-quiz-1.jpg') ||
+             !checkGallery.find(img => img.src === 'assets/events/ai-workshop-1.jpg'));
+            
+        if (needsGalleryReset) {
+            localStorage.removeItem('acm_gallery');
+            localStorage.setItem('acm_is_dirty', 'true');
+        }
+
         if (!localStorage.getItem('acm_events')) {
             const defaults = [
-                {
-                    id: 1, 
-                    slug: 'codesprint-26', 
-                    title: "CodeSprint 26",
-                    dateText: "MAR 15 • 48 HOURS • TSEC CAMPUS",
-                    eventDate: "2026-03-15T09:00:00",
-                    prizePool: 100000,
-                    category: 'HACKATHON',
-                    desc: "A 48-hour flagship hackathon transforming ideas into scalable tech products.",
-                    images: ["https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200"],
-                    tracks: ["AI & Machine Learning", "Cybersecurity", "Web3 & Blockchain", "Open Innovation"],
-                    speakers: [
-                        { name: "Rohit Sharma", role: "Senior Engineer, Google", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400" },
-                        { name: "Ananya Mehta", role: "AI Researcher, Microsoft", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400" }
-                    ],
-                    faqs: [
-                        { question: "Team size?", answer: "2–4 members allowed." },
-                        { question: "Is it offline?", answer: "Yes." }
-                    ]
-                },
-                {
-                    id: 2, 
-                    slug: 'system-breach', 
-                    title: "System_Breach",
-                    dateText: "APR 02 • 12 HOURS • CYBER LAB",
-                    eventDate: "2024-04-02T10:00:00",
-                    prizePool: 50000,
-                    category: 'CTF',
-                    desc: "A high-intensity cybersecurity Capture The Flag competition.",
-                    images: ["https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200"],
-                    tracks: ["Web Exploitation", "Cryptography", "Reverse Engineering"],
-                    speakers: [
-                        { name: "Arjun Nair", role: "Security Analyst, Deloitte", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400" }
-                    ],
-                    faqs: [
-                        { question: "Prizes?", answer: "Cash rewards + internship opportunities." }
-                    ]
-                }
-            ];
+    {
+        id: 5, 
+        slug: 'internship-gap', 
+        title: "Internship Gap Seminar",
+        tagline: "Why Good Students Still Don't Get Selected",
+        dateText: "9 JUL 2026   ONLINE",
+        eventDate: "2026-07-09T10:00:00",
+        venue: "Online",
+        category: 'SEMINAR',
+        desc: "TSEC ACM Student Chapter conducted the online seminar 'Internship Gap: Why Good Students Still Don't Get Selected' led by Ms. Deepti K S (Vendavo). The session offered practical insights into internship recruitment, resume building, LinkedIn optimization, interview preparation, and professional branding.",
+        images: ["assets/events/internship-gap-1.jpeg", "assets/events/internship-gap-2.jpeg", "assets/events/internship-gap-3.jpeg", "assets/events/internship-gap-4.jpeg"],
+        statistics: { participants: 80, duration: "Online" },
+        highlights: [
+            { icon: "generic", title: "Recruitment Insights", desc: "Practical insights into internship recruitment." },
+            { icon: "generic", title: "Resume & LinkedIn", desc: "Resume building and LinkedIn optimization." },
+            { icon: "generic", title: "Interview Prep", desc: "Interview preparation and professional branding." }
+        ],
+        speakers: [
+            { name: "Ms. Deepti K S", role: "Speaker", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400" }
+        ],
+        outcomes: [
+            "Students became more industry-ready",
+            "Better prepared for future career opportunities"
+        ],
+        organizers: ["TSEC ACM Student Chapter"]
+    },
+    {
+        id: 1, 
+        slug: 'ai-tools-workshop', 
+        title: "AI Tools Workshop",
+        tagline: "Accelerate your development with AI",
+        dateText: "27 MAR 2026   2 HOURS   CC1 & CC2",
+        eventDate: "2026-03-27T09:30:00",
+        venue: "2nd Floor, CC1 & CC2",
+        category: 'WORKSHOP',
+        desc: "The AI Tools Workshop 2026 was organized with the objective of introducing students to the rapidly evolving ecosystem of Artificial Intelligence-powered development tools. The workshop aimed to bridge the gap between theoretical knowledge and practical implementation by providing participants with hands-on exposure to modern AI-assisted workflows.",
+        images: ["assets/events/ai-workshop-1.jpg", "assets/events/ai-workshop-2.jpg", "assets/events/ai-workshop-3.jpg"],
+        statistics: { participants: 66, duration: "2 Hours" },
+        highlights: [
+            { icon: "generic", title: "AI-Assisted Workflows", desc: "Hands-on demonstration of modern AI-assisted software development workflows." },
+            { icon: "generic", title: "Gemini", desc: "Practical use of Gemini for idea generation, logic development, and architectural planning." },
+            { icon: "generic", title: "Claude", desc: "Introduction to Claude for writing, debugging, and refining application code." },
+            { icon: "generic", title: "Figma", desc: "UI/UX design using Figma before beginning application development." },
+            { icon: "generic", title: "Stitch AI & Supabase", desc: "Integration of Stitch AI and Supabase for backend services and database management." }
+        ],
+        tracks: [
+            { title: "Prompt Engineering", desc: "Familiarize students with prompt engineering and effective interaction with LLMs.", tech: ["Gemini", "Claude"] },
+            { title: "Web Development", desc: "Enable participants to transform ideas into functional web applications.", tech: ["Supabase", "Figma", "Stitch AI"] }
+        ],
+        timeline: [
+            { title: "Registration", time: "9:00 AM" },
+            { title: "Introduction", time: "9:30 AM" },
+            { title: "Hands-on AI Tools", time: "10:00 AM" },
+            { title: "UI/UX Generation", time: "11:00 AM" }
+        ],
+        speakers: [
+            { name: "Mr. Divij Shah", role: "Speaker", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400" }
+        ],
+        outcomes: [
+            "Practical experience using AI tools",
+            "Developed functional web application prototypes",
+            "Improved understanding of prompt engineering",
+            "Enhanced exposure to modern software development practices"
+        ],
+        organizers: ["TSEC ACM Student Chapter", "Coding Club"],
+        winners: [
+            { name: "Samiksha Naik", title: "Quiz Winner", prize: null },
+            { name: "Yashvi Shukla", title: "Quiz Runner-Up", prize: null }
+        ]
+    },
+    {
+        id: 2, 
+        slug: 'ai-tools-quiz', 
+        title: "AI Tools Quiz",
+        tagline: "Test your AI knowledge",
+        dateText: "27 MAR 2026   1 HOUR   CC1 & CC2",
+        eventDate: "2026-03-27T11:45:00",
+        venue: "2nd Floor, CC1 & CC2",
+        category: 'QUIZ',
+        desc: "The AI Tools Quiz 2026 was organized as the concluding activity of the AI Tools Workshop. The quiz was designed to evaluate participants' understanding of the concepts, tools, and workflows introduced during the workshop. Through an engaging format, students tested their knowledge of modern AI technologies while reinforcing their practical skills.",
+        images: ["assets/events/ai-quiz-2.jpg", "assets/events/ai-quiz-3.jpg", "assets/events/ai-quiz-4.jpg"],
+        statistics: { participants: 66, duration: "45 Mins", prizePool: "₹3300", certificates: "100%" },
+        highlights: [
+            { icon: "generic", title: "Knowledge Assessment", desc: "Questions were based on concepts and AI tools demonstrated during the workshop." },
+            { icon: "generic", title: "Competitive Spirit", desc: "Participants showcased excellent enthusiasm and competitive spirit." },
+            { icon: "generic", title: "Cash Prizes", desc: "Cash prizes were awarded to the top two performers." }
+        ],
+        outcomes: [
+            "Strengthened understanding of AI tools and concepts",
+            "Active recall and practical application of workshop learnings",
+            "Gained confidence in emerging AI technologies",
+            "Promoted collaborative learning and healthy competition"
+        ],
+        organizers: ["TSEC ACM Student Chapter", "Coding Club"],
+        winners: [
+            { name: "Quiz Winner", title: "1st Place", prize: "₹1800" },
+            { name: "Quiz Runner-Up", title: "2nd Place", prize: "₹1500" }
+        ]
+    },
+    {
+        id: 3, 
+        slug: 'devsprint', 
+        title: "DEVSPRINT 2K26",
+        tagline: "Innovate. Code. Conquer.",
+        dateText: "27 MAR 2026   8.5 HOURS   LAB 12 & 13",
+        eventDate: "2026-03-27T08:30:00",
+        venue: "4th Floor, Lab 12 & 13",
+        category: 'HACKATHON',
+        desc: "DevSprint Mini Hackathon was organized by ACM Students Chapter and CodeCrafters with the aim of encouraging innovation, creativity, and practical learning among students. This event provided a platform for participants to think critically, work collaboratively, and develop solutions within a limited time frame addressing real-life issues related to leftover food.",
+        images: ["https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200", "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1200", "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200"],
+        statistics: { participants: 53, duration: "8.5 Hours" },
+        highlights: [
+            { icon: "generic", title: "On-the-spot Problem", desc: "The problem domain (leftover food redistribution) was revealed on the spot." },
+            { icon: "generic", title: "5-Hour Sprint", desc: "Participants worked continuously for five hours to develop web applications." },
+            { icon: "generic", title: "Live Evaluation", desc: "Judges evaluated projects interactively based on innovation and usability." }
+        ],
+        tracks: [
+            { title: "Web Development", desc: "Develop functional applications to redistribute leftover food.", tech: ["React", "Node.js", "Python"] }
+        ],
+        timeline: [
+            { title: "Hackathon Starts", time: "8:30 AM" },
+            { title: "Problem Reveal", time: "9:00 AM" },
+            { title: "Development Phase", time: "9:30 AM" },
+            { title: "Evaluation & Judging", time: "2:30 PM" },
+            { title: "Prize Distribution", time: "4:00 PM" }
+        ],
+        speakers: [
+            { name: "Mrs. Bhagyashri Kakirde", role: "Judge", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400" },
+            { name: "Mr. Mayur Mehta", role: "Judge", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400" }
+        ],
+        outcomes: [
+            "Enhanced problem-solving and coding skills",
+            "Exposure to competitive environments",
+            "Strengthened debugging and optimization techniques",
+            "Encouragement of discipline and teamwork"
+        ],
+        organizers: ["TSEC ACM Student Chapter", "CodeCrafters"],
+        winners: [
+            { name: "Team Elites", title: "Winner", prize: null },
+            { name: "Team Skillissue", title: "Runner Up", prize: null }
+        ]
+    },
+    {
+        id: 4, 
+        slug: 'inauguration', 
+        title: "Inauguration Ceremony",
+        tagline: "The beginning of a dynamic community",
+        dateText: "6 MAR 2026   1.5 HOURS   3D THEATRE",
+        eventDate: "2026-03-06T10:00:00",
+        venue: "3D Theatre",
+        category: 'CEREMONY',
+        desc: "The Department of Computer Engineering successfully organized the Inauguration Ceremony of the TSEC ACM Student Chapter at the 3D Theatre, marking the beginning of a dynamic and innovation-driven student community.",
+        images: ["https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=1200", "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1200", "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200"],
+        statistics: { participants: "Students & Faculty", duration: "1.5 Hours" },
+        highlights: [
+            { icon: "generic", title: "Global Impact", desc: "Introduction to ACM and its global impact in computing." },
+            { icon: "generic", title: "Logo Reveal", desc: "Creative and symbolic ACM logo reveal featuring a neon-blue theme." },
+            { icon: "generic", title: "Badge Distribution", desc: "Core Committee announcement and badge distribution by the Principal." }
+        ],
+        timeline: [
+            { title: "Welcome & Invocation", time: "10:00 AM" },
+            { title: "Introduction to ACM", time: "10:15 AM" },
+            { title: "Official Logo Reveal", time: "10:30 AM" },
+            { title: "Badge Distribution", time: "10:45 AM" },
+            { title: "Vote of Thanks", time: "11:15 AM" }
+        ],
+        outcomes: [
+            "Established the foundation of the chapter",
+            "Motivated students to engage in technical activities",
+            "Encouraged a culture of innovation and leadership",
+            "Introduced a new platform for technical growth"
+        ],
+        organizers: ["Department of Computer Engineering", "ACM"]
+    }
+];
+
             localStorage.setItem('acm_events', JSON.stringify(defaults));
+        }
+
+        if (!localStorage.getItem('acm_gallery')) {
+            const defaults = [
+                { src: "assets/events/ai-workshop-1.jpg", caption: "AI Tools Workshop - Day 1", eventSlug: "ai-tools-workshop" },
+                { src: "assets/events/ai-workshop-2.jpg", caption: "AI Tools Workshop - Session", eventSlug: "ai-tools-workshop" },
+                { src: "assets/events/ai-workshop-3.jpg", caption: "AI Tools Workshop - Hands-on", eventSlug: "ai-tools-workshop" },
+                { src: "assets/events/ai-quiz-2.jpg", caption: "AI Tools Quiz - Audience", eventSlug: "ai-tools-quiz" },
+                { src: "assets/events/ai-quiz-3.jpg", caption: "AI Tools Quiz - Participation", eventSlug: "ai-tools-quiz" },
+                { src: "assets/events/ai-quiz-4.jpg", caption: "AI Tools Quiz - Presentation", eventSlug: "ai-tools-quiz" },
+                { src: "assets/events/internship-gap-1.jpeg", caption: "Internship Gap Seminar", eventSlug: "internship-gap" },
+                { src: "assets/events/internship-gap-2.jpeg", caption: "Internship Gap Session", eventSlug: "internship-gap" },
+                { src: "assets/events/internship-gap-3.jpeg", caption: "Internship Gap Mentorship", eventSlug: "internship-gap" },
+                { src: "assets/events/internship-gap-4.jpeg", caption: "Internship Gap Q&A", eventSlug: "internship-gap" }
+            ];
+            localStorage.setItem('acm_gallery', JSON.stringify(defaults));
         }
         if (!localStorage.getItem('acm_team')) {
             const defaults = {
