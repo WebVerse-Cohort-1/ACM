@@ -21,6 +21,7 @@ const NeuralFlow = () => {
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
     renderer.domElement.style.zIndex = '-10';
+    renderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild(renderer.domElement);
 
     // Particles
@@ -169,7 +170,7 @@ const NeuralFlow = () => {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <div ref={mountRef} id="canvas-bg" className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020202]" />;
+  return <div ref={mountRef} id="canvas-bg" className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020202] pointer-events-none" />;
 };
 
 export default NeuralFlow;

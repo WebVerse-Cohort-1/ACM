@@ -44,4 +44,4 @@ export const formatNumber = (n) => Number(n).toLocaleString();
 /**
  * The API server base URL. Change this to your production URL when deploying.
  */
-export const API_BASE_URL = 'http://localhost:3001';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';

@@ -94,7 +94,7 @@ const EventRegister = () => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Info */}
-            <fieldset className="p-6 border border-white/10 rounded-xl bg-white/2 space-y-4">
+            <fieldset className="p-6 border border-white/10 rounded-xl bg-[#0a192f] shadow-xl space-y-4">
               <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// PERSONAL_INFO</legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -113,7 +113,7 @@ const EventRegister = () => {
             </fieldset>
 
             {/* Academic Info */}
-            <fieldset className="p-6 border border-white/10 rounded-xl bg-white/2 space-y-4">
+            <fieldset className="p-6 border border-white/10 rounded-xl bg-[#0a192f] shadow-xl space-y-4">
               <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// ACADEMIC_INFO</legend>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
@@ -138,7 +138,7 @@ const EventRegister = () => {
             </fieldset>
 
             {/* Team Info */}
-            <fieldset className="p-6 border border-white/10 rounded-xl bg-white/2 space-y-4">
+            <fieldset className="p-6 border border-white/10 rounded-xl bg-[#0a192f] shadow-xl space-y-4">
               <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// TEAM_INFO</legend>
               <div>
                 <label className={labelClass}>Team Name (leave blank if solo)</label>
@@ -159,8 +159,8 @@ const EventRegister = () => {
                     <div key={idx} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3 relative">
                       <button type="button" onClick={() => setForm({ ...form, members: form.members.filter((_, i) => i !== idx) })} className="absolute top-2 right-2 text-red-500 font-bold p-1 hover:bg-red-500/10 rounded">✕</button>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input required className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" placeholder="Name" value={member.name} onChange={e => { const nm = [...form.members]; nm[idx].name = e.target.value; setForm({ ...form, members: nm }); }} />
-                        <input required type="email" className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" placeholder="Email" value={member.email} onChange={e => { const nm = [...form.members]; nm[idx].email = e.target.value; setForm({ ...form, members: nm }); }} />
+                        <input required className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" placeholder="Name" value={member.name} onChange={e => { const nm = form.members.map((m, i) => i === idx ? { ...m, name: e.target.value } : m); setForm({ ...form, members: nm }); }} />
+                        <input required type="email" className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" placeholder="Email" value={member.email} onChange={e => { const nm = form.members.map((m, i) => i === idx ? { ...m, email: e.target.value } : m); setForm({ ...form, members: nm }); }} />
                       </div>
                     </div>
                   ))}

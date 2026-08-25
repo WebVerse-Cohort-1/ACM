@@ -184,7 +184,7 @@ const Gallery = () => {
       />
 
       {/* Scroll spacer */}
-      <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none" />
+      <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-0 -z-50 pointer-events-none" />
 
       {/* HUD */}
       <div

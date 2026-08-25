@@ -215,27 +215,27 @@ const Home = () => {
       />
 
       {/* ── SECTION 1: HERO ── */}
-      <section className="min-h-screen flex flex-col justify-center px-6 md:px-20 pt-24 pb-16 relative z-10 pointer-events-none">
-        <div className="max-w-5xl pointer-events-auto">
-          <div className="overflow-hidden mb-4">
-            <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.25em] animate-pulse">
-              :: SYSTEM_READY — ACM_TSEC_v4.0
+      <section className="min-h-screen flex flex-col justify-center px-6 md:px-20 pt-24 md:pt-20 pb-16 relative z-10 pointer-events-none">
+        <div className="max-w-4xl pointer-events-auto">
+          <div className="overflow-hidden mb-3">
+            <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em]">
+              :: SYSTEM_READY
             </p>
           </div>
 
-          <h1 className="text-6xl sm:text-7xl md:text-[10rem] font-heading font-bold leading-[0.88] mb-8 mix-blend-screen">
-            <GlitchText text={d.homeHeading1} /><br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">{d.homeHeading2}</span><br />
-            <span className="text-acm-blue uppercase">{d.homeHeading3}</span>
+          <h1 className="text-5xl sm:text-6xl md:text-9xl font-heading font-bold leading-[0.9] md:leading-[0.85] mb-6 md:mb-8 mix-blend-screen">
+            <GlitchText text={d.homeHeading1 || "FUTURE"} /><br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">{d.homeHeading2 || "READY"}</span><br />
+            <span className="text-acm-blue uppercase">{d.homeHeading3 || "ENGINEERS"}</span>
           </h1>
 
-          <p className="text-gray-400 text-base md:text-xl max-w-xl mb-10 leading-relaxed border-l-2 border-acm-cyan/40 pl-5 whitespace-pre-line">
-            {d.homeDesc}
+          <p className="text-gray-400 text-base md:text-xl max-w-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6 whitespace-pre-line">
+            {d.homeDesc || "The Official ACM Student Chapter of TSEC.\nWe don't just write code; we architect experiences."}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
             <Link to="/events">
-              <MagneticButton as="div" className="px-8 py-4 bg-white text-black font-bold text-sm hover:bg-acm-cyan transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+              <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 bg-white text-black font-bold text-sm rounded-none hover:bg-acm-cyan transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
                 EXPLORE EVENTS
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" />
@@ -243,19 +243,19 @@ const Home = () => {
               </MagneticButton>
             </Link>
             <Link to="/contact">
-              <MagneticButton as="div" className="px-8 py-4 border border-white/20 text-white font-bold text-sm hover:bg-white/10 backdrop-blur-md flex items-center justify-center w-full sm:w-auto">
+              <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white font-bold text-sm rounded-none hover:bg-white/10 backdrop-blur-md flex items-center justify-center w-full sm:w-auto">
                 JOIN NETWORK
               </MagneticButton>
             </Link>
           </div>
+        </div>
 
-          {/* Scroll hint */}
-          <div className="mt-16 flex items-center gap-3 text-gray-600 font-mono text-[10px] tracking-widest">
-            <div className="w-6 h-9 border border-white/15 rounded-full flex items-start justify-center pt-1.5">
-              <div className="w-1 h-2 bg-acm-cyan rounded-full animate-movedown" />
-            </div>
-            SCROLL_TO_EXPLORE
+        {/* Scroll Indicator — hidden on small screens to avoid overflow */}
+        <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference">
+          <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
           </div>
+          <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
         </div>
       </section>
 

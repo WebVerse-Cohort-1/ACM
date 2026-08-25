@@ -33,8 +33,9 @@ const Navbar = () => {
   return (
     <>
       <nav className={`fixed top-0 w-full px-6 md:px-12 flex justify-between items-center transition-all duration-300 z-[1001] ${scrolled || isOpen ? 'py-4 bg-[#020c1b]/95 backdrop-blur-md border-b border-white/10 shadow-lg' : 'py-8'}`}>
-        <Link to="/" onClick={() => setIsOpen(false)} className="text-2xl font-heading font-bold tracking-widest text-white hover:text-acm-cyan transition-colors">
-          TSEC <span className="text-acm-cyan">ACM</span>
+        <Link to="/" onClick={() => setIsOpen(false)} className="flex items-center gap-3 text-2xl font-heading font-bold tracking-widest text-white hover:text-acm-cyan transition-colors">
+          <img src="/logo.png" alt="ACM Logo" className="w-8 h-8 object-contain" />
+          <span>TSEC <span className="text-acm-cyan">ACM</span></span>
         </Link>
 
         {/* Desktop Links */}
