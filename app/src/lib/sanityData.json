@@ -1,0 +1,373 @@
+{
+  "about": {
+    "benefits": "1. Access to ACM Digital Library\n2. Networking opportunities\n3. Hands-on workshops",
+    "eventsConducted": "Over 50+ workshops, hackathons, and seminars conducted since inception.",
+    "homeDesc": null,
+    "homeHeading1": null,
+    "homeHeading2": null,
+    "homeHeading3": null,
+    "legacyLogs": [
+      {
+        "desc": "Awarded Best Student Chapter nationwide.",
+        "title": "National Apex",
+        "year": "2025"
+      },
+      {
+        "desc": "Launched open-source initiative with 500+ PRs.",
+        "title": "Source Code",
+        "year": "2023"
+      }
+    ],
+    "mission": "1. To cultivate critical thinking through hands-on learning.\n2. To promote innovation and research.\n3. To nurture leadership and teamwork.\n4. To create a strong tech community.",
+    "stats": [
+      {
+        "label": "MEMBERS",
+        "value": 500
+      },
+      {
+        "label": "EVENTS",
+        "value": 30
+      },
+      {
+        "label": "AWARDS",
+        "value": 10
+      }
+    ],
+    "vision": "To build a future-ready community of innovators who leverage computing to solve real-world problems.",
+    "whatIsAcm": "The TSEC ACM Student Chapter at Thakur Shyamnarayan Engineering College is a dynamic student-driven community committed to fostering technical excellence, innovation, and holistic student development."
+  },
+  "events": [
+    {
+      "category": "QUIZ",
+      "customStatusText": null,
+      "dateText": "TBA",
+      "desc": "The AI Tools Quiz 2026 was organized as the concluding activity of the AI Tools Workshop. The quiz was designed to evaluate participants' understanding of the concepts, tools, and workflows introduced during the workshop. Through an engaging format, students tested their knowledge of modern AI technologies while reinforcing their practical skills.",
+      "eventDate": null,
+      "faqs": null,
+      "images": null,
+      "maxTeamSize": null,
+      "prizePool": null,
+      "registrationStatus": null,
+      "slug": "ai-tools-quiz",
+      "speakers": null,
+      "title": "AI Tools Quiz",
+      "tracks": null
+    },
+    {
+      "category": "CEREMONY",
+      "customStatusText": null,
+      "dateText": "TBA",
+      "desc": "Inauguration Ceremony for the TSEC ACM Student Chapter.",
+      "eventDate": null,
+      "faqs": null,
+      "images": null,
+      "maxTeamSize": null,
+      "prizePool": null,
+      "registrationStatus": null,
+      "slug": "inauguration",
+      "speakers": null,
+      "title": "Inauguration Ceremony",
+      "tracks": null
+    },
+    {
+      "category": "SEMINAR",
+      "customStatusText": null,
+      "dateText": "TBA",
+      "desc": "TSEC ACM Student Chapter conducted the online seminar 'Internship Gap: Why Good Students Still Don't Get Selected' led by Ms. Deepti K S (Vendavo). The session offered practical insights into internship recruitment, resume building, LinkedIn optimization, interview preparation, and professional branding.",
+      "eventDate": null,
+      "faqs": null,
+      "images": null,
+      "maxTeamSize": null,
+      "prizePool": null,
+      "registrationStatus": null,
+      "slug": "internship-gap",
+      "speakers": null,
+      "title": "Internship Gap Seminar",
+      "tracks": null
+    },
+    {
+      "category": "WORKSHOP",
+      "customStatusText": null,
+      "dateText": "TBA",
+      "desc": "The AI Tools Workshop 2026 was organized with the objective of introducing students to the rapidly evolving ecosystem of Artificial Intelligence-powered development tools. The workshop aimed to bridge the gap between theoretical knowledge and practical implementation by providing participants with hands-on exposure to modern AI-assisted workflows.",
+      "eventDate": null,
+      "faqs": null,
+      "images": null,
+      "maxTeamSize": null,
+      "prizePool": null,
+      "registrationStatus": null,
+      "slug": "ai-tools-workshop",
+      "speakers": null,
+      "title": "AI Tools Workshop",
+      "tracks": null
+    },
+    {
+      "category": "HACKATHON",
+      "customStatusText": null,
+      "dateText": "TBA",
+      "desc": "DevSprint Mini Hackathon was organized by ACM Students Chapter and CodeCrafters with the aim of encouraging innovation, creativity, and practical learning among students. This event provided a platform for participants to think critically, work collaboratively, and develop solutions within a limited time frame addressing real-life issues related to leftover food.",
+      "eventDate": null,
+      "faqs": null,
+      "images": null,
+      "maxTeamSize": null,
+      "prizePool": null,
+      "registrationStatus": null,
+      "slug": "devsprint",
+      "speakers": null,
+      "title": "DEVSPRINT 2K26",
+      "tracks": null
+    }
+  ],
+  "gallery": [
+    {
+      "caption": null,
+      "eventSlug": null,
+      "src": null
+    }
+  ],
+  "members": [
+    {
+      "_id": "iFWkJop8SzTfywDSvUWOTz",
+      "category": "Core",
+      "desc": "Leading the chapter with a focus on community building and global tech standards.",
+      "image": "/Photoshot ACM/aditya devghare.jpeg",
+      "linkedin": "https://www.linkedin.com/in/aaditya-devghare",
+      "name": "Aaditya Devghare",
+      "role": "Chairperson"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWPVt",
+      "category": "Core",
+      "desc": "Overseeing administrative tasks and maintaining chapter records.",
+      "image": "/Photoshot ACM/aditya mishra.jpeg",
+      "linkedin": "https://www.linkedin.com/in/aditya-mishra-b76b7436a",
+      "name": "Aditya Mishra",
+      "role": "Secretary"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsKu",
+      "category": "Core",
+      "desc": "Driving internal operations and coordinating between diverse team verticals.",
+      "image": "/Photoshot ACM/ishika mehta.jpeg",
+      "linkedin": "https://www.linkedin.com/in/ishika-mehta-",
+      "name": "Ishika Mehta",
+      "role": "Vice Chairperson"
+    },
+    {
+      "_id": "Zu4266Dfr9xDNlDITptiip",
+      "category": "Core",
+      "desc": "Expanding our reach and ensuring value for every TSEC ACM member.",
+      "image": "/Photoshot ACM/nigam tiwari.png",
+      "linkedin": "https://www.linkedin.com/in/nigam-tiwari-8a76233a3",
+      "name": "Nigam Tiwari",
+      "role": "Membership Chair"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWP94",
+      "category": "Core",
+      "desc": "Managing chapter finances with precision and strategic allocation.",
+      "image": "/Photoshot ACM/sagar gupta.jpeg",
+      "linkedin": "https://www.linkedin.com/in/sagar-gupta-8788052ab",
+      "name": "Sagar Gupta",
+      "role": "Treasurer"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWRnO",
+      "category": "Creative Team",
+      "desc": "Crafting visual identities that resonate with our tech community.",
+      "image": "/Photoshot ACM/jainish dave.jpeg",
+      "linkedin": "#",
+      "name": "Janish Dave",
+      "role": "Creative Designer"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWR8J",
+      "category": "Creative Team",
+      "desc": "Visual storytelling through high-impact graphic design.",
+      "image": "/Photoshot ACM/krishi oza.jpeg",
+      "linkedin": "https://www.linkedin.com/in/krishi-oza-86399a3b2",
+      "name": "Krishi Oza",
+      "role": "Creative Designer"
+    },
+    {
+      "_id": "Zu4266Dfr9xDNlDITptkhF",
+      "category": "Creative Team",
+      "desc": "Creating intuitive user journeys and aesthetic digital interfaces.",
+      "image": "/Photoshot ACM/sahir sheikh.jpeg",
+      "linkedin": "https://www.linkedin.com/in/sahir-shaikh-b19b90281",
+      "name": "Sahir Sheikh",
+      "role": "UI/UX Designer"
+    },
+    {
+      "_id": "Zu4266Dfr9xDNlDITptkGd",
+      "category": "Creative Team",
+      "desc": "Designing user-centric interfaces for seamless digital navigation.",
+      "image": "/Photoshot ACM/samhita hejmadi.jpeg",
+      "linkedin": "https://www.linkedin.com/in/samhita-hejmadi-7a0892262",
+      "name": "Samhita Hejmadi",
+      "role": "UI/UX Designer"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWTUN",
+      "category": "Editorial & Content Team",
+      "desc": "Translating complex tech concepts into engaging written narratives.",
+      "image": "/Photoshot ACM/aadish shukla.jpeg",
+      "linkedin": "#",
+      "name": "Aadiish Shukla",
+      "role": "Content Writer"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwstu",
+      "category": "Editorial & Content Team",
+      "desc": "Curating the latest tech news for our weekly subscriber base.",
+      "image": "/Photoshot ACM/amaan sheikh.jpeg",
+      "linkedin": "https://www.linkedin.com/in/mohammed-amaan-shaikh-2a5518346",
+      "name": "Amaan Sheikh",
+      "role": "Newsletter Editor"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwswj",
+      "category": "Editorial & Content Team",
+      "desc": "Capturing the essence of events through dynamic visual lenses.",
+      "image": "/Photoshot ACM/shivam tiwari.jpeg",
+      "linkedin": "https://www.linkedin.com/in/shivam-tiwari-381872337",
+      "name": "Shivam Tiwari",
+      "role": "Cinematographer"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWV2E",
+      "category": "Event Team",
+      "desc": "Conceptualizing and managing large-scale flagship hackathons.",
+      "image": "/Photoshot ACM/asmita chauhan.jpeg",
+      "linkedin": "https://www.linkedin.com/in/asmita-chauhan-8083682a0",
+      "name": "Asmita Chauhan",
+      "role": "Event Head"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWW48",
+      "category": "Event Team",
+      "desc": "Managing onsite operations and attendee experience metrics.",
+      "image": "/Photoshot ACM/nidhi lad.jpeg",
+      "linkedin": "https://www.linkedin.com/in/nidhi-lad-6187a8354",
+      "name": "Nidhi Lad",
+      "role": "Event Head"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwt5C",
+      "category": "Event Team",
+      "desc": "Coordinating workshop logistics and speaker onboarding.",
+      "image": "/Photoshot ACM/sammriddhi singh.jpeg",
+      "linkedin": "https://www.linkedin.com/in/samriddhi-singh-0a770238a",
+      "name": "Samriddhi Singh",
+      "role": "Event Head"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsI5",
+      "category": "Faculty",
+      "desc": "Providing strategic guidance and support for chapter initiatives.",
+      "image": "/Photoshot ACM/kashif sheikh.jpeg",
+      "linkedin": "#",
+      "name": "Kashif Sheikh",
+      "role": "Faculty Co-Sponsor"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsFG",
+      "category": "Faculty",
+      "desc": "Guiding the chapter with academic leadership and professional mentorship.",
+      "image": "/Photoshot ACM/smita dange.jpeg",
+      "linkedin": "#",
+      "name": "Smita Dandge",
+      "role": "Faculty Sponsor"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsCR",
+      "category": "Faculty",
+      "desc": "Leading with strategic vision and providing overarching support for the chapter's mission.",
+      "image": "/Photoshot ACM/vaishali rane.jpeg",
+      "linkedin": "#",
+      "name": "Vaishali Rane",
+      "role": "Chief Patron"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwt99",
+      "category": "Marketing Team",
+      "desc": "Developing strategies to expand chapter visibility and reach.",
+      "image": "/Photoshot ACM/arushi singh.jpeg",
+      "linkedin": "https://www.linkedin.com/in/arushi-singh-b327643a3",
+      "name": "Arushi Singh",
+      "role": "Marketing Manager"
+    },
+    {
+      "_id": "Zu4266Dfr9xDNlDITptm1k",
+      "category": "Marketing Team",
+      "desc": "Driving brand growth through targeted outreach and communication.",
+      "image": "/Photoshot ACM/jaya yadav.jpeg",
+      "linkedin": "https://www.linkedin.com/in/jaya-yadav-560a103a1",
+      "name": "Jaya Yadav",
+      "role": "Marketing Manager"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWUjy",
+      "category": "Operations Team",
+      "desc": "Ensuring smooth execution of all logistical and back-end pipelines.",
+      "image": "/Photoshot ACM/sonal  tripathi.jpeg",
+      "linkedin": "https://www.linkedin.com/in/sonaltripathi20",
+      "name": "Sonal Tripathi",
+      "role": "Operational Head"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWU0K",
+      "category": "Social Media Team",
+      "desc": "Managing our digital footprint and community engagement.",
+      "image": "/Photoshot ACM/aditya bhat.jpg",
+      "linkedin": "https://www.linkedin.com/in/aditya-bhatt-1710123a5",
+      "name": "Aditya Bhatt",
+      "role": "Social Media Manager"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsyz",
+      "category": "Social Media Team",
+      "desc": "Curating viral content and handling channel outreach.",
+      "image": "/Photoshot ACM/ayushi labde.jpeg",
+      "linkedin": "https://www.linkedin.com/in/ayushi-labde-74872931b",
+      "name": "Ayushi Labde",
+      "role": "Social Media Manager"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsQY",
+      "category": "Tech Team",
+      "desc": "Specializing in software architecture and technical implementation.",
+      "image": "/Photoshot ACM/aman mandal.jpeg",
+      "linkedin": "https://www.linkedin.com/in/amanmandal35",
+      "name": "Aman Mandal",
+      "role": "Technical Head"
+    },
+    {
+      "_id": "iFWkJop8SzTfywDSvUWPxH",
+      "category": "Tech Team",
+      "desc": "Architecting codebases and leading technical research initiatives.",
+      "image": "/Photoshot ACM/shivam pal.jpeg",
+      "linkedin": "https://www.linkedin.com/in/shivampal7",
+      "name": "Shivam Pal",
+      "role": "Technical Head"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsTw",
+      "category": "Web Team",
+      "desc": "Building immersive digital experiences with modern web stacks.",
+      "image": "/Photoshot ACM/rushabh singh.jpeg",
+      "linkedin": "https://www.linkedin.com/in/rushabh-anil-singh/",
+      "name": "Rushabh Singh",
+      "role": "Webmaster"
+    },
+    {
+      "_id": "w7NcQYcddOylrBXAfQwsWl",
+      "category": "Web Team",
+      "desc": "Optimizing web performance and maintaining digital infrastructure.",
+      "image": "/Photoshot ACM/shubham singh.jpeg",
+      "linkedin": "https://www.linkedin.com/in/shubham-singh-564602314",
+      "name": "Shubham Singh",
+      "role": "Webmaster"
+    }
+  ]
+}

@@ -1,39 +1,24 @@
 // src/lib/sanity.js
-// Sanity client configured for ACM TSEC (gx7rj7pk / production)
-// This app uses Vite — use VITE_ prefix for client-safe env vars.
+// READ-ONLY Sanity client for ACM TSEC frontend.
+// All write operations go through api/server.js (which holds the write token securely).
 import { createClient } from '@sanity/client';
 import imageUrlBuilder from '@sanity/image-url';
 
 export const client = createClient({
-  projectId: import.meta.env.VITE_SANITY_PROJECT_ID || 'gx7rj7pk',
+  projectId: import.meta.env.VITE_SANITY_PROJECT_ID || '9js05zdy',
   dataset: import.meta.env.VITE_SANITY_DATASET || 'production',
-  apiVersion: '2026-06-25',
-  useCdn: true, // serve from edge cache for public reads
+  apiVersion: '2023-05-03',
+  useCdn: true,
 });
 
-// Client for mutations (requires a token with write access)
-// IMPORTANT: Only use this server-side or if you are safely passing the token
-export const writeClient = createClient({
-  projectId: import.meta.env.VITE_SANITY_PROJECT_ID || 'gx7rj7pk',
-  dataset: import.meta.env.VITE_SANITY_DATASET || 'production',
-  apiVersion: '2026-06-25',
-  token: import.meta.env.VITE_SANITY_API_TOKEN, // Set this in your .env file
-  useCdn: false, // mutations shouldn't be cached
-});
-
-// Image URL builder
+// Image URL builder (for Sanity-native images, if used)
 const builder = imageUrlBuilder(client);
-
-/**
- * Get a Sanity image URL helper.
- * Usage: sanityImage(source).width(800).url()
- */
 export function sanityImage(source) {
   return builder.image(source);
 }
 
 /**
- * Convenience fetch that returns null on error instead of throwing.
+ * Convenience fetch — returns null on error instead of throwing.
  */
 export async function sanityFetch(query, params = {}) {
   try {
@@ -44,63 +29,60 @@ export async function sanityFetch(query, params = {}) {
   }
 }
 
-/**
- * Helper to create a new document in Sanity
- * @param {Object} documentData - The document data to create
- */
-export async function createDocument(documentData) {
-  try {
-    const result = await writeClient.create(documentData)
-    console.log('Document created:', result)
-    return result
-  } catch (error) {
-    console.error('Error creating document:', error)
-    throw error
-  }
-}
+// --- GROQ QUERY CONSTANTS ---
+export const QUERIES = {
+  ABOUT: `*[_type == "about"][0] {
+    whatIsAcm, vision, mission, benefits, eventsConducted,
+    homeHeading1, homeHeading2, homeHeading3, homeDesc,
+    stats[] { label, value },
+    legacyLogs[] { year, title, desc }
+  }`,
 
-/**
- * Uploads a file to the custom Google Drive API backend, gets the Drive File ID,
- * and saves the final document data to Sanity.
- * 
- * @param {File} file - The file to upload (from an <input type="file" />)
- * @param {Object} documentData - The document to create in Sanity
- * @param {string} driveIdFieldName - The field name in Sanity to store the Drive ID (e.g. 'driveProfilePictureId')
- */
-export async function uploadToDriveAndSaveToSanity(file, documentData, driveIdFieldName) {
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
+  EVENTS: `*[_type == "event"] | order(_createdAt desc) {
+    title,
+    "slug": slug.current,
+    category,
+    dateText,
+    desc,
+    images,
+    prizePool,
+    maxTeamSize,
+    eventDate,
+    registrationStatus,
+    customStatusText
+  }`,
 
-    // 1. Upload to our local Node.js Express server
-    // Note: Adjust the URL if your API runs on a different port/host in production
-    const uploadRes = await fetch('http://localhost:3001/upload', {
-      method: 'POST',
-      body: formData
-    })
+  EVENT_BY_SLUG: `*[_type == "event" && slug.current == $slug][0] {
+    title,
+    "slug": slug.current,
+    category,
+    dateText,
+    eventDate,
+    desc,
+    images,
+    prizePool,
+    maxTeamSize,
+    registrationStatus,
+    customStatusText,
+    tracks[] { name, desc },
+    speakers[] { name, role, image, linkedin, type, link },
+    faqs[] { q, a }
+  }`,
 
-    if (!uploadRes.ok) {
-      throw new Error(`Upload API failed with status ${uploadRes.status}`)
-    }
+  GALLERY_BY_SLUG: `*[_type == "gallery" && eventSlug == $slug] {
+    src, caption
+  }`,
 
-    const uploadData = await uploadRes.json()
-    const fileId = uploadData.fileId
+  ALL_GALLERY: `*[_type == "gallery"] { src, caption, eventSlug }`,
 
-    if (!fileId) {
-      throw new Error('No fileId returned from Google Drive upload API')
-    }
+  MEMBERS: `*[_type == "member"] | order(category asc, name asc) {
+    _id, name, role, category, desc, linkedin,
+    "image": driveProfilePictureId
+  }`,
 
-    // 2. Attach the Drive File ID to the document data
-    const finalDocumentData = {
-      ...documentData,
-      [driveIdFieldName]: fileId
-    }
-
-    // 3. Save to Sanity
-    return await createDocument(finalDocumentData)
-    
-  } catch (error) {
-    console.error('Error uploading to drive and saving to sanity:', error)
-    throw error
-  }
-}
+  QUIZ_BY_SLUG: `*[_type == "quiz" && eventSlug == $slug][0] {
+    _id, title, durationMinutes, marksPerQuestion, negativeMarks,
+    driveCoverImageId,
+    questions[] { _key, text, type, options, explanation }
+  }`,
+};

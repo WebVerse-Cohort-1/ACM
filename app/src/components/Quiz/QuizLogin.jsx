@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { client } from '../../lib/sanity';
 
-export default function QuizLogin() {
+const QuizLogin = () => {
     const [form, setForm] = useState({ teamName: '', email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -12,38 +13,52 @@ export default function QuizLogin() {
         setLoading(true);
         setError('');
 
-        // Basic verification with local storage or mock cloud
         try {
-            // Ideally call GAS endpoint here
-            const gasUrl = localStorage.getItem('acm_gas_url');
-            let verified = false;
+            // Fetch registration from Sanity
+            const query = `*[_type == "registration" && team == $teamName && email == $email][0]`;
+            const registration = await client.fetch(query, { teamName: form.teamName, email: form.email });
 
-            if (gasUrl) {
-                const response = await fetch(gasUrl, {
+            if (!registration) {
+                setError('Team not found or email does not match.');
+                setLoading(false);
+                return;
+            }
+
+            if (!registration.isApprovedForExam) {
+                setError('Your team is not approved to take the exam. Please contact an admin.');
+                setLoading(false);
+                return;
+            }
+
+            // Create or fetch the quizSession for this team via secure API
+            const sessionQuery = `*[_type == "quizSession" && teamName == $teamName][0]`;
+            let session = await client.fetch(sessionQuery, { teamName: form.teamName });
+
+            if (!session) {
+                // Securely call backend API to initialize session instead of using writeClient in frontend
+                const res = await fetch('http://localhost:3001/quiz-session', {
                     method: 'POST',
-                    mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'quiz_login', data: form })
+                    body: JSON.stringify({ registrationId: registration._id, team: registration.team, email: form.email })
                 });
-                const resData = await response.json();
-                if (resData.success) {
-                    verified = true;
+                
+                if (!res.ok) {
+                    throw new Error('Failed to initialize session');
                 }
-            } else {
-                // Mock verification for testing without GAS
-                if (form.teamName && form.email && form.password) {
-                    verified = true; 
-                }
+                const data = await res.json();
+                session = { _id: data.sessionId };
             }
 
-            if (verified) {
-                // Generate secure token/session
-                sessionStorage.setItem('quiz_session', JSON.stringify({ team: form.teamName, email: form.email, startTime: Date.now() }));
-                // Redirect to exam screen
-                navigate('/quiz/exam');
-            } else {
-                setError('Invalid credentials or unauthorized to take the exam.');
-            }
+            // Generate secure token/session
+            sessionStorage.setItem('quiz_session', JSON.stringify({ 
+                team: registration.team, 
+                email: form.email, 
+                sessionId: session._id,
+                memberName: registration.name 
+            }));
+            
+            // Redirect to exam screen
+            navigate('/quiz/exam');
         } catch (err) {
             console.error("Login Error:", err);
             setError('Failed to connect to the verification server. Ensure you are online.');
@@ -92,3 +107,5 @@ export default function QuizLogin() {
         </div>
     );
 }
+
+export default QuizLogin;

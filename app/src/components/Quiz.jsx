@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { createClient } from '@sanity/client';
-const client = createClient({ projectId: 'gx7rj7pk', dataset: 'production', useCdn: true, apiVersion: '2023-05-03' });
+import { client } from '../lib/sanity';
 
 export function Quiz({ initialQuizId }) {
   const [availableQuizzes, setAvailableQuizzes] = useState([]);
@@ -56,26 +55,22 @@ export function Quiz({ initialQuizId }) {
     
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/submit-quiz', {
+      await fetch('http://localhost:3001/submit-quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          quizId: quizData._id,
           quizTitle: quizData.title,
-          eventSlug: quizData.eventSlug,
-          participantId,
-          answers
+          name: participantId, // using participantId as name
+          email: participantId, // assuming they might enter email
+          answers: JSON.stringify(answers),
+          score: 0
         })
       });
       
-      if (response.ok) {
-        setSubmitted(true);
-      } else {
-        alert('Error submitting quiz.');
-      }
+      setSubmitted(true);
     } catch (error) {
       console.error(error);
-      alert('Network error.');
+      alert('Error submitting quiz.');
     } finally {
       setLoading(false);
     }
@@ -122,9 +117,9 @@ export function Quiz({ initialQuizId }) {
             <div key={q._key} className="mb-6 p-4 border rounded">
               <p className="font-semibold mb-2">{idx + 1}. {q.text}</p>
               
-              {q.options ? (
+              {q.type === 'multiple_choice' || !q.type ? (
                 <div className="space-y-2">
-                  {q.options.map((opt, optIdx) => (
+                  {q.options?.map((opt, optIdx) => (
                     <label key={optIdx} className="block">
                       <input 
                         type="radio" 
@@ -137,12 +132,26 @@ export function Quiz({ initialQuizId }) {
                     </label>
                   ))}
                 </div>
+              ) : q.type === 'link' ? (
+                <input 
+                  type="url" 
+                  className="w-full border p-2 rounded" 
+                  placeholder="https://..." 
+                  onChange={(e) => handleTextAnswer(q._key, e.target.value)} 
+                />
+              ) : q.type === 'short_answer' ? (
+                <input 
+                  type="text" 
+                  className="w-full border p-2 rounded" 
+                  placeholder="Short answer text" 
+                  onChange={(e) => handleTextAnswer(q._key, e.target.value)} 
+                />
               ) : (
                 <textarea 
                   className="w-full border p-2 rounded" 
-                  rows="3"
-                  onChange={(e) => handleTextAnswer(q._key, e.target.value)}
-                  placeholder="Type your answer here..."
+                  rows="3" 
+                  placeholder="Type your paragraph here..." 
+                  onChange={(e) => handleTextAnswer(q._key, e.target.value)} 
                 />
               )}
             </div>

@@ -2,7 +2,12 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
-import {UsersIcon, CalendarIcon, ClipboardIcon} from '@sanity/icons'
+import {icons} from '@sanity/icons'
+
+// Polyfill to prevent Vite client ReferenceError __BUNDLED_DEV__ is not defined
+if (typeof window !== 'undefined') {
+  (window as any).__BUNDLED_DEV__ = true;
+}
 
 export default defineConfig({
   name: 'default',
@@ -13,22 +18,44 @@ export default defineConfig({
 
   plugins: [
     structureTool({
-      structure: (S) =>
+      structure: (S: any) =>
         S.list()
           .title('CRM Dashboard')
           .items([
             S.listItem()
+              .title('About Info')
+              .icon(icons.info || icons.document)
+              .child(
+                S.editor()
+                  .id('about')
+                  .schemaType('about')
+                  .documentId('siteAbout')
+                  .title('About Info')
+              ),
+            S.listItem()
+              .title('Events')
+              .icon(icons.calendar)
+              .child(S.documentTypeList('event').title('All Events')),
+            S.listItem()
+              .title('Quizzes')
+              .icon(icons.database)
+              .child(S.documentTypeList('quiz').title('All Quizzes')),
+            S.listItem()
               .title('Members')
-              .icon(UsersIcon)
+              .icon(icons.users)
               .child(S.documentTypeList('member').title('All Members')),
             S.listItem()
-              .title('Events / Quizzes')
-              .icon(CalendarIcon)
-              .child(S.documentTypeList('quiz').title('All Events')),
+              .title('Gallery Captures')
+              .icon(icons.image || icons.document)
+              .child(S.documentTypeList('gallery').title('All Captures')),
             S.listItem()
-              .title('Registrations')
-              .icon(ClipboardIcon)
+              .title('Event Registrations')
+              .icon(icons.clipboard)
               .child(S.documentTypeList('registration').title('Event Registrations')),
+            S.listItem()
+              .title('Contact Messages')
+              .icon(icons.envelope)
+              .child(S.documentTypeList('message').title('Contact Messages')),
           ]),
     }),
     visionTool(),
