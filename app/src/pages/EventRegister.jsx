@@ -5,7 +5,7 @@ import { QUERIES } from '../lib/sanity';
 import { API_BASE_URL } from '../lib/utils';
 import SEO from '../components/ui/SEO';
 
-const inputClass = 'w-full bg-white/5 border border-white/10 p-3.5 text-white rounded-lg focus:border-acm-cyan outline-none transition-all placeholder:text-gray-600 text-sm';
+const inputClass = 'w-full bg-[#060f1e] border border-white/10 p-3.5 text-white rounded-lg focus:border-acm-cyan outline-none transition-all placeholder:text-gray-600 text-sm';
 const labelClass = 'block text-[10px] text-acm-cyan/70 font-mono uppercase tracking-[0.2em] mb-1.5';
 
 const EventRegister = () => {
@@ -95,7 +95,7 @@ const EventRegister = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Info */}
             <fieldset className="p-6 border border-white/10 rounded-xl bg-[#0a192f] shadow-xl space-y-4">
-              <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// PERSONAL_INFO</legend>
+              <div className="text-acm-cyan font-mono text-[10px] tracking-widest mb-2">// PERSONAL_INFO</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Full Name *</label>
@@ -114,7 +114,7 @@ const EventRegister = () => {
 
             {/* Academic Info */}
             <fieldset className="p-6 border border-white/10 rounded-xl bg-[#0a192f] shadow-xl space-y-4">
-              <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// ACADEMIC_INFO</legend>
+              <div className="text-acm-cyan font-mono text-[10px] tracking-widest mb-2">// ACADEMIC_INFO</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className={labelClass}>Year *</label>
@@ -139,7 +139,7 @@ const EventRegister = () => {
 
             {/* Team Info */}
             <fieldset className="p-6 border border-white/10 rounded-xl bg-[#0a192f] shadow-xl space-y-4">
-              <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// TEAM_INFO</legend>
+              <div className="text-acm-cyan font-mono text-[10px] tracking-widest mb-2">// TEAM_INFO</div>
               <div>
                 <label className={labelClass}>Team Name (leave blank if solo)</label>
                 <input type="text" placeholder="Team Binary_Bards" className={inputClass} value={form.team} onChange={e => setForm({ ...form, team: e.target.value })} />

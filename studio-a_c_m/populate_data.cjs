@@ -1,12 +1,12 @@
-require('dotenv').config({ path: '../app/.env' });
+require('dotenv').config({ path: '../.env' });
 const { createClient } = require('@sanity/client');
 
 const client = createClient({
-  projectId: process.env.VITE_SANITY_PROJECT_ID || '1y06w0n1',
+  projectId: process.env.VITE_SANITY_PROJECT_ID || '9js05zdy',
   dataset: process.env.VITE_SANITY_DATASET || 'production',
   apiVersion: '2023-01-01',
   useCdn: false,
-  token: process.env.SANITY_API_TOKEN
+  token: process.env.SANITY_API_TOKEN || 'skfYsvcNv1z5RKClXF1eCauID6B4mWAx3C0LcvVpYRxl691QkaNd6zVjO5SFL6i8CloY5vemU5luY8VQzqINBZRrRBMTmglGAS3U6izQgkjRfBvTCZPKizUFEjv5KMFE5M0fZj5USs2QFL7wvssZoFs0kK6X52HUCZ91Cf8fOtdql1q4Qr1K'
 });
 
 const defaultAbout = {

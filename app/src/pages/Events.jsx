@@ -28,8 +28,20 @@ const Events = () => {
       </div>
 
       {loading && (
-        <div className="text-center py-20 text-acm-cyan font-mono text-xs animate-pulse tracking-widest">
-          :: FETCHING_INTEL...
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 w-full">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="aspect-video rounded-2xl border border-white/5 bg-white/2 p-5 md:p-8 flex flex-col justify-between animate-pulse">
+              <div className="flex justify-between items-start">
+                <div className="h-6 w-24 bg-white/10 rounded animate-pulse" />
+                <div className="h-5 w-16 bg-white/10 rounded animate-pulse" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-8 w-3/4 bg-white/10 rounded animate-pulse" />
+                <div className="h-4 w-full bg-white/10 rounded animate-pulse" />
+                <div className="h-3 w-1/4 bg-white/10 rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

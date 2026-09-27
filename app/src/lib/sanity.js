@@ -8,7 +8,8 @@ export const client = createClient({
   projectId: import.meta.env.VITE_SANITY_PROJECT_ID || '9js05zdy',
   dataset: import.meta.env.VITE_SANITY_DATASET || 'production',
   apiVersion: '2023-05-03',
-  useCdn: true,
+  useCdn: false,
+  token: 'skMesiSGgptaX6gPk66VI6jPuA5ma6rBpd0YcBR2RlWX7W4pejDOOr2pivZwY9QELH3CaQA7OdWK0Q8StGDYvEkMIuPzjwBDmOol1BeEdHaQHf3F8Cr0Qo2vYPY2agTWnHk6ZDzDflBurIFgnmUQcibPNzoi84q90LU8ERPNCdKgCESDTjut',
 });
 
 // Image URL builder (for Sanity-native images, if used)

@@ -35,7 +35,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
 
   return (
     <div
-      className="absolute top-1/2 left-1/2 transition-all ease-out cursor-pointer group"
+      className="absolute top-1/2 left-1/2 transition-all ease-out cursor-pointer group pointer-events-auto"
       style={{ ...transformStyle, transitionDuration: isActive ? '800ms' : '0ms', width: '90vw', maxWidth: '900px', aspectRatio: window.innerWidth < 640 ? '1 / 1.1' : '16 / 9' }}
       onClick={handleClick}
     >
@@ -194,15 +194,11 @@ const Gallery = () => {
         <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-2 tracking-tighter">
           NEURAL_<span className="text-acm-cyan">ARCHIVE</span>
         </h1>
-        <div className="flex justify-center space-x-4 text-[10px] md:text-xs font-mono text-acm-cyan/80">
-          <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
-          <span>:: DEPTH: {Math.round(smoothScroll)}</span>
-        </div>
       </div>
 
       {/* 3D Viewport */}
       <div className="fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center perspective-[1000px] pointer-events-none">
-        <div className="relative w-full h-full preserve-3d pointer-events-auto">
+        <div className="relative w-full h-full preserve-3d pointer-events-none">
           {items.map((item, index) => (
             <FusionCard
               key={item.id}

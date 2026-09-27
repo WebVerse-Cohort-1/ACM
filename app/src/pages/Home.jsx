@@ -249,14 +249,6 @@ const Home = () => {
             </Link>
           </div>
         </div>
-
-        {/* Scroll Indicator — hidden on small screens to avoid overflow */}
-        <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference">
-          <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
-          </div>
-          <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
-        </div>
       </section>
 
       {/* ── SECTION 2: ABOUT PREVIEW ── */}
