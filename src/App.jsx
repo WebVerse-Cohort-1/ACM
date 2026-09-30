@@ -1177,7 +1177,7 @@ const FusionGallery = () => {
 
     useEffect(() => {
         try {
-            const storedEvents = JSON.parse(localStorage.getItem('acm_events') || '[]');
+            const storedEvents = JSON.parse(localStorage.getItem('acm_events') || '[]').filter(e => e.slug !== 'techforge');
             const storedGallery = JSON.parse(localStorage.getItem('acm_gallery') || '[]');
 
             // Map events
@@ -4446,7 +4446,7 @@ const App = () => {
                 venue: "Thakur Shyamnarayan Engineering College",
                 category: 'HACKATHON',
                 desc: "TECHFORGE is a high-energy 24-hour hybrid technology competition merging online development with offline presentation. Organized by the TSEC ACM Student Chapter and CodeCrafters, it challenges 60 teams under the 'Transformers' theme to solve real-world problems.",
-                images: ["assets/events/techforde.jpeg"],
+                images: ["assets/techforge.jpeg"],
                 statistics: { participants: "60 Teams", duration: "24 Hours Hybrid" },
                 highlights: [
                     { icon: "generic", title: "18-Hour Online Phase", desc: "Teams develop their solutions remotely within the 18-hour timeframe." },
