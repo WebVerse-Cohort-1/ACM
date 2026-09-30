@@ -1162,6 +1162,15 @@ const TeamPersonaCard = ({ member }) => {
 const FusionGallery = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
     const [activeIndex, setActiveIndex] = useState(-1);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [touchStart, setTouchStart] = useState(null);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        if (window.innerWidth < 768) setActiveIndex(0);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [items, setItems] = useState([]);
     const location = useLocation();
@@ -1211,7 +1220,7 @@ const FusionGallery = () => {
 
     // Scroll Logic with Hard Limit
     useEffect(() => {
-        if (items.length === 0) return;
+        if (items.length === 0 || isMobile) return;
         const scrollFactor = 2.5;
         const lastZ = items[items.length - 1]?.z || 0;
         // The real page-scroll position at which last event is focused
@@ -1233,6 +1242,7 @@ const FusionGallery = () => {
 
     // Active Item Detection
     useEffect(() => {
+        if (isMobile) return;
         let closest = -1;
         let minDist = 500;
 
@@ -1248,19 +1258,28 @@ const FusionGallery = () => {
 
     const scrollFactor = 2.5;
     // Spacer height = exactly the scroll position of the last event
-    const maxZ = items.length > 0 ? (items[items.length - 1].z / scrollFactor) + window.innerHeight : 2000;
+    const maxZ = isMobile ? 0 : (items.length > 0 ? (items[items.length - 1].z / scrollFactor) + window.innerHeight : 2000);
 
-    const handleNext = () => window.scrollBy({ top: 600, behavior: 'smooth' });
-    const handlePrev = () => window.scrollBy({ top: -600, behavior: 'smooth' });
+    const handleNext = () => isMobile ? setActiveIndex(p => Math.min(items.length - 1, p + 1)) : window.scrollBy({ top: 600, behavior: 'smooth' });
+    const handlePrev = () => isMobile ? setActiveIndex(p => Math.max(0, p - 1)) : window.scrollBy({ top: -600, behavior: 'smooth' });
+
+    const onTouchStart = (e) => setTouchStart(e.touches[0].clientX);
+    const onTouchEnd = (e) => {
+        if (!touchStart) return;
+        const diff = touchStart - e.changedTouches[0].clientX;
+        if (diff > 50) handleNext();
+        if (diff < -50) handlePrev();
+        setTouchStart(null);
+    };
 
     return (
         <div className="min-h-screen bg-transparent transition-colors duration-1000 relative">
 
             {/* Scroll Spacer */}
-            <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
+            {!isMobile && <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>}
 
             {/* Manual Controls */}
-            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] flex gap-4">
+            <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] flex gap-4 ${isMobile && activeIndex === -1 && items.length > 0 ? 'hidden' : ''}`}>
                 <button onClick={handlePrev} className="w-12 h-12 rounded-full border border-acm-cyan text-acm-cyan flex items-center justify-center hover:bg-acm-cyan hover:text-black transition-colors backdrop-blur-md cursor-pointer pointer-events-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
                 </button>
@@ -1284,14 +1303,20 @@ const FusionGallery = () => {
             </div>
 
             {/* Viewport */}
-            <div className="fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center perspective-[1000px] pointer-events-none">
-                <div className="relative w-full h-full preserve-3d pointer-events-auto">
+            <div
+                className={`fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center ${!isMobile ? 'perspective-[1000px]' : ''} pointer-events-none`}
+                onTouchStart={isMobile ? onTouchStart : undefined}
+                onTouchEnd={isMobile ? onTouchEnd : undefined}
+            >
+                <div className={`relative w-full h-full ${!isMobile ? 'preserve-3d' : ''} pointer-events-auto`}>
                     {items.map((item, index) => (
                         <FusionCard
                             key={item.id}
                             item={item}
                             isActive={index === activeIndex}
-                            rawZ={-item.z + scrollProgress - 500}
+                            rawZ={isMobile ? 0 : -item.z + scrollProgress - 500}
+                            isMobile={isMobile}
+                            mobileOffset={index - activeIndex}
                         />
                     ))}
                 </div>
@@ -1300,7 +1325,7 @@ const FusionGallery = () => {
     );
 };
 
-const FusionCard = ({ item, isActive, rawZ }) => {
+const FusionCard = ({ item, isActive, rawZ, isMobile, mobileOffset }) => {
     const navigate = ReactRouterDOM.useNavigate();
     const [slide, setSlide] = useState(0);
 
@@ -1325,21 +1350,19 @@ const FusionCard = ({ item, isActive, rawZ }) => {
     }
 
     // --- Interaction Physics ---
-    const transformStyle = isActive
-        ? {
-            // SNAP TO CENTER
-            transform: `translate3d(-50%, -50%, 0px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`,
-            opacity: 1,
-            zIndex: 100,
-            filter: 'blur(0px)'
-        }
-        : {
-            // BACKGROUND DRIFT
-            transform: `translate3d(calc(-50% + ${item.x}vw), calc(-50% + ${item.y}vh), ${rawZ}px) rotateZ(${item.rotation}deg) scale3d(0.8, 0.8, 0.8)`,
-            opacity: rawZ > 0 ? 0 : Math.max(0, 1 - Math.abs(rawZ) / 3000), // Fade off in distance
-            zIndex: Math.round(-rawZ),
-            filter: `blur(${Math.min(10, Math.abs(rawZ) / 200)}px) grayscale(${Math.min(100, Math.abs(rawZ) / 30)}%)`
+    let transformStyle;
+    if (isMobile) {
+        transformStyle = {
+            transform: `translate3d(calc(-50% + ${mobileOffset * 105}vw), -50%, 0)`,
+            opacity: Math.abs(mobileOffset) > 0 ? 0.3 : 1,
+            zIndex: isActive ? 100 : 0,
+            filter: 'none'
         };
+    } else {
+        transformStyle = isActive
+            ? { transform: `translate3d(-50%, -50%, 0px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`, opacity: 1, zIndex: 100, filter: 'blur(0px)' }
+            : { transform: `translate3d(calc(-50% + ${item.x}vw), calc(-50% + ${item.y}vh), ${rawZ}px) rotateZ(${item.rotation}deg) scale3d(0.8, 0.8, 0.8)`, opacity: rawZ > 0 ? 0 : Math.max(0, 1 - Math.abs(rawZ) / 3000), zIndex: Math.round(-rawZ), filter: `blur(${Math.min(10, Math.abs(rawZ) / 200)}px) grayscale(${Math.min(100, Math.abs(rawZ) / 30)}%)` };
+    }
 
     const handleCardClick = () => {
         if (!isActive) return;
