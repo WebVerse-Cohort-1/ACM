@@ -48,20 +48,54 @@ const useMousePosition = () => {
     return mousePosition;
 };
 
+// --- LENIS SETUP ---
+const LenisSetup = () => {
+    useEffect(() => {
+        if (!window.Lenis) return;
+        const lenis = new window.Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+        return () => lenis.destroy();
+    }, []);
+    return null;
+};
+
 // --- CUSTOM CURSOR ---
 const CustomCursor = () => {
     const { x, y } = useMousePosition();
+    const [hovered, setHovered] = useState(false);
     const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    useEffect(() => {
+        const handleMouseOver = (e) => {
+            if (e.target.closest('a') || e.target.closest('button')) {
+                setHovered(true);
+            } else {
+                setHovered(false);
+            }
+        };
+        document.addEventListener('mouseover', handleMouseOver);
+        return () => document.removeEventListener('mouseover', handleMouseOver);
+    }, []);
+
     if (isTouch) return null;
     return (
         <>
             <div
-                className="fixed top-0 left-0 w-8 h-8 border border-acm-cyan rounded-full pointer-events-none z-[100] transition-transform duration-100 ease-out mix-blend-difference"
-                style={{ transform: `translate(${x - 16}px, ${y - 16}px)` }}
+                className={`fixed top-0 left-0 border border-acm-cyan rounded-full pointer-events-none z-[9999] transition-all duration-300 ease-out mix-blend-difference ${hovered ? 'w-16 h-16 bg-white opacity-20' : 'w-8 h-8 bg-transparent opacity-100'}`}
+                style={{ transform: `translate(${x - (hovered ? 32 : 16)}px, ${y - (hovered ? 32 : 16)}px)` }}
             />
             <div
-                className="fixed top-0 left-0 w-2 h-2 bg-acm-blue rounded-full pointer-events-none z-[100] transition-transform duration-75 ease-out"
-                style={{ transform: `translate(${x - 4}px, ${y - 4}px)` }}
+                className="fixed top-0 left-0 w-2 h-2 bg-acm-cyan rounded-full pointer-events-none z-[10000] mix-blend-difference transition-transform duration-75 ease-out"
+                style={{ transform: `translate(${x - 4}px, ${y - 4}px) scale(${hovered ? 0 : 1})` }}
             />
         </>
     );
@@ -388,7 +422,37 @@ const Navbar = () => {
 
 // --- ROUTES ---
 
+const useCountdown = (targetDate) => {
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const difference = +new Date(targetDate) - +new Date();
+            let timeLeft = {};
+            if (difference > 0) {
+                timeLeft = {
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((difference / 1000 / 60) % 60),
+                    seconds: Math.floor((difference / 1000) % 60),
+                };
+            } else {
+                timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+            }
+            return timeLeft;
+        };
+        setTimeLeft(calculateTimeLeft());
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [targetDate]);
+    return timeLeft;
+};
+
 const Home = () => {
+    const techForgeDate = "2026-10-02T08:00:00";
+    const { days, hours, minutes, seconds } = useCountdown(techForgeDate);
+
     const [data, setData] = useState({
         homeHeading1: "FUTURE",
         homeHeading2: "READY",
@@ -405,51 +469,115 @@ const Home = () => {
                     ...stored
                 }));
             }
-        } catch (e) {}
+        } catch (e) { }
     }, []);
 
     return (
-        <div className="min-h-screen flex flex-col justify-center px-6 md:px-20 pt-24 md:pt-20 pb-16">
-            <div className="max-w-4xl">
-                <div className="overflow-hidden mb-3">
-                    <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em]">
-                        :: SYSTEM_READY
+        <>
+            {/* HERO SECTION (100vh) */}
+            <div className="min-h-screen flex flex-col justify-center px-6 md:px-20 relative">
+                <div className="max-w-4xl z-10">
+                    <div className="overflow-hidden mb-3">
+                        <p className="text-acm-cyan font-mono text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em]">
+                            :: SYSTEM_READY
+                        </p>
+                    </div>
+
+                    <motion.h1
+                        initial={{ letterSpacing: '0.2em', opacity: 0, filter: 'blur(10px)' }}
+                        animate={{ letterSpacing: '0em', opacity: 1, filter: 'blur(0px)' }}
+                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-5xl sm:text-6xl md:text-9xl font-heading font-bold leading-[0.9] md:leading-[0.85] mb-6 md:mb-8 mix-blend-screen"
+                    >
+                        <GlitchText text={data.homeHeading1 || "FUTURE"} /><br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">{data.homeHeading2 || "READY"}</span><br />
+                        <span className="text-acm-blue uppercase">{data.homeHeading3 || "ENGINEERS"}</span>
+                    </motion.h1>
+
+                    <p className="text-gray-400 text-base md:text-xl max-w-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6 whitespace-pre-line">
+                        {data.homeDesc || "The Official ACM Student Chapter of TSEC.\nWe don't just write code; we architect experiences."}
                     </p>
+
+                    <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
+                        <Link to="/events">
+                            <MagneticButton as="div" className="group relative overflow-hidden px-6 md:px-8 py-3 md:py-4 bg-white text-black font-bold text-sm rounded-none border border-transparent transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <span className="relative z-10 flex items-center gap-2 group-hover:text-black transition-colors duration-300">
+                                    EXPLORE EVENTS
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"><line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" /></svg>
+                                </span>
+                                <div className="absolute inset-0 bg-acm-cyan translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] origin-bottom z-0"></div>
+                            </MagneticButton>
+                        </Link>
+                        <Link to="/contact">
+                            <MagneticButton as="div" className="group relative overflow-hidden px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white font-bold text-sm rounded-none hover:border-acm-cyan transition-colors flex items-center justify-center w-full sm:w-auto">
+                                <span className="relative z-10">JOIN NETWORK</span>
+                                <div className="absolute inset-0 bg-white/10 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 z-0"></div>
+                            </MagneticButton>
+                        </Link>
+                    </div>
                 </div>
 
-                <h1 className="text-5xl sm:text-6xl md:text-9xl font-heading font-bold leading-[0.9] md:leading-[0.85] mb-6 md:mb-8 mix-blend-screen">
-                    <GlitchText text={data.homeHeading1 || "FUTURE"} /><br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase">{data.homeHeading2 || "READY"}</span><br />
-                    <span className="text-acm-blue uppercase">{data.homeHeading3 || "ENGINEERS"}</span>
-                </h1>
-
-                <p className="text-gray-400 text-base md:text-xl max-w-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6 whitespace-pre-line">
-                    {data.homeDesc || "The Official ACM Student Chapter of TSEC.\nWe don't just write code; we architect experiences."}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
-                    <Link to="/events">
-                        <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 bg-white text-black font-bold text-sm rounded-none hover:bg-acm-cyan transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
-                            EXPLORE EVENTS
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-                        </MagneticButton>
-                    </Link>
-                    <Link to="/contact">
-                        <MagneticButton as="div" className="px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white font-bold text-sm rounded-none hover:bg-white/10 backdrop-blur-md flex items-center justify-center w-full sm:w-auto">
-                            JOIN NETWORK
-                        </MagneticButton>
-                    </Link>
+                {/* Scroll Indicator */}
+                <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference z-10">
+                    <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
+                    </div>
+                    <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
                 </div>
             </div>
 
-            {/* Scroll Indicator — hidden on small screens to avoid overflow */}
-            <div className="hidden sm:flex absolute bottom-10 right-10 flex-col items-center gap-2 mix-blend-difference">
-                <div className="w-[1px] h-20 bg-white/50 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1/2 bg-white animate-movedown"></div>
+            {/* UPCOMING EVENT SECTION (TECHFORGE) */}
+            <div className="min-h-screen flex flex-col justify-center px-6 md:px-20 py-24 relative z-20">
+
+                {/* UPCOMING EVENT (TECHFORGE) */}
+                <div className="mt-16 sm:mt-24 w-full p-[1px] bg-gradient-to-r from-acm-cyan/50 via-transparent to-acm-cyan/50 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(100,255,218,0.05)] group max-w-5xl mx-auto">
+                    <div className="bg-[#020C1B] rounded-2xl p-6 md:p-10 relative overflow-hidden">
+                        {/* Decorative Minimal Background */}
+                        <div className="absolute inset-0 opacity-10 pointer-events-none neural-grid"></div>
+                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-acm-cyan/10 blur-[80px] transition-all duration-700 pointer-events-none"></div>
+
+                        <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-16 items-start lg:items-center justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <span className="w-2 h-2 bg-acm-cyan rounded-full animate-ping"></span>
+                                    <span className="text-[10px] sm:text-xs font-mono text-acm-cyan tracking-[0.3em] uppercase">:: NEXT_OBJECTIVE // HACKATHON</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl lg:text-7xl font-heading font-black text-white mb-4 group-hover:text-acm-cyan transition-colors drop-shadow-2xl">
+                                    TechForge 2026
+                                </h2>
+                                <p className="text-gray-400 leading-relaxed max-w-xl text-sm sm:text-lg">
+                                    A high-energy 24-hour hybrid technology competition (Theme: Transformers). Featuring an intense 18-hour online phase paired with a 6-hour offline final pitch at TSEC.
+                                </p>
+                                <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                                    <Link to="/events/techforge" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-acm-cyan text-[#020C1B] font-bold text-sm tracking-widest hover:scale-105 transition-transform shadow-[0_0_20px_rgba(100,255,218,0.2)] rounded-full">
+                                        ACCESS MAINFRAME
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* Minimal Countdown Timer */}
+                            <div className="flex gap-3 sm:gap-4 shrink-0 mt-4 lg:mt-0 bg-[#050B14] p-6 rounded-2xl border border-white/5 shadow-xl">
+                                {[
+                                    { label: 'DAYS', value: days },
+                                    { label: 'HOURS', value: hours },
+                                    { label: 'MINUTES', value: minutes },
+                                    { label: 'SECONDS', value: seconds }
+                                ].map((time, idx) => (
+                                    <div key={idx} className="flex flex-col items-center">
+                                        <div className="w-14 h-16 sm:w-20 sm:h-24 bg-[#0a1224] rounded flex items-center justify-center border border-white/5 relative overflow-hidden group-hover:border-acm-cyan/30 transition-colors">
+                                            <div className="absolute top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-acm-cyan/50 to-transparent"></div>
+                                            <span className="text-2xl sm:text-4xl font-mono text-white font-bold drop-shadow-md">{time.value.toString().padStart(2, '0')}</span>
+                                        </div>
+                                        <span className="mt-3 text-[8px] sm:text-[10px] font-mono text-gray-500 tracking-[0.2em]">{time.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <span className="text-[10px] tracking-widest vertical-rl">SCROLL</span>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -469,6 +597,8 @@ const Events = () => {
                 desc: ev.desc,
                 image: Array.isArray(ev.images) ? ev.images[0] : ev.images
             }));
+            const techForge = { slug: 'techforge', title: 'TechForge', date: 'UPCOMING', tag: 'HACKATHON', color: 'from-acm-cyan/40 to-black', desc: 'The ultimate technical convergence fusing cutting-edge workshops and intense hackathons.', image: '' };
+            if (!data.find(e => e.slug === 'techforge')) data.unshift(techForge);
             setEvents(data);
         } catch (e) { setEvents([]); }
     }, [location.pathname]);
@@ -486,26 +616,26 @@ const Events = () => {
             <div className="flex flex-col md:flex-row items-start justify-between mb-12">
                 <div>
                     <h2 className="text-4xl md:text-6xl font-heading font-bold text-white uppercase tracking-tighter">
-                        Event Card <span className="text-acm-cyan">Template</span>
+                        Upcoming <span className="text-acm-cyan">Event</span>
                     </h2>
-                    <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 uppercase font-semibold">:: UPCOMING_OPERATIONS</p>
+                    <p className="text-gray-400 font-mono text-xs tracking-widest mt-2 uppercase font-semibold">:: DEPLOYMENT_SCHEDULE</p>
                 </div>
-                
+
                 {/* Navigation Controls */}
                 <div className="flex items-center gap-4 mt-6 md:mt-0">
-                    <button 
-                        onClick={handlePrev} 
+                    <button
+                        onClick={handlePrev}
                         disabled={currentIndex === 0}
                         className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/20 transition-all ${currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 hover:border-white/50 text-white'}`}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                     </button>
-                    <button 
-                        onClick={handleNext} 
+                    <button
+                        onClick={handleNext}
                         disabled={currentIndex === events.length - 1}
                         className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/20 transition-all ${currentIndex === events.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 hover:border-white/50 text-white'}`}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                     </button>
                 </div>
             </div>
@@ -517,18 +647,18 @@ const Events = () => {
                         // Calculate relative position (-2, -1, 0, 1, 2)
                         const relativeIndex = index - currentIndex;
                         const isVisible = Math.abs(relativeIndex) <= 2;
-                        
+
                         if (!isVisible) return null;
-                        
+
                         // Compute transforms based on relative index
                         let translateX = relativeIndex * 60; // 60% overlap logic roughly
                         let scale = 1 - Math.abs(relativeIndex) * 0.15;
                         let zIndex = 50 - Math.abs(relativeIndex) * 10;
                         let opacity = 1 - Math.abs(relativeIndex) * 0.4;
-                        
+
                         return (
-                            <div 
-                                key={ev.slug} 
+                            <div
+                                key={ev.slug}
                                 onClick={() => setCurrentIndex(index)}
                                 className={`absolute transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] cursor-pointer overflow-hidden rounded-2xl bg-[#111] border ${relativeIndex === 0 ? 'border-white/20 shadow-[0_0_80px_rgba(100,255,218,0.1)]' : 'border-white/5'} flex-shrink-0 w-[280px] sm:w-[340px] h-[400px] sm:h-[480px]`}
                                 style={{
@@ -542,11 +672,11 @@ const Events = () => {
 
                                 {/* Masked Image Overlay */}
                                 {ev.image && (
-                                    <div 
-                                        className="absolute inset-y-0 right-0 w-3/4 pointer-events-none transition-all duration-700" 
-                                        style={{ 
-                                            maskImage: 'linear-gradient(to right, transparent 0%, black 50%)', 
-                                            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%)' 
+                                    <div
+                                        className="absolute inset-y-0 right-0 w-3/4 pointer-events-none transition-all duration-700"
+                                        style={{
+                                            maskImage: 'linear-gradient(to right, transparent 0%, black 50%)',
+                                            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%)'
                                         }}
                                     >
                                         <img src={getDirectDriveUrl(ev.image)} className={`w-full h-full object-contain mix-blend-screen opacity-80 ${relativeIndex === 0 ? 'grayscale-0' : 'grayscale'}`} />
@@ -558,7 +688,7 @@ const Events = () => {
                                     <div>
                                         <span className="text-acm-cyan font-bold text-[10px] uppercase tracking-[0.2em]">{ev.tag}</span>
                                         <h3 className="text-white font-heading font-black text-2xl sm:text-4xl leading-[1.1] mt-3 line-clamp-3 w-[85%] shadow-black drop-shadow-2xl relative z-20">{ev.title}</h3>
-                                        
+
                                         <div className="mt-6 sm:mt-8 relative z-20">
                                             <span className="text-white font-bold text-sm block shadow-black drop-shadow-md">Live Event</span>
                                             <span className="text-gray-300 text-[10px] sm:text-xs font-mono shadow-black drop-shadow-md">{ev.date}</span>
@@ -566,13 +696,13 @@ const Events = () => {
                                     </div>
 
                                     <div className="flex justify-between items-end relative z-20">
-                                        <Link 
-                                            to={`/events/${ev.slug}`} 
+                                        <Link
+                                            to={`/events/${ev.slug}`}
                                             onClick={(e) => relativeIndex !== 0 && e.preventDefault()}
                                             className={`inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold transition-all border border-white/10 ${relativeIndex !== 0 ? 'pointer-events-none opacity-50' : ''}`}
                                         >
                                             Read More
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                                         </Link>
                                     </div>
                                 </div>
@@ -634,19 +764,39 @@ const TerminalTyping = ({ text, delay = 0, className = "" }) => {
     );
 };
 
+const DEFAULTS = {
+    whatIsAcm: 'The TSEC ACM Student Chapter at Thakur Shyamnarayan Engineering College is a dynamic student-driven community committed to fostering technical excellence, innovation, and holistic student development.',
+    vision: 'To build a future-ready community of innovators who leverage computing to solve real-world problems and drive meaningful societal impact.',
+    mission: '1. To cultivate critical thinking and technical excellence through hands-on learning, competitions, and collaborative projects.\n2. To promote innovation and research by encouraging students to explore emerging technologies and build impactful solutions.\n3. To nurture leadership, entrepreneurship, and teamwork through diverse technical and creative initiatives.\n4. To create a strong tech community that bridges academia, industry, and society.',
+    stats: [{ label: 'MEMBERS', value: 500 }, { label: 'EVENTS', value: 30 }, { label: 'AWARDS', value: 10 }],
+    legacyLogs: [
+        { year: '2025', title: 'National Apex', desc: 'Awarded Best Student Chapter nationwide.' },
+        { year: '2023', title: 'Source Code', desc: 'Launched open-source initiative with 500+ PRs.' },
+    ],
+};
+
+const OBJECTIVES = [
+    { id: "01", title: "Enhance Technical Competence", desc: "Strengthen students' core knowledge in programming, algorithms, AI, and emerging technologies through workshops, coding contests, and hands-on sessions.", icon: "💻" },
+    { id: "02", title: "Promote Innovation & Problem-Solving", desc: "Encourage students to develop innovative solutions for real-world challenges through hackathons, projects, and research-driven activities.", icon: "💡" },
+    { id: "03", title: "Foster Research & Development Culture", desc: "Motivate students to explore research, publish papers, and participate in technical conferences and competitions.", icon: "🔬" },
+    { id: "04", title: "Build a Collaborative Tech Community", desc: "Create a platform for peer learning, knowledge sharing, and collaboration among students, faculty, and industry professionals.", icon: "🤝" },
+    { id: "05", title: "Develop Leadership & Teamwork Skills", desc: "Provide opportunities for students to lead, organize, and manage technical and non-technical events.", icon: "👑" },
+    { id: "06", title: "Bridge Academia and Industry", desc: "Connect students with industry experts through guest lectures, mentorship programs, and internships.", icon: "🌉" },
+    { id: "07", title: "Encourage Socially Relevant Computing", desc: "Use technology for solving societal issues through projects, awareness drives, and community-focused initiatives.", icon: "🌍" },
+    { id: "08", title: "Promote Inclusivity & Equal Opportunities", desc: "Ensure participation from students of all backgrounds and encourage diversity in technology fields.", icon: "🌈" },
+    { id: "09", title: "Support Open Source & Continuous Learning", desc: "Encourage contributions to open-source projects and promote lifelong learning through continuous upskilling.", icon: "📖" },
+    { id: "10", title: "Enhance Communication & Technical Expression", desc: "Develop students' ability to present ideas, explain concepts, and communicate technical knowledge effectively.", icon: "📢" },
+];
+
+const TAGLINES = [
+    "Innovate. Integrate. Impact.",
+    "Building Coders. Creating Innovators.",
+    "Think Tech. Build the Future.",
+    "From Code to Change."
+];
+
 const About = () => {
-    const [aboutData, setAboutData] = useState({
-        mission: "We are the architects of the digital frontier. TSEC ACM is not just a club; it's an incubator for those who dare to disrupt the status quo.",
-        stats: [
-            { label: "MEMBERS", value: 500 },
-            { label: "EVENTS", value: 30 },
-            { label: "AWARDS", value: 10 },
-        ],
-        legacyLogs: [
-            { year: "2025", title: "National Apex", desc: "Awarded Best Student Chapter nationwide." },
-            { year: "2023", title: "Source Code", desc: "Launched open-source initiative with 500+ PRs." }
-        ]
-    });
+    const [aboutData, setAboutData] = useState({ ...DEFAULTS });
     const location = useLocation();
 
     useEffect(() => {
@@ -660,338 +810,198 @@ const About = () => {
         }
     }, [location.pathname]);
 
-    // Handle stats animation re-triggering if data updates
-    useEffect(() => {
-        if (aboutData.stats) {
-            setCounts(aboutData.stats.map(() => 0));
-            setHasAnimated(false);
-        }
-    }, [aboutData.stats]);
-
-    const stats = aboutData.stats;
+    const stats = aboutData.stats || [];
     const [counts, setCounts] = useState(stats.map(() => 0));
     const [hasAnimated, setHasAnimated] = useState(false);
     const statsRef = useRef(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting && !hasAnimated) {
-                    setHasAnimated(true);
-
-                    stats.forEach((stat, index) => {
-                        let start = 0;
-                        const duration = 1500;
-                        const increment = stat.value / (duration / 16);
-
-                        const counter = setInterval(() => {
-                            start += increment;
-
-                            if (start >= stat.value) {
-                                start = stat.value;
-                                clearInterval(counter);
-                            }
-
-                            setCounts(prev => {
-                                const updated = [...prev];
-                                updated[index] = Math.floor(start);
-                                return updated;
-                            });
-                        }, 16);
-                    });
-                }
-            },
-            { threshold: 0.4 }
-        );
-
-        if (statsRef.current) observer.observe(statsRef.current);
-
-        return () => observer.disconnect();
-    }, [hasAnimated]);
-
-    const objectives = [
-        { id: "01", title: "Enhance Technical Competence", desc: "Strengthen students' core knowledge in programming, algorithms, AI, and emerging technologies through workshops, coding contests, and hands-on sessions.", icon: "generic" },
-        { id: "02", title: "Promote Innovation & Problem-Solving", desc: "Encourage students to develop innovative solutions for real-world challenges through hackathons, projects, and research-driven activities.", icon: "generic" },
-        { id: "03", title: "Foster Research & Development Culture", desc: "Motivate students to explore research, publish papers, and participate in technical conferences and competitions.", icon: "generic" },
-        { id: "04", title: "Build a Collaborative Tech Community", desc: "Create a platform for peer learning, knowledge sharing, and collaboration among students, faculty, and industry professionals.", icon: "generic" },
-        { id: "05", title: "Develop Leadership & Teamwork Skills", desc: "Provide opportunities for students to lead, organize, and manage technical and non-technical events.", icon: "generic" },
-        { id: "06", title: "Bridge Academia and Industry", desc: "Connect students with industry experts through guest lectures, mentorship programs, and internships.", icon: "generic" },
-        { id: "07", title: "Encourage Socially Relevant Computing", desc: "Use technology for solving societal issues through projects, awareness drives, and community-focused initiatives.", icon: "generic" },
-        { id: "08", title: "Promote Inclusivity & Equal Opportunities", desc: "Ensure participation from students of all backgrounds and encourage diversity in technology fields.", icon: "generic" },
-        { id: "09", title: "Support Open Source & Continuous Learning", desc: "Encourage contributions to open-source projects and promote lifelong learning through continuous upskilling.", icon: "generic" },
-        { id: "10", title: "Enhance Communication & Technical Expression", desc: "Develop students' ability to present ideas, explain concepts, and communicate technical knowledge effectively.", icon: "generic" },
-    ];
-
-    const missions = [
-        { text: "To cultivate critical thinking and technical excellence through hands-on learning, competitions, and collaborative projects.", icon: "generic" },
-        { text: "To promote innovation and research by encouraging students to explore emerging technologies and build impactful solutions.", icon: "generic" },
-        { text: "To nurture leadership, entrepreneurship, and teamwork through diverse technical and creative initiatives.", icon: "generic" },
-        { text: "To create a strong tech community that bridges academia, industry, and society.", icon: "generic" },
-    ];
-
-    const taglines = [
-        "Innovate. Integrate. Impact.",
-        "Building Coders. Creating Innovators.",
-        "Think Tech. Build the Future.",
-        "From Code to Change."
-    ];
-
+    const aboutRef = useRef(null);
+    const [progress, setProgress] = useState(0);
     const [activeTagline, setActiveTagline] = useState(0);
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setActiveTagline(prev => (prev + 1) % taglines.length);
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
 
     const [visionRef, visionVisible] = useScrollReveal();
     const [missionRef, missionVisible] = useScrollReveal();
     const [objRef, objVisible] = useScrollReveal();
 
-    return (
-        <div className="min-h-screen pt-24 md:pt-32 px-4 md:px-20 max-w-7xl mx-auto pb-16 md:pb-32">
+    useEffect(() => {
+        document.title = "About | ACM TSEC";
+        const interval = setInterval(() => {
+            setActiveTagline(prev => (prev + 1) % TAGLINES.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
 
-            {/* === HERO SECTION === */}
-            <div className="mb-12 md:mb-32 relative">
-                <h1 className="hidden md:block text-8xl md:text-[10rem] font-heading font-bold opacity-[0.03] absolute -top-10 -left-4 pointer-events-none select-none z-0">
-                    ABOUT
-                </h1>
-                <div className="relative z-10">
-                    <p className="text-acm-cyan font-mono text-xs tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-6 animate-pulse">
-                        :: SYSTEM_PROFILE_LOADED
-                    </p>
-                    <h2 className="text-4xl md:text-7xl font-heading font-bold text-white mb-3 md:mb-4">
-                        WHO_WE<span className="text-acm-cyan">_ARE</span>
-                    </h2>
-                    <p className="text-base md:text-2xl text-gray-400 max-w-3xl leading-relaxed border-l-2 border-acm-cyan/30 pl-4 md:pl-6">
-                        We are the <span className="text-white font-bold">architects</span> of the digital frontier.
-                        TSEC ACM is not just a club; it's an incubator for those who dare to
-                        <span className="italic text-acm-cyan/80"> disrupt</span> the status quo.
-                    </p>
+    // Reset counter when stats change
+    useEffect(() => {
+        setCounts((aboutData.stats || []).map(() => 0));
+        setHasAnimated(false);
+    }, [JSON.stringify(aboutData.stats)]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting && !hasAnimated) {
+                setHasAnimated(true);
+                stats.forEach((stat, index) => {
+                    let start = 0;
+                    const increment = stat.value / (1500 / 16);
+                    const counter = setInterval(() => {
+                        start += increment;
+                        if (start >= stat.value) { start = stat.value; clearInterval(counter); }
+                        setCounts(prev => { const u = [...prev]; u[index] = Math.floor(start); return u; });
+                    }, 16);
+                });
+            }
+        }, { threshold: 0.4 });
+        if (statsRef.current) observer.observe(statsRef.current);
+        return () => observer.disconnect();
+    }, [hasAnimated, JSON.stringify(stats)]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!aboutRef.current) return;
+            setProgress(Math.min(Math.max(window.scrollY / 800, 0), 1));
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    return (
+        <div ref={aboutRef} className="min-h-screen pt-28 md:pt-32 px-5 md:px-20 flex flex-col md:flex-row gap-10 md:gap-20 pb-20">
+            {/* Mobile title */}
+            <div className="md:hidden mb-10">
+                <h1 className="text-6xl font-heading font-bold text-acm-cyan tracking-widest leading-tight">WHO<br />WE ARE</h1>
+            </div>
+
+            {/* Desktop sticky sidebar */}
+            <div className="hidden md:flex md:w-1/3 items-start justify-center relative">
+                <div className="sticky top-32 space-y-6">
+                    {['WHO', 'WE', 'ARE'].map((word, i) => {
+                        const isActive = progress >= (i + 1) / 4;
+                        return (
+                            <div key={i} className={`text-8xl font-heading font-bold transition-all duration-700 ${isActive ? 'text-acm-cyan scale-110' : 'text-white/30 scale-100'}`}>
+                                {word}
+                            </div>
+                        );
+                    })}
+                    <div className="absolute -left-6 top-0 h-full w-[2px] bg-white/10">
+                        <div className="w-full bg-acm-cyan transition-all duration-300" style={{ height: `${progress * 100}%` }} />
+                    </div>
+                </div>
+            </div>
+
+            <div className="md:w-2/3 space-y-16 md:space-y-32">
+                <section>
+                    <h2 className="text-sm text-acm-cyan mb-4 font-mono uppercase tracking-widest">_What is ACM?</h2>
+                    <p className="text-base md:text-xl font-light leading-relaxed text-white/80 mb-6">{aboutData.whatIsAcm}</p>
 
                     {/* Rotating Tagline */}
-                    <div className="mt-8 h-12 relative overflow-hidden">
-                        {taglines.map((t, i) => (
+                    <div className="h-12 relative overflow-hidden mb-12">
+                        {TAGLINES.map((t, i) => (
                             <div
                                 key={i}
-                                className={`absolute left-0 font-mono text-sm tracking-[0.2em] transition-all duration-700 ${
-                                    i === activeTagline
-                                        ? 'opacity-100 translate-y-0 text-acm-cyan'
-                                        : 'opacity-0 translate-y-8 text-gray-600'
-                                }`}
+                                className={`absolute left-0 font-mono text-sm tracking-[0.2em] transition-all duration-700 ${i === activeTagline
+                                    ? 'opacity-100 translate-y-0 text-acm-cyan'
+                                    : 'opacity-0 translate-y-8 text-gray-600'
+                                    }`}
                             >
                                 <span className="text-gray-600 mr-2">&gt;&gt;</span> "{t}"
                             </div>
                         ))}
                     </div>
-                </div>
-            </div>
 
-            {/* === STATS COUNTER === */}
-            <div
-                ref={statsRef}
-                className="grid grid-cols-3 gap-4 md:gap-16 mb-12 md:mb-40"
-            >
-                {stats.map((stat, i) => (
-                    <div
-                        key={i}
-                        className="text-center group transition-transform duration-500 hover:-translate-y-3 relative"
-                    >
-                        <div className="absolute inset-0 bg-acm-cyan/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-                        <h3 className="text-4xl md:text-7xl font-heading font-bold text-acm-cyan relative mb-2">
-                            {counts[i]}+
-                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500"></span>
-                        </h3>
-                        <p className="text-xs tracking-[0.3em] text-gray-500 mt-3 font-mono">
-                            {stat.label}
-                        </p>
-                    </div>
-                ))}
-            </div>
-
-            {/* === VISION SECTION === */}
-            <div ref={visionRef} className={`mb-12 md:mb-40 transition-all duration-1000 ${visionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-                <div className="flex items-center gap-6 mb-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-acm-cyan rounded-full animate-pulse shadow-[0_0_15px_rgba(100,255,218,0.5)]" />
-                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
-                            VISION<span className="text-acm-cyan">_</span>
-                        </h2>
-                    </div>
-                    <div className="flex-1 h-px bg-gradient-to-r from-acm-cyan/30 to-transparent" />
-                    <span className="font-mono text-[9px] text-acm-cyan/40 tracking-[0.5em] hidden md:block">MODULE_01</span>
-                </div>
-
-                <div className="relative group">
-                    {/* Glow backdrop */}
-                    <div className="absolute -inset-4 bg-gradient-to-r from-acm-cyan/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-                    <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-5 md:p-14 backdrop-blur-md group-hover:border-acm-cyan/30 transition-all duration-700 overflow-hidden">
-                        {/* Decorative corner brackets */}
-                        <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-acm-cyan/30 rounded-tl-sm" />
-                        <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-acm-cyan/30 rounded-br-sm" />
-
-                        {/* Scan line animation */}
-                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-acm-cyan/40 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[movedown_3s_linear_infinite]" />
-
-                        <p className="font-mono text-[10px] text-acm-cyan/60 tracking-[0.4em] mb-6">// CORE_DIRECTIVE</p>
-
-                        <blockquote className="text-lg md:text-4xl font-light leading-relaxed text-white/90">
-                            <span className="text-acm-cyan text-5xl font-serif leading-none mr-2">"</span>
-                            To build a <span className="text-acm-cyan font-semibold">future-ready community</span> of innovators who leverage computing to solve{' '}
-                            <span className="text-white font-semibold">real-world problems</span> and drive meaningful{' '}
-                            <span className="bg-gradient-to-r from-acm-cyan to-blue-400 bg-clip-text text-transparent font-semibold">societal impact</span>.
-                            <span className="text-acm-cyan text-5xl font-serif leading-none ml-1">"</span>
-                        </blockquote>
-
-                        <div className="mt-8 flex flex-wrap gap-4">
-                            {["Innovation", "Real-World Impact", "Societal Progress"].map((tag, i) => (
-                                <span key={i} className="px-4 py-1.5 border border-acm-cyan/20 rounded-full text-[10px] font-mono tracking-[0.2em] text-acm-cyan/70 bg-acm-cyan/5 hover:bg-acm-cyan/10 hover:border-acm-cyan/40 transition-all duration-300 cursor-default">
-                                    {tag}
-                                </span>
-                            ))}
+                    <div ref={visionRef} className={`mb-16 transition-all duration-1000 ${visionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+                        <h2 className="text-sm text-acm-cyan mb-4 font-mono uppercase tracking-widest">_Vision</h2>
+                        <div className="relative group bg-white/[0.03] border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md hover:border-acm-cyan/30 transition-all duration-700 overflow-hidden">
+                            <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-acm-cyan/30 rounded-tl-sm" />
+                            <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-acm-cyan/30 rounded-br-sm" />
+                            <blockquote className="text-lg md:text-2xl font-light leading-relaxed text-white/90 italic">
+                                "{aboutData.vision}"
+                            </blockquote>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* === MISSION SECTION === */}
-            <div ref={missionRef} className={`mb-12 md:mb-40 transition-all duration-1000 delay-200 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-                <div className="flex items-center gap-6 mb-12">
-                    <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
-                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
-                            MISSION<span className="text-blue-400">_</span>
-                        </h2>
-                    </div>
-                    <div className="flex-1 h-px bg-gradient-to-r from-blue-400/30 to-transparent" />
-                    <span className="font-mono text-[9px] text-blue-400/40 tracking-[0.5em] hidden md:block">MODULE_02</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {missions.map((m, i) => (
-                        <div
-                            key={i}
-                            className="group relative"
-                            style={{ animationDelay: `${i * 150}ms` }}
-                        >
-                            {/* Hover glow */}
-                            <div className="absolute -inset-2 bg-blue-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                            <div className="relative bg-white/[0.03] border border-white/10 rounded-xl p-6 md:p-8 h-full group-hover:border-blue-400/30 group-hover:bg-white/[0.05] transition-all duration-500 overflow-hidden">
-                                {/* Top accent bar */}
-                                <div className="absolute top-0 left-0 w-0 h-[2px] bg-gradient-to-r from-blue-400 to-acm-cyan group-hover:w-full transition-all duration-700" />
-
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-shrink-0 w-12 h-12 bg-blue-500/10 border border-blue-400/20 rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-500">
-                                        {m.icon}
+                    <div ref={missionRef} className={`transition-all duration-1000 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+                        <h2 className="text-sm text-acm-cyan mb-8 font-mono uppercase tracking-widest">_Mission</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            {(aboutData.mission || '').split('\n').filter(l => l.trim()).map((line, i) => {
+                                const cleanLine = line.replace(/^\d+\./, '').trim();
+                                const icons = ['💡', '🚀', '🏆', '🌐'];
+                                return (
+                                    <div key={i} className="group relative bg-white/[0.03] border border-white/10 rounded-xl p-6 h-full hover:border-acm-cyan/30 hover:bg-white/[0.05] transition-all duration-500 overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-0 h-[2px] bg-gradient-to-r from-acm-cyan to-blue-500 group-hover:w-full transition-all duration-700" />
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-shrink-0 w-10 h-10 bg-acm-cyan/10 border border-acm-cyan/20 rounded-lg flex items-center justify-center text-xl group-hover:scale-110 group-hover:bg-acm-cyan/20 transition-all duration-500">
+                                                {icons[i] || '🎯'}
+                                            </div>
+                                            <div className="flex-1">
+                                                <span className="font-mono text-[9px] text-acm-cyan/50 tracking-[0.3em] block mb-2">M{i + 1}_DIRECTIVE</span>
+                                                <p className="text-gray-300 text-sm leading-relaxed group-hover:text-white/90 transition-colors duration-500">
+                                                    {cleanLine}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <span className="font-mono text-[9px] text-blue-400/50 tracking-[0.3em] block mb-2">M{i + 1}_DIRECTIVE</span>
-                                        <p className="text-gray-300 text-sm md:text-base leading-relaxed group-hover:text-white/90 transition-colors duration-500">
-                                            {m.text}
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Stats Section */}
+                <div ref={statsRef} className="grid grid-cols-3 gap-4 md:gap-10">
+                    {stats.map((stat, i) => (
+                        <div key={i} className="text-center group transition-transform duration-500 hover:-translate-y-2">
+                            <h3 className="text-3xl md:text-6xl font-heading font-bold text-acm-cyan relative">
+                                {counts[i]}+
+                                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-acm-cyan group-hover:w-full transition-all duration-500" />
+                            </h3>
+                            <p className="text-[10px] md:text-xs tracking-[0.2em] md:tracking-[0.3em] text-gray-500 mt-2 md:mt-3">{stat.label}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Objectives Section */}
+                <div ref={objRef} className={`transition-all duration-1000 ${objVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+                    <h2 className="text-sm text-acm-cyan mb-8 font-mono uppercase tracking-widest">_Objectives</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {OBJECTIVES.map((obj) => (
+                            <div key={obj.id} className="group relative bg-white/[0.02] border border-white/[0.06] rounded-lg p-5 hover:border-purple-400/30 hover:bg-white/[0.04] transition-all duration-500 overflow-hidden h-full">
+                                <div className="absolute left-0 top-0 w-[2px] h-0 bg-gradient-to-b from-purple-400 to-acm-cyan group-hover:h-full transition-all duration-700" />
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 text-xl group-hover:scale-125 transition-transform duration-500">
+                                        {obj.icon}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-xs md:text-sm font-bold text-white/90 mb-1 group-hover:text-purple-300 transition-colors duration-500">
+                                            {obj.id}. {obj.title}
+                                        </h4>
+                                        <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors duration-500">
+                                            {obj.desc}
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* === OBJECTIVES SECTION === */}
-            <div ref={objRef} className={`mb-12 md:mb-40 transition-all duration-1000 delay-300 ${objVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-                <div className="flex items-center gap-6 mb-12">
-                    <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(192,132,252,0.5)]" />
-                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
-                            OBJECTIVES<span className="text-purple-400">_</span>
-                        </h2>
+                        ))}
                     </div>
-                    <div className="flex-1 h-px bg-gradient-to-r from-purple-400/30 to-transparent" />
-                    <span className="font-mono text-[9px] text-purple-400/40 tracking-[0.5em] hidden md:block">MODULE_03</span>
                 </div>
 
-                {/* Objectives Terminal Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {objectives.map((obj, i) => {
-                        const [objItemRef, objItemVisible] = useScrollReveal(0.1);
-                        return (
-                            <div
-                                key={obj.id}
-                                ref={objItemRef}
-                                className={`group relative transition-all duration-700 ${objItemVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-                                style={{ transitionDelay: `${i * 80}ms` }}
-                            >
-                                <div className="relative bg-white/[0.02] border border-white/[0.06] rounded-lg p-5 md:p-6 hover:border-purple-400/30 hover:bg-white/[0.04] transition-all duration-500 overflow-hidden h-full">
-                                    {/* Left accent */}
-                                    <div className="absolute left-0 top-0 w-[2px] h-0 bg-gradient-to-b from-purple-400 to-acm-cyan group-hover:h-full transition-all duration-700" />
-
-                                    <div className="flex items-start gap-4 pl-2">
-                                        <div className="flex-shrink-0">
-                                            <span className="text-2xl block mb-1 group-hover:scale-125 transition-transform duration-500">{obj.icon}</span>
-                                            <span className="font-mono text-[10px] text-purple-400/60 tracking-widest">{obj.id}</span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm md:text-base font-bold text-white/90 mb-2 group-hover:text-purple-300 transition-colors duration-500">
-                                                {obj.title}
-                                            </h4>
-                                            <p className="text-xs md:text-sm text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors duration-500">
-                                                {obj.desc}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                {/* Legacy Logs */}
+                <section>
+                    <h2 className="text-sm text-acm-cyan mb-8 font-mono uppercase tracking-widest">_History & Legacy</h2>
+                    <div className="border-l border-white/20 pl-5 md:pl-10 space-y-10 md:space-y-16">
+                        {(aboutData.legacyLogs || []).map((log, i) => (
+                            <div key={i}>
+                                <span className="text-2xl md:text-4xl font-heading font-bold opacity-30">{log.year}</span>
+                                <h3 className="text-lg md:text-2xl font-bold mt-2">{log.title}</h3>
+                                <p className="text-gray-400 mt-2 text-sm md:text-base">{log.desc}</p>
                             </div>
-                        );
-                    })}
-                </div>
-
-                {/* Terminal Footer */}
-                <div className="mt-8 text-center">
-                    <p className="font-mono text-[10px] text-gray-600 tracking-[0.4em] animate-pulse">
-                        :: {objectives.length}_OBJECTIVES_LOADED :: STATUS_ACTIVE ::
-                    </p>
-                </div>
+                        ))}
+                    </div>
+                </section>
             </div>
-
-            {/* === LEGACY LOGS === */}
-            <div className="mb-20">
-                <div className="flex items-center gap-6 mb-12">
-                    <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
-                        <h2 className="text-3xl md:text-5xl font-heading font-bold text-white">
-                            LEGACY<span className="text-amber-400">_</span>LOGS
-                        </h2>
-                    </div>
-                    <div className="flex-1 h-px bg-gradient-to-r from-amber-400/30 to-transparent" />
-                    <span className="font-mono text-[9px] text-amber-400/40 tracking-[0.5em] hidden md:block">MODULE_04</span>
-                </div>
-
-                <div className="border-l-2 border-white/10 pl-8 md:pl-12 space-y-16 relative">
-                    {/* Animated Pulse on timeline */}
-                    <div className="absolute left-[-5px] top-0 w-2 h-2 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-ping" />
-
-                    <div className="group">
-                        <span className="text-5xl font-heading font-bold text-white/10 group-hover:text-amber-400/30 transition-colors duration-500">2025</span>
-                        <h3 className="text-2xl font-bold mt-2 text-white group-hover:text-amber-300 transition-colors duration-500">National Apex</h3>
-                        <p className="text-gray-400 mt-2 group-hover:text-gray-300 transition-colors duration-500">
-                            Awarded Best Student Chapter nationwide.
-                        </p>
-                    </div>
-                    <div className="group">
-                        <span className="text-5xl font-heading font-bold text-white/10 group-hover:text-amber-400/30 transition-colors duration-500">2023</span>
-                        <h3 className="text-2xl font-bold mt-2 text-white group-hover:text-amber-300 transition-colors duration-500">Source Code</h3>
-                        <p className="text-gray-400 mt-2 group-hover:text-gray-300 transition-colors duration-500">
-                            Launched open-source initiative with 500+ PRs.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
         </div>
     );
 };
+
 
 const Team = () => {
     const teamData = {
@@ -1090,7 +1100,7 @@ const TeamPersonaCard = ({ member }) => {
                         loop
                         muted
                         playsInline
-                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-[1.15] group-hover:contrast-125 group-hover:saturate-50"
                     />
                 ) : (
                     <img
@@ -1098,11 +1108,13 @@ const TeamPersonaCard = ({ member }) => {
                         alt={member.name}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-[1.15] group-hover:contrast-125 group-hover:saturate-50"
                         style={getImageStyle(member.image)}
                     />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent z-10"></div>
+                <div className="absolute inset-0 z-20 pointer-events-none opacity-0 group-hover:opacity-70 transition-opacity duration-300" style={{ backgroundImage: 'linear-gradient(transparent 50%, rgba(0, 0, 0, 0.4) 50%)', backgroundSize: '100% 4px' }}></div>
+                <div className="absolute inset-0 z-20 pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity duration-300 mix-blend-screen" style={{ backgroundImage: 'linear-gradient(90deg, rgba(255,0,0,1), rgba(0,255,0,1), rgba(0,0,255,1))', backgroundSize: '3px 100%' }}></div>
             </div>
 
             {/* LinkedIn Float — always visible on mobile, hover on desktop */}
@@ -1118,15 +1130,15 @@ const TeamPersonaCard = ({ member }) => {
             )}
 
             {/* Content Section */}
-            <div className="absolute bottom-0 left-0 w-full p-3 md:p-6 flex flex-col items-start bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent">
-                <p className="text-[7px] md:text-[9px] font-mono text-acm-cyan tracking-[0.2em] md:tracking-[0.4em] uppercase mb-1 md:mb-2 opacity-60 truncate w-full">
+            <div className="absolute bottom-0 left-0 w-full h-[60%] p-3 md:p-6 pb-4 md:pb-8 flex flex-col justify-end items-start bg-gradient-to-t from-[#020202] via-[#020202]/95 to-transparent z-30 pointer-events-none">
+                <p className="text-[7px] md:text-[9px] font-mono text-acm-cyan tracking-[0.2em] md:tracking-[0.4em] uppercase mb-1 md:mb-2 opacity-80 truncate w-full pointer-events-auto shadow-black drop-shadow-md">
                     {member.role}
                 </p>
-                <h3 className="text-sm md:text-xl font-['Playfair_Display'] font-serif text-white mb-1 md:mb-2 group-hover:text-acm-cyan transition-colors duration-500 leading-tight">
+                <h3 className="text-sm md:text-xl font-['Playfair_Display'] font-serif text-white mb-1 md:mb-2 group-hover:text-acm-cyan transition-colors duration-500 leading-tight pointer-events-auto shadow-black drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                     {member.name}
                 </h3>
-                <div className="w-4 md:w-6 h-[1px] bg-white/20 group-hover:w-full group-hover:bg-acm-cyan/40 transition-all duration-700 mb-2 md:mb-4"></div>
-                <p className="hidden md:block text-[11px] leading-relaxed text-gray-400 font-sans line-clamp-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-y-2 group-hover:translate-y-0">
+                <div className="w-4 md:w-6 h-[1px] bg-white/30 group-hover:w-full group-hover:bg-acm-cyan/60 transition-all duration-700 mb-2 md:mb-4 pointer-events-auto shadow-[0_0_10px_black]"></div>
+                <p className="hidden md:block text-[11px] leading-relaxed text-white/90 font-sans line-clamp-2 opacity-0 group-hover:opacity-100 transition-all duration-700 transform translate-y-2 group-hover:translate-y-0 pointer-events-auto shadow-black drop-shadow-md">
                     {member.desc}
                 </p>
             </div>
@@ -1150,7 +1162,7 @@ const TeamPersonaCard = ({ member }) => {
 const FusionGallery = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     const [items, setItems] = useState([]);
     const location = useLocation();
 
@@ -1158,7 +1170,7 @@ const FusionGallery = () => {
         try {
             const storedEvents = JSON.parse(localStorage.getItem('acm_events') || '[]');
             const storedGallery = JSON.parse(localStorage.getItem('acm_gallery') || '[]');
-            
+
             // Map events
             const eventItems = storedEvents.map((event, i) => ({
                 ...event,
@@ -1238,14 +1250,27 @@ const FusionGallery = () => {
     // Spacer height = exactly the scroll position of the last event
     const maxZ = items.length > 0 ? (items[items.length - 1].z / scrollFactor) + window.innerHeight : 2000;
 
+    const handleNext = () => window.scrollBy({ top: 600, behavior: 'smooth' });
+    const handlePrev = () => window.scrollBy({ top: -600, behavior: 'smooth' });
+
     return (
         <div className="min-h-screen bg-transparent transition-colors duration-1000 relative">
-            
+
             {/* Scroll Spacer */}
             <div style={{ height: `${maxZ}px` }} className="absolute top-0 left-0 w-px -z-50 pointer-events-none"></div>
 
+            {/* Manual Controls */}
+            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] flex gap-4">
+                <button onClick={handlePrev} className="w-12 h-12 rounded-full border border-acm-cyan text-acm-cyan flex items-center justify-center hover:bg-acm-cyan hover:text-black transition-colors backdrop-blur-md cursor-pointer pointer-events-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button onClick={handleNext} className="w-12 h-12 rounded-full border border-acm-cyan text-acm-cyan flex items-center justify-center hover:bg-acm-cyan hover:text-black transition-colors backdrop-blur-md cursor-pointer pointer-events-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+            </div>
+
             {/* HUD - Fades out on scroll to prevent overlap */}
-            <div 
+            <div
                 className="fixed top-24 left-1/2 -translate-x-1/2 z-50 text-center mix-blend-exclusion pointer-events-none w-full transition-opacity duration-300"
                 style={{ opacity: Math.max(0, 1 - scrollProgress / 400), transform: `translate(-50%, -${scrollProgress * 0.2}px)` }}
             >
@@ -1253,8 +1278,8 @@ const FusionGallery = () => {
                     NEURAL_<span className="text-acm-cyan">ARCHIVE</span>
                 </h1>
                 <div className="flex justify-center space-x-4 text-[10px] md:text-xs font-mono text-acm-cyan/80">
-                     <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
-                     <span>:: DEPTH: {Math.round(scrollProgress)}</span>
+                    <span>:: SCROLL_NAV: {activeIndex !== -1 ? 'LOCKED' : 'DRIFTING'}</span>
+                    <span>:: DEPTH: {Math.round(scrollProgress)}</span>
                 </div>
             </div>
 
@@ -1262,10 +1287,10 @@ const FusionGallery = () => {
             <div className="fixed top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center perspective-[1000px] pointer-events-none">
                 <div className="relative w-full h-full preserve-3d pointer-events-auto">
                     {items.map((item, index) => (
-                        <FusionCard 
-                            key={item.id} 
-                            item={item} 
-                            isActive={index === activeIndex} 
+                        <FusionCard
+                            key={item.id}
+                            item={item}
+                            isActive={index === activeIndex}
                             rawZ={-item.z + scrollProgress - 500}
                         />
                     ))}
@@ -1313,7 +1338,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
             transform: `translate3d(calc(-50% + ${item.x}vw), calc(-50% + ${item.y}vh), ${rawZ}px) rotateZ(${item.rotation}deg) scale3d(0.8, 0.8, 0.8)`,
             opacity: rawZ > 0 ? 0 : Math.max(0, 1 - Math.abs(rawZ) / 3000), // Fade off in distance
             zIndex: Math.round(-rawZ),
-            filter: `blur(${Math.min(10, Math.abs(rawZ)/200)}px) grayscale(${Math.min(100, Math.abs(rawZ)/30)}%)`
+            filter: `blur(${Math.min(10, Math.abs(rawZ) / 200)}px) grayscale(${Math.min(100, Math.abs(rawZ) / 30)}%)`
         };
 
     const handleCardClick = () => {
@@ -1327,47 +1352,45 @@ const FusionCard = ({ item, isActive, rawZ }) => {
     }
 
     return (
-        <div 
+        <div
             className="absolute top-1/2 left-1/2 transition-all ease-out cursor-pointer group"
-            style={{ 
+            style={{
                 ...transformStyle,
-                transitionDuration: isActive ? '800ms' : '0ms', 
-                width: '90vw', 
+                transitionDuration: isActive ? '800ms' : '0ms',
+                width: '90vw',
                 maxWidth: '900px',
-                aspectRatio: window.innerWidth < 640 ? '1 / 1.1' : '16 / 9' 
+                aspectRatio: window.innerWidth < 640 ? '1 / 1.1' : '16 / 9'
             }}
             onClick={handleCardClick}
         >
             <div className={`w-full h-full relative rounded-2xl overflow-hidden border transition-all duration-700 ${isActive ? 'border-acm-cyan/50 shadow-[0_0_80px_rgba(100,255,218,0.2)] bg-[#020202]/92 backdrop-blur-2xl' : 'border-white/10 bg-white/5'}`}>
-                
+
                 {/* Image / Carousel Layer */}
                 <div className="absolute inset-0 z-0">
                     {item.images && item.images.length > 0 ? (
                         <>
                             {item.images.map((img, i) => (
-                                <img 
-                                    key={i} 
-                                    src={getDirectDriveUrl(img)} 
-                                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
-                                        i === slide ? 'translate-x-0 opacity-100 z-10' : 
+                                <img
+                                    key={i}
+                                    src={getDirectDriveUrl(img)}
+                                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${i === slide ? 'translate-x-0 opacity-100 z-10' :
                                         i < slide ? '-translate-x-full opacity-0 z-0' : 'translate-x-full opacity-0 z-0'
-                                    } ${isActive ? 'grayscale-0' : 'grayscale'}`}
+                                        } ${isActive ? 'grayscale-0' : 'grayscale'}`}
                                     alt="Event"
                                 />
                             ))}
                         </>
                     ) : (
                         item.slides.map((gradient, i) => (
-                            <div 
-                                key={i} 
-                                className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all duration-1000 ${
-                                    i === slide ? 'translate-x-0 opacity-100 z-10' : 
+                            <div
+                                key={i}
+                                className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all duration-1000 ${i === slide ? 'translate-x-0 opacity-100 z-10' :
                                     i < slide ? '-translate-x-full opacity-0 z-0' : 'translate-x-full opacity-0 z-0'
-                                }`} 
+                                    }`}
                             />
                         ))
                     )}
-                 </div>
+                </div>
 
                 {/* Interaction Buttons - Only if active */}
                 {isActive && (item.images?.length > 1 || (!item.images && item.slides.length > 1)) && (
@@ -1390,7 +1413,7 @@ const FusionCard = ({ item, isActive, rawZ }) => {
                             {item.desc}
                         </p>
                     </div>
-                     <div className={`font-mono text-3xl md:text-5xl font-bold text-white/5 ${isActive ? 'text-acm-cyan/20 scale-100' : 'scale-50'} transition-all duration-500`}>
+                    <div className={`font-mono text-3xl md:text-5xl font-bold text-white/5 ${isActive ? 'text-acm-cyan/20 scale-100' : 'scale-50'} transition-all duration-500`}>
                         {(item.id + 1).toString().padStart(2, '0')}
                     </div>
                 </div>
@@ -1666,14 +1689,14 @@ const ShapeIcon = ({ type }) => {
         default:
             return (
                 <svg {...svgProps}>
-                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
                 </svg>
             );
     }
 }
 
 const StatCard = ({ icon, label, value }) => (
-    <motion.div 
+    <motion.div
         whileHover={{ y: -5 }}
         className="p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm relative overflow-hidden group"
     >
@@ -1688,10 +1711,10 @@ const StatCard = ({ icon, label, value }) => (
 
 const EventDetail = () => {
     const { slug } = useParams();
-    
+
     // Clear localStorage to force data reset for the demo
     useEffect(() => {
-        if(localStorage.getItem('acm_events_reset_v4') !== 'true') {
+        if (localStorage.getItem('acm_events_reset_v4') !== 'true') {
             localStorage.removeItem('acm_events');
             localStorage.setItem('acm_events_reset_v4', 'true');
             window.location.reload();
@@ -1710,7 +1733,7 @@ const EventDetail = () => {
     if (!event) return <div className="min-h-screen flex items-center justify-center text-white text-3xl">Event Not Found</div>;
 
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="min-h-screen pt-28 md:pt-32 px-4 md:px-10 lg:px-20 text-white max-w-[1400px] mx-auto pb-20"
@@ -1718,7 +1741,7 @@ const EventDetail = () => {
             {/* 1. HERO SECTION */}
             <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-24">
                 <div className="flex-1">
-                    <motion.div 
+                    <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.1 }}
@@ -1726,8 +1749,8 @@ const EventDetail = () => {
                         <h1 className="text-4xl sm:text-6xl md:text-8xl font-heading font-black mb-4 tracking-tight leading-[1.1]">{event.title}</h1>
                         <p className="text-acm-cyan font-mono text-sm md:text-lg mb-8 tracking-widest">{event.tagline || event.dateText}</p>
                     </motion.div>
-                    
-                    <motion.div 
+
+                    <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
@@ -1741,49 +1764,71 @@ const EventDetail = () => {
                 </div>
 
                 {/* 2. EVENT STATUS & 3. INFO PANEL */}
-                <motion.div 
+                <motion.div
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                     className="w-full md:w-[350px] shrink-0 sticky top-32"
                 >
                     <div className="p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl space-y-6">
-                        <div className="flex items-center gap-3 text-green-400 font-bold mb-6">
-                            <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
-                            Successfully Conducted
-                        </div>
-                        
-                        <div className="space-y-4 text-sm">
-                            <div className="flex justify-between border-b border-white/10 pb-3">
-                                <span className="text-gray-400">Date</span>
-                                <span className="font-mono">{new Date(event.eventDate).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex justify-between border-b border-white/10 pb-3">
-                                <span className="text-gray-400">Organizers</span>
-                                <span className="text-right">{event.organizers?.join(', ') || 'ACM'}</span>
-                            </div>
-                            {event.statistics?.certificates && (
-                                <div className="flex justify-between pb-3">
-                                    <span className="text-gray-400">Certificates</span>
-                                    <span className="text-acm-cyan font-bold">{event.statistics.certificates}</span>
-                                </div>
-                            )}
-                        </div>
+                        {(() => {
+                            const isUpcoming = new Date(event.eventDate) > new Date();
+                            return (
+                                <>
+                                    <div className={`flex items-center gap-3 font-bold mb-6 ${isUpcoming ? 'text-acm-cyan' : 'text-green-400'}`}>
+                                        <div className={`w-3 h-3 rounded-full animate-pulse ${isUpcoming ? 'bg-acm-cyan' : 'bg-green-400'}`} />
+                                        {isUpcoming ? 'Upcoming Event' : 'Successfully Conducted'}
+                                    </div>
 
-                        <div className="pt-4 space-y-3">
-                            <button className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-acm-cyan transition-colors">
-                                VIEW GALLERY
-                            </button>
-                            <button className="w-full py-4 bg-transparent border border-white/20 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">
-                                DOWNLOAD REPORT
-                            </button>
-                        </div>
+                                    <div className="space-y-4 text-sm">
+                                        <div className="flex justify-between border-b border-white/10 pb-3">
+                                            <span className="text-gray-400">Date</span>
+                                            <span className="font-mono text-right max-w-xs">{event.dateText || new Date(event.eventDate).toLocaleDateString()}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-white/10 pb-3">
+                                            <span className="text-gray-400">Organizers</span>
+                                            <span className="text-right">{event.organizers?.join(', ') || 'ACM'}</span>
+                                        </div>
+                                        {event.statistics?.certificates && (
+                                            <div className="flex justify-between pb-3">
+                                                <span className="text-gray-400">Certificates</span>
+                                                <span className="text-acm-cyan font-bold">{event.statistics.certificates}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="pt-4 space-y-3">
+                                        {isUpcoming ? (
+                                            <a
+                                                href={event.slug === 'techforge' ? 'https://forms.gle/iWBTjdmQjx2BZZFP7' : (event.registrationLink || '#')}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full py-4 bg-acm-cyan text-[#02050f] font-black rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(100,255,218,0.2)] flex justify-center items-center"
+                                            >
+                                                REGISTER NOW
+                                            </a>
+                                        ) : (
+                                            <>
+                                                {event.images && event.images.length > 0 && (
+                                                    <button className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-acm-cyan transition-colors">
+                                                        VIEW GALLERY
+                                                    </button>
+                                                )}
+                                                <button className="w-full py-4 bg-transparent border border-white/20 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">
+                                                    DOWNLOAD REPORT
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
                 </motion.div>
             </div>
 
             {/* 4. ABOUT THE EVENT */}
-            <motion.section 
+            <motion.section
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -1801,7 +1846,7 @@ const EventDetail = () => {
                     <h2 className="text-3xl md:text-5xl font-bold mb-10 font-heading">Highlights</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {event.highlights.map((h, i) => (
-                            <motion.div 
+                            <motion.div
                                 key={i}
                                 whileHover={{ scale: 1.02 }}
                                 className="p-8 bg-white/5 border border-white/10 rounded-3xl hover:border-acm-cyan/50 transition-colors"
@@ -1868,7 +1913,7 @@ const EventDetail = () => {
                     <h2 className="text-3xl md:text-5xl font-bold mb-10 font-heading">Gallery</h2>
                     <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                         {event.images.map((img, i) => (
-                            <motion.div 
+                            <motion.div
                                 key={i}
                                 whileHover={{ scale: 1.02 }}
                                 className="break-inside-avoid overflow-hidden rounded-3xl border border-white/10"
@@ -1981,9 +2026,9 @@ const EventRegister = () => {
             if (!Array.isArray(stored)) return null;
             const found = stored.find(e => e.slug === slug);
             return found || null;
-        } catch (e) { 
+        } catch (e) {
             console.error("Error finding event:", e);
-            return null; 
+            return null;
         }
     }, [slug]);
 
@@ -1998,7 +2043,7 @@ const EventRegister = () => {
         };
         const existing = JSON.parse(localStorage.getItem('acm_registrations') || '[]');
         localStorage.setItem('acm_registrations', JSON.stringify([data, ...existing]));
-        
+
         // Submit to cloud
         const submitToCloud = async (reg) => {
             const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
@@ -2064,16 +2109,16 @@ const EventRegister = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className={labelClass}>Full Name *</label>
-                                    <input type="text" required placeholder="John Doe" className={inputClass} value={form.name} onChange={e => setForm({...form, name: e.target.value})}/>
+                                    <input type="text" required placeholder="John Doe" className={inputClass} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Phone *</label>
-                                    <input type="tel" required placeholder="9876543210" maxLength="10" className={inputClass} value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}/>
+                                    <input type="tel" required placeholder="9876543210" maxLength="10" className={inputClass} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                                 </div>
                             </div>
                             <div>
                                 <label className={labelClass}>Email *</label>
-                                <input type="email" required placeholder="you@example.com" className={inputClass} value={form.email} onChange={e => setForm({...form, email: e.target.value})}/>
+                                <input type="email" required placeholder="you@example.com" className={inputClass} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                             </div>
                         </fieldset>
 
@@ -2083,21 +2128,21 @@ const EventRegister = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className={labelClass}>Year *</label>
-                                    <select required className={inputClass} value={form.year} onChange={e => setForm({...form, year: e.target.value})}>
+                                    <select required className={inputClass} value={form.year} onChange={e => setForm({ ...form, year: e.target.value })}>
                                         <option value="">Select Year</option>
                                         <option>FY</option><option>SY</option><option>TY</option><option>LY</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className={labelClass}>Branch *</label>
-                                    <select required className={inputClass} value={form.branch} onChange={e => setForm({...form, branch: e.target.value})}>
+                                    <select required className={inputClass} value={form.branch} onChange={e => setForm({ ...form, branch: e.target.value })}>
                                         <option value="">Select Branch</option>
                                         <option>CS</option><option>IT</option><option>EXTC</option><option>MECH</option><option>CIVIL</option><option>Other</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className={labelClass}>College</label>
-                                    <input type="text" placeholder="TSEC" className={inputClass} value={form.college} onChange={e => setForm({...form, college: e.target.value})}/>
+                                    <input type="text" placeholder="TSEC" className={inputClass} value={form.college} onChange={e => setForm({ ...form, college: e.target.value })} />
                                 </div>
                             </div>
                         </fieldset>
@@ -2107,7 +2152,7 @@ const EventRegister = () => {
                             <legend className="text-acm-cyan font-mono text-[10px] tracking-widest px-2">// TEAM_INFO</legend>
                             <div>
                                 <label className={labelClass}>Team Name (leave blank if solo)</label>
-                                <input type="text" placeholder="Team Binary_Bards" className={inputClass} value={form.team} onChange={e => setForm({...form, team: e.target.value})}/>
+                                <input type="text" placeholder="Team Binary_Bards" className={inputClass} value={form.team} onChange={e => setForm({ ...form, team: e.target.value })} />
                             </div>
 
                             {/* Dynamic Members */}
@@ -2116,9 +2161,9 @@ const EventRegister = () => {
                                     <div className="flex justify-between items-center">
                                         <p className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">// TEAM_MATES ({form.members.length + 1} / {event.maxTeamSize})</p>
                                         {form.members.length < event.maxTeamSize - 1 && (
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setForm({...form, members: [...form.members, { name: '', email: '', phone: '' }]})}
+                                            <button
+                                                type="button"
+                                                onClick={() => setForm({ ...form, members: [...form.members, { name: '', email: '', phone: '' }] })}
                                                 className="text-[10px] text-acm-cyan font-mono border border-acm-cyan/30 px-3 py-1 rounded hover:bg-acm-cyan hover:text-black transition-all"
                                             >
                                                 [+] ADD_MEMBER
@@ -2128,9 +2173,9 @@ const EventRegister = () => {
 
                                     {form.members.map((member, idx) => (
                                         <div key={idx} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3 relative">
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setForm({...form, members: form.members.filter((_, i) => i !== idx)})}
+                                            <button
+                                                type="button"
+                                                onClick={() => setForm({ ...form, members: form.members.filter((_, i) => i !== idx) })}
                                                 className="absolute top-2 right-2 text-red-500 font-bold p-1 hover:bg-red-500/10 rounded"
                                             >
                                                 ✕
@@ -2139,14 +2184,14 @@ const EventRegister = () => {
                                                 <div>
                                                     <label className="text-[8px] text-gray-600 font-mono mb-1 block uppercase">Name</label>
                                                     <input required className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" value={member.name} onChange={e => {
-                                                        const nm = [...form.members]; nm[idx].name = e.target.value; setForm({...form, members: nm});
-                                                    }}/>
+                                                        const nm = [...form.members]; nm[idx].name = e.target.value; setForm({ ...form, members: nm });
+                                                    }} />
                                                 </div>
                                                 <div>
                                                     <label className="text-[8px] text-gray-600 font-mono mb-1 block uppercase">Email</label>
                                                     <input required type="email" className="w-full bg-black border border-white/10 p-2 rounded text-xs text-white" value={member.email} onChange={e => {
-                                                        const nm = [...form.members]; nm[idx].email = e.target.value; setForm({...form, members: nm});
-                                                    }}/>
+                                                        const nm = [...form.members]; nm[idx].email = e.target.value; setForm({ ...form, members: nm });
+                                                    }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -2156,7 +2201,7 @@ const EventRegister = () => {
 
                             <div>
                                 <label className={labelClass}>Message / Query (optional)</label>
-                                <textarea placeholder="Any questions or notes for the organizers..." rows="3" className={inputClass + ' resize-none'} value={form.message} onChange={e => setForm({...form, message: e.target.value})}/>
+                                <textarea placeholder="Any questions or notes for the organizers..." rows="3" className={inputClass + ' resize-none'} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
                             </div>
                         </fieldset>
 
@@ -2186,10 +2231,10 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
         });
 
     const exportCSV = () => {
-        const headers = ['Name','Email','Phone','Year','Branch','College','Team','Event','Timestamp','Message'];
+        const headers = ['Name', 'Email', 'Phone', 'Year', 'Branch', 'College', 'Team', 'Event', 'Timestamp', 'Message'];
         // Sort registrations by event for better readability in the flat export
         const sorted = [...registrations].sort((a, b) => (a.event || '').localeCompare(b.event || ''));
-        const rows = sorted.map(r => [r.name,r.email,r.phone,r.year,r.branch,r.college,r.team,r.event,r.timestamp,r.message].map(v => `"${v||''}"`));
+        const rows = sorted.map(r => [r.name, r.email, r.phone, r.year, r.branch, r.college, r.team, r.event, r.timestamp, r.message].map(v => `"${v || ''}"`));
         const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement('a');
@@ -2200,7 +2245,7 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
 
     const exportByEvent = async () => {
         const zip = new JSZip();
-        const headers = ['Name','Email','Phone','Year','Branch','College','Team','Timestamp','Message'];
+        const headers = ['Name', 'Email', 'Phone', 'Year', 'Branch', 'College', 'Team', 'Timestamp', 'Message'];
 
         // Group by event
         const grouped = {};
@@ -2213,7 +2258,7 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
         if (Object.keys(grouped).length === 0) return alert('No registrations to export');
 
         Object.entries(grouped).forEach(([eventName, regs]) => {
-            const rows = regs.map(r => [r.name,r.email,r.phone,r.year,r.branch,r.college,r.team,r.timestamp,r.message].map(v => `"${v||''}"`));
+            const rows = regs.map(r => [r.name, r.email, r.phone, r.year, r.branch, r.college, r.team, r.timestamp, r.message].map(v => `"${v || ''}"`));
             const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
             const safeName = eventName.replace(/[^a-z0-9_\-]/gi, '_');
             zip.file(`${safeName}.csv`, csv);
@@ -2221,13 +2266,13 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
 
         // Add a summary sheet
         const summaryRows = Object.entries(grouped).map(([name, regs]) => [`"${name}"`, regs.length]);
-        const summaryCSV = [['Event','Count'], ...summaryRows].map(r => r.join(',')).join('\n');
+        const summaryCSV = [['Event', 'Count'], ...summaryRows].map(r => r.join(',')).join('\n');
         zip.file('_summary.csv', summaryCSV);
 
         const content = await zip.generateAsync({ type: 'blob' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(content);
-        a.download = `registrations_event_wise_${new Date().toISOString().slice(0,10)}.zip`;
+        a.download = `registrations_event_wise_${new Date().toISOString().slice(0, 10)}.zip`;
         a.click();
     };
 
@@ -2257,7 +2302,7 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
                     className="text-[10px] font-mono text-acm-cyan border border-acm-cyan/30 px-4 py-2.5 rounded hover:bg-acm-cyan/10 flex items-center gap-2 whitespace-nowrap">
                     <span>↓</span> DOWNLOAD EVENT-WISE (ZIP)
                 </button>
-                <button onClick={() => { if(confirm('Clear all registrations?')) { localStorage.removeItem('acm_registrations'); setRegistrations([]); } }}
+                <button onClick={() => { if (confirm('Clear all registrations?')) { localStorage.removeItem('acm_registrations'); setRegistrations([]); } }}
                     className="text-[10px] font-mono text-red-500 border border-red-500/20 px-4 py-2.5 rounded hover:bg-red-500/10 whitespace-nowrap">
                     WIPE ALL
                 </button>
@@ -2268,7 +2313,7 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
 
             <div className="space-y-8">
                 {filtered.length === 0 && <div className="py-20 text-center text-gray-600 font-mono text-xs">NO_RECORDS_MATCH_QUERY</div>}
-                
+
                 {Object.entries(
                     filtered.reduce((acc, reg) => {
                         const key = reg.event || 'Unknown Event';
@@ -2282,7 +2327,7 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
                             <h3 className="text-acm-cyan font-mono text-[10px] tracking-widest uppercase">// {eventName} ({regs.length})</h3>
                             <div className="flex-1 h-[1px] bg-white/5"></div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 gap-2">
                             {regs.map((reg, i) => {
                                 const regIndex = registrations.indexOf(reg);
@@ -2340,9 +2385,9 @@ const RegistrationsPanel = ({ registrations, setRegistrations, events, filterEve
                                                     </div>
                                                 )}
                                                 <div className="col-span-2 md:col-span-4 flex justify-end mt-4">
-                                                    <button 
+                                                    <button
                                                         onClick={() => {
-                                                            if(confirm('Delete this registration?')) {
+                                                            if (confirm('Delete this registration?')) {
                                                                 const updated = registrations.filter((_, idx) => idx !== regIndex);
                                                                 setRegistrations(updated);
                                                                 localStorage.setItem('acm_registrations', JSON.stringify(updated));
@@ -2418,7 +2463,7 @@ const Management = () => {
             setPinInput('');
             // Log attempt
             const log = JSON.parse(localStorage.getItem('acm_access_log') || '[]');
-            log.push({ time: new Date().toISOString(), attempt: pinInput.slice(0,5) + '...' });
+            log.push({ time: new Date().toISOString(), attempt: pinInput.slice(0, 5) + '...' });
             localStorage.setItem('acm_access_log', JSON.stringify(log.slice(-50)));
         }
     };
@@ -2439,13 +2484,13 @@ const Management = () => {
         // --- ONLY USE CLOUD DATA, NO DEFAULTS ---
         if (!localStorage.getItem('acm_events')) localStorage.setItem('acm_events', '[]');
         if (!localStorage.getItem('acm_team')) localStorage.setItem('acm_team', '{}');
-        
+
         // Auto-initialize from cloud if URL exists but data is empty
         const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (gasUrl && JSON.parse(localStorage.getItem('acm_events')).length === 0) {
-           console.log("INITIAL_BOOT :: ATTEMPTING_CLOUD_SYNC");
-           // We'll let the user manually trigger Fetch for now to be safe, 
-           // or we could trigger the fetch function if it was extracted.
+            console.log("INITIAL_BOOT :: ATTEMPTING_CLOUD_SYNC");
+            // We'll let the user manually trigger Fetch for now to be safe, 
+            // or we could trigger the fetch function if it was extracted.
         }
 
         setRegistrations(JSON.parse(localStorage.getItem('acm_registrations') || '[]'));
@@ -2477,7 +2522,7 @@ const Management = () => {
         setSyncStatus('SYNCING');
         const timer = setTimeout(() => {
             pushToCloud(true);
-        }, 3000); 
+        }, 3000);
         return () => clearTimeout(timer);
     }, [isDirty]);
 
@@ -2485,7 +2530,7 @@ const Management = () => {
     const pushToCloud = async (silent = false) => {
         const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (!gasUrl) return silent ? null : alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
-        
+
         setSyncStatus('SYNCING');
         try {
             const payload = {
@@ -2500,7 +2545,7 @@ const Management = () => {
                     timestamp: new Date().toISOString()
                 }
             };
-            
+
             // Use no-cors as Apps Script doesn't support CORS preflight,
             // but the POST still reaches the server. We verify success via 
             // the subsequent GET (version will have bumped).
@@ -2510,31 +2555,31 @@ const Management = () => {
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
             });
-            
+
             // Mark as synced locally
             setIsDirty(false);
             localStorage.removeItem('acm_is_dirty');
             localStorage.setItem('acm_last_sync', new Date().toLocaleTimeString());
             setSyncStatus('SUCCESS');
-            if(!silent) alert('UPLINK_SUCCESS :: CLOUD_STORAGE_SYNCHRONIZED');
+            if (!silent) alert('UPLINK_SUCCESS :: CLOUD_STORAGE_SYNCHRONIZED');
         } catch (err) {
             console.error("Push Failed:", err);
             setSyncStatus('ERROR');
-            if(!silent) alert(`UPLINK_FAILURE: ${err.message}`);
+            if (!silent) alert(`UPLINK_FAILURE: ${err.message}`);
         }
     };
 
     const pullFromCloud = async () => {
         const gasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
         if (!gasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
-        
+
         setSyncStatus('SYNCING');
         try {
             const response = await fetch(`${gasUrl}?action=get`);
             if (!response.ok) throw new Error(`HTTP_${response.status}`);
             const result = await response.json();
             const finalData = result.data || result;
-            
+
             if (finalData && finalData.events) {
                 localStorage.setItem('acm_events', JSON.stringify(finalData.events));
                 localStorage.setItem('acm_team', JSON.stringify(finalData.team));
@@ -2542,11 +2587,11 @@ const Management = () => {
                 localStorage.setItem('acm_about', JSON.stringify(finalData.about));
                 localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
                 localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
-                
+
                 // Clear dirty state to allow automatic sync to resume
                 localStorage.removeItem('acm_is_dirty');
                 localStorage.setItem('acm_last_sync', new Date().toLocaleTimeString());
-                
+
                 setSyncStatus('SUCCESS');
                 alert('DOWNLINK_ESTABLISHED :: FETCH_COMPLETE :: RE-INITIALIZING');
                 window.location.reload();
@@ -2638,9 +2683,9 @@ const Management = () => {
     };
 
     const addEvent = (e) => {
-        if(e) e.preventDefault();
+        if (e) e.preventDefault();
         if (!newEvent.title || !newEvent.slug) return alert('MISSING_REQUIRED_FIELDS');
-        
+
         const finalEvent = {
             ...newEvent,
             id: editingEventId || Date.now()
@@ -2653,7 +2698,7 @@ const Management = () => {
         } else {
             existing.push(finalEvent);
         }
-        
+
         saveEvents(existing);
         setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, maxTeamSize: 1, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] });
         setEditingEventId(null);
@@ -2692,7 +2737,7 @@ const Management = () => {
     const addMember = (e) => {
         e.preventDefault();
         const updated = { ...team };
-        
+
         // Serialize crop metadata into the image string if present
         let finalImage = newMember.image;
         if (newMember.cropCss && newMember.cropCss.objectPosition) {
@@ -2714,7 +2759,7 @@ const Management = () => {
             if (!updated[newMember.category]) updated[newMember.category] = [];
             updated[newMember.category].push({ ...memberData, id: Date.now() });
         }
-        
+
         saveTeam(updated);
         setNewMember({ name: '', role: '', desc: '', image: '', category: 'CORE_COMMITTEE', linkedin: '' });
         alert(editingMemberId ? "MEMBER_RE_SYNCED" : "MEMBER_BOARDED");
@@ -2729,21 +2774,21 @@ const Management = () => {
             transformOrigin: `${x}% ${y}%`
         } : null;
 
-        setNewMember({ 
-            name: m.name, 
-            role: m.role, 
-            desc: m.desc, 
-            image: url, 
-            category: m.category || 'CORE_COMMITTEE', 
+        setNewMember({
+            name: m.name,
+            role: m.role,
+            desc: m.desc,
+            image: url,
+            category: m.category || 'CORE_COMMITTEE',
             linkedin: m.linkedin || '',
-            cropCss 
+            cropCss
         });
         setEditingMemberId(m.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     const deleteMember = (cat, id) => {
-        if(confirm('Remove this member?')) {
+        if (confirm('Remove this member?')) {
             const updated = { ...team };
             updated[cat] = updated[cat].filter(m => m.id !== id);
             saveTeam(updated);
@@ -2759,26 +2804,26 @@ const Management = () => {
         events.forEach(ev => {
             (ev.images || []).forEach((img, idx) => {
                 if (img.startsWith('data:image')) {
-                    assets.file(`events/${ev.slug}_${idx}.${img.split(';')[0].split('/')[1]}`, img.split(',')[1], {base64: true});
+                    assets.file(`events/${ev.slug}_${idx}.${img.split(';')[0].split('/')[1]}`, img.split(',')[1], { base64: true });
                 }
             });
         });
         // Team images
         Object.values(team).flat().forEach(m => {
             if (m.image?.startsWith('data:image')) {
-                assets.file(`team/${m.id}.${m.image.split(';')[0].split('/')[1]}`, m.image.split(',')[1], {base64: true});
+                assets.file(`team/${m.id}.${m.image.split(';')[0].split('/')[1]}`, m.image.split(',')[1], { base64: true });
             }
         });
         // Standalone gallery images
         gallery.forEach((g, i) => {
             if (g.src?.startsWith('data:image')) {
-                assets.file(`gallery/${i}.${g.src.split(';')[0].split('/')[1]}`, g.src.split(',')[1], {base64: true});
+                assets.file(`gallery/${i}.${g.src.split(';')[0].split('/')[1]}`, g.src.split(',')[1], { base64: true });
             }
         });
-        const content = await zip.generateAsync({type: "blob"});
+        const content = await zip.generateAsync({ type: "blob" });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(content);
-        a.download = `acm_vault_${new Date().toISOString().slice(0,10)}.zip`;
+        a.download = `acm_vault_${new Date().toISOString().slice(0, 10)}.zip`;
         a.click();
     };
 
@@ -2922,9 +2967,9 @@ const Management = () => {
                         <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                             <div className={`w-1.5 h-1.5 rounded-full ${syncStatus === 'SYNCING' ? 'bg-yellow-400 animate-pulse' : syncStatus === 'ERROR' ? 'bg-red-500' : isDirty ? 'bg-blue-400' : 'bg-green-500'}`}></div>
                             <span className="text-[8px] font-mono tracking-[0.2em] text-gray-400 uppercase">
-                                {syncStatus === 'SYNCING' ? 'SYNCING_TO_CLOUD' : 
-                                 syncStatus === 'ERROR' ? 'SYNC_FAILED' : 
-                                 isDirty ? 'CHANGES_READY' : 'CLOUD_SAVED'}
+                                {syncStatus === 'SYNCING' ? 'SYNCING_TO_CLOUD' :
+                                    syncStatus === 'ERROR' ? 'SYNC_FAILED' :
+                                        isDirty ? 'CHANGES_READY' : 'CLOUD_SAVED'}
                             </span>
                             {localStorage.getItem('acm_last_sync') && (
                                 <span className="text-[8px] font-mono text-gray-600 border-l border-white/10 pl-2 ml-1 uppercase">{localStorage.getItem('acm_last_sync')}</span>
@@ -2966,44 +3011,44 @@ const Management = () => {
             {activeTab === 'events' && (
                 <div className="space-y-10">
                     <form onSubmit={addEvent} className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-4 max-w-2xl relative">
-                        {editingEventId && <button type="button" onClick={() => {setEditingEventId(null); setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] }); setJsonEdit('');}} className="absolute top-4 right-4 text-[10px] text-gray-500 hover:text-white underline">CANCEL_EDIT</button>}
+                        {editingEventId && <button type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', category: '', desc: '', slug: '', images: [], prizePool: 0, dateText: '', eventDate: '', tracks: [], speakers: [], faqs: [] }); setJsonEdit(''); }} className="absolute top-4 right-4 text-[10px] text-gray-500 hover:text-white underline">CANCEL_EDIT</button>}
                         <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan">
                             {editingEventId ? "// PATCH_EXISTING_LOG" : "// DEPLOY_NEW_EVENT"}
                         </h2>
                         <div className="grid grid-cols-2 gap-4 text-xs">
-                            <input 
-                                required 
-                                placeholder="Title" 
-                                className="bg-black border border-white/10 p-3 rounded" 
-                                value={newEvent.title} 
+                            <input
+                                required
+                                placeholder="Title"
+                                className="bg-black border border-white/10 p-3 rounded"
+                                value={newEvent.title}
                                 onChange={e => {
                                     const val = e.target.value;
                                     const s = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 30);
-                                    setNewEvent({...newEvent, title: val, slug: s});
+                                    setNewEvent({ ...newEvent, title: val, slug: s });
                                 }}
                             />
-                            <input 
-                                required 
-                                placeholder="Slug (URL ID)" 
-                                className="bg-black border border-white/10 p-3 rounded" 
-                                value={newEvent.slug} 
+                            <input
+                                required
+                                placeholder="Slug (URL ID)"
+                                className="bg-black border border-white/10 p-3 rounded"
+                                value={newEvent.slug}
                                 onPaste={e => {
                                     const pasted = e.clipboardData.getData('Text');
                                     if (pasted.includes('drive.google.com') || pasted.includes('http')) {
                                         // Attempt to extract title or just the last part of URL if it's not a generic link
                                         const clean = pasted.split('/').pop().split('?')[0].split('=')[0].toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 30);
-                                        setNewEvent({...newEvent, slug: clean});
+                                        setNewEvent({ ...newEvent, slug: clean });
                                         e.preventDefault();
                                     }
                                 }}
                                 onChange={e => {
                                     const val = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-                                    setNewEvent({...newEvent, slug: val});
+                                    setNewEvent({ ...newEvent, slug: val });
                                 }}
                             />
                         </div>
-                        <input required placeholder="Category (e.g. HACKATHON)" className="w-full bg-black border border-white/10 p-3 rounded text-xs" value={newEvent.category} onChange={e => setNewEvent({...newEvent, category: e.target.value})}/>
-                        <textarea required placeholder="Description" className="w-full bg-black border border-white/10 p-3 rounded h-32 text-xs" value={newEvent.desc} onChange={e => setNewEvent({...newEvent, desc: e.target.value})}/>
+                        <input required placeholder="Category (e.g. HACKATHON)" className="w-full bg-black border border-white/10 p-3 rounded text-xs" value={newEvent.category} onChange={e => setNewEvent({ ...newEvent, category: e.target.value })} />
+                        <textarea required placeholder="Description" className="w-full bg-black border border-white/10 p-3 rounded h-32 text-xs" value={newEvent.desc} onChange={e => setNewEvent({ ...newEvent, desc: e.target.value })} />
 
                         {/* ─── MULTI-IMAGE MANAGER ─── */}
                         <div className="space-y-3 border border-white/10 rounded-xl p-4 bg-black/20">
@@ -3025,7 +3070,7 @@ const Management = () => {
                                         <button type="button" onClick={() => setNewEvent(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))} className="text-red-500 px-2 text-xs hover:bg-red-500/10 rounded">✕</button>
                                     </div>
                                 ))}
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setNewEvent(prev => ({ ...prev, images: [...(Array.isArray(prev.images) ? prev.images : []), ""] }))}
                                     className="w-full py-2 border border-dashed border-acm-cyan/30 text-[9px] text-acm-cyan/60 font-mono uppercase hover:border-acm-cyan hover:text-acm-cyan transition-all rounded-lg"
@@ -3039,159 +3084,159 @@ const Management = () => {
                                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-4 p-2 bg-black/20 rounded-lg">
                                     {newEvent.images.filter(Boolean).map((src, idx) => (
                                         <div key={idx} className="relative aspect-square rounded overflow-hidden border border-white/5 opacity-80 hover:opacity-100 transition-opacity">
-                                            <img src={getDirectDriveUrl(src)} className="w-full h-full object-cover"/>
+                                            <img src={getDirectDriveUrl(src)} className="w-full h-full object-cover" />
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Date_Text (e.g. MAR 15 • 48H)</label>
-                                    <input className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.dateText} onChange={e => setNewEvent({...newEvent, dateText: e.target.value})}/>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Countdown_ISO (e.g. 2026-03-15T09:00:00)</label>
-                                    <input className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.eventDate} onChange={e => setNewEvent({...newEvent, eventDate: e.target.value})}/>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Prize_Pool (Number)</label>
-                                    <input type="number" className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.prizePool} onChange={e => setNewEvent({...newEvent, prizePool: parseInt(e.target.value)||0})}/>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Max_Team_Size</label>
-                                    <input type="number" min="1" className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.maxTeamSize} onChange={e => setNewEvent({...newEvent, maxTeamSize: parseInt(e.target.value)||1})}/>
-                                </div>
-                            </div>
-
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[10px] text-gray-400 font-mono mb-4 block uppercase tracking-widest">// EVENT_INTEL_SYSTEM</label>
-                                
-                                {/* Tracks Manager */}
-                                <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
-                                    <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: TRACKS_OF_INNOVATION</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(newEvent.tracks || []).map((track, idx) => (
-                                            <div key={idx} className="flex items-center gap-2 bg-acm-cyan/10 border border-acm-cyan/20 px-3 py-2 rounded">
-                                                <input 
-                                                    className="bg-transparent border-none outline-none text-[10px] text-white w-24"
-                                                    value={track}
-                                                    onChange={e => {
-                                                        const nt = [...newEvent.tracks];
-                                                        nt[idx] = e.target.value;
-                                                        setNewEvent({...newEvent, tracks: nt});
-                                                    }}
-                                                />
-                                                <button type="button" onClick={() => setNewEvent({...newEvent, tracks: newEvent.tracks.filter((_, i) => i !== idx)})} className="text-red-500 text-[10px]">✕</button>
-                                            </div>
-                                        ))}
-                                        <button type="button" onClick={() => setNewEvent({...newEvent, tracks: [...(newEvent.tracks || []), "New Track"]})} className="text-[10px] text-gray-500 border border-dashed border-white/10 px-3 py-2 rounded hover:text-acm-cyan hover:border-acm-cyan transition-all">[+] ADD_TRACK</button>
-                                    </div>
-                                </div>
+                                <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Date_Text (e.g. MAR 15 • 48H)</label>
+                                <input className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.dateText} onChange={e => setNewEvent({ ...newEvent, dateText: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Countdown_ISO (e.g. 2026-03-15T09:00:00)</label>
+                                <input className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.eventDate} onChange={e => setNewEvent({ ...newEvent, eventDate: e.target.value })} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Prize_Pool (Number)</label>
+                                <input type="number" className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.prizePool} onChange={e => setNewEvent({ ...newEvent, prizePool: parseInt(e.target.value) || 0 })} />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-400 font-mono mb-2 block uppercase tracking-widest">Max_Team_Size</label>
+                                <input type="number" min="1" className="w-full bg-black/40 border border-white/10 px-4 py-2 text-xs rounded-lg text-white" value={newEvent.maxTeamSize} onChange={e => setNewEvent({ ...newEvent, maxTeamSize: parseInt(e.target.value) || 1 })} />
+                            </div>
+                        </div>
 
-                                {/* Speakers Manager */}
-                                <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
-                                    <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: EXPERT_POOL_DEPOLYMENT (Speakers & Judges)</p>
-                                    <div className="space-y-6">
-                                        {(newEvent.speakers || []).map((s, idx) => (
-                                            <div key={idx} className="p-4 bg-white/2 border border-white/5 rounded-lg relative space-y-4">
-                                                <button type="button" onClick={() => setNewEvent({...newEvent, speakers: newEvent.speakers.filter((_, i) => i !== idx)})} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-lg z-10">✕</button>
-                                                
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="space-y-1">
-                                                        <label className="text-[8px] text-gray-500 font-mono">EXPERT_NAME</label>
-                                                        <input placeholder="e.g. Satoshi Nakamoto" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.name} onChange={e => {
-                                                            const ns = [...newEvent.speakers]; ns[idx].name = e.target.value; setNewEvent({...newEvent, speakers: ns});
-                                                        }}/>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <label className="text-[8px] text-gray-500 font-mono">PRIMARY_ROLE</label>
-                                                        <input placeholder="e.g. Lead Dev @ Google" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.role} onChange={e => {
-                                                            const ns = [...newEvent.speakers]; ns[idx].role = e.target.value; setNewEvent({...newEvent, speakers: ns});
-                                                        }}/>
-                                                    </div>
-                                                </div>
+                        <div>
+                            <label className="text-[10px] text-gray-400 font-mono mb-4 block uppercase tracking-widest">// EVENT_INTEL_SYSTEM</label>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <div className="space-y-1">
-                                                        <label className="text-[8px] text-gray-500 font-mono">ASSIGN_ROLE</label>
-                                                        <select className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" 
-                                                            value={['SPEAKER', 'JUDGE', 'MENTOR', 'GUEST'].includes(s.type?.toUpperCase()) ? s.type : 'OTHER_CUSTOM'} 
-                                                            onChange={e => {
-                                                                const val = e.target.value;
-                                                                const ns = [...newEvent.speakers]; 
-                                                                if(val === 'OTHER_CUSTOM') {
-                                                                    ns[idx].isCustomType = true;
-                                                                    ns[idx].type = ''; // Reset for custom entry
-                                                                } else {
-                                                                    ns[idx].isCustomType = false;
-                                                                    ns[idx].type = val;
-                                                                }
-                                                                setNewEvent({...newEvent, speakers: ns});
-                                                            }}>
-                                                            <option value="SPEAKER">SPEAKER</option>
-                                                            <option value="JUDGE">JUDGE</option>
-                                                            <option value="MENTOR">MENTOR</option>
-                                                            <option value="GUEST">GUEST</option>
-                                                            <option value="OTHER_CUSTOM">++ OTHER_CUSTOM ++</option>
-                                                        </select>
-                                                        {s.isCustomType && (
-                                                            <input 
-                                                                placeholder="Enter Custom Type" 
-                                                                className="w-full mt-1 bg-black border border-acm-cyan/30 p-2 rounded text-[9px] text-acm-cyan animate-pulse focus:animate-none"
-                                                                value={s.type}
-                                                                onChange={e => {
-                                                                    const ns = [...newEvent.speakers]; 
-                                                                    ns[idx].type = e.target.value.toUpperCase(); 
-                                                                    setNewEvent({...newEvent, speakers: ns});
-                                                                }}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                    <div className="md:col-span-2 space-y-1">
-                                                        <label className="text-[8px] text-gray-500 font-mono">NEURAL_LINK (LinkedIn / Portfolio)</label>
-                                                        <input placeholder="https://linkedin.com/in/..." className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.link || ''} onChange={e => {
-                                                            const ns = [...newEvent.speakers]; ns[idx].link = e.target.value; setNewEvent({...newEvent, speakers: ns});
-                                                        }}/>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-1">
-                                                    <label className="text-[8px] text-gray-500 font-mono">VISUAL_ASSET_URL</label>
-                                                    <input placeholder="Image URL (Direct Link)" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white font-mono" value={s.image} onChange={e => {
-                                                        const ns = [...newEvent.speakers]; ns[idx].image = e.target.value; setNewEvent({...newEvent, speakers: ns});
-                                                    }}/>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <button type="button" onClick={() => setNewEvent({...newEvent, speakers: [...(newEvent.speakers || []), {name:'', role:'', image:'', type:'SPEAKER', link:''}]})} className="w-full py-3 border border-dashed border-white/10 text-[10px] text-gray-500 hover:text-acm-cyan hover:border-acm-cyan transition-all font-mono">
-                                            [+] INITIALIZE_NEW_EXPERT_PROFILE
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* FAQ Manager */}
-                                <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
-                                    <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: KNOWLEDGE_RECON_FAQS</p>
-                                    <div className="space-y-4">
-                                        {(newEvent.faqs || []).map((f, idx) => (
-                                            <div key={idx} className="space-y-2 p-4 bg-white/2 border border-white/5 rounded-lg relative">
-                                                <button type="button" onClick={() => setNewEvent({...newEvent, faqs: newEvent.faqs.filter((_, i) => i !== idx)})} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-lg">✕</button>
-                                                <input placeholder="Question" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={f.question} onChange={e => {
-                                                    const nf = [...newEvent.faqs]; nf[idx].question = e.target.value; setNewEvent({...newEvent, faqs: nf});
-                                                }}/>
-                                                <textarea placeholder="Response" rows="2" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={f.answer} onChange={e => {
-                                                    const nf = [...newEvent.faqs]; nf[idx].answer = e.target.value; setNewEvent({...newEvent, faqs: nf});
-                                                }}/>
-                                            </div>
-                                        ))}
-                                        <button type="button" onClick={() => setNewEvent({...newEvent, faqs: [...(newEvent.faqs || []), {question:'', answer:''}]})} className="w-full py-2 border border-dashed border-white/10 text-[10px] text-gray-500 hover:text-acm-cyan hover:border-acm-cyan transition-all font-mono">[+] GENERATE_FAQ</button>
-                                    </div>
+                            {/* Tracks Manager */}
+                            <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
+                                <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: TRACKS_OF_INNOVATION</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {(newEvent.tracks || []).map((track, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 bg-acm-cyan/10 border border-acm-cyan/20 px-3 py-2 rounded">
+                                            <input
+                                                className="bg-transparent border-none outline-none text-[10px] text-white w-24"
+                                                value={track}
+                                                onChange={e => {
+                                                    const nt = [...newEvent.tracks];
+                                                    nt[idx] = e.target.value;
+                                                    setNewEvent({ ...newEvent, tracks: nt });
+                                                }}
+                                            />
+                                            <button type="button" onClick={() => setNewEvent({ ...newEvent, tracks: newEvent.tracks.filter((_, i) => i !== idx) })} className="text-red-500 text-[10px]">✕</button>
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={() => setNewEvent({ ...newEvent, tracks: [...(newEvent.tracks || []), "New Track"] })} className="text-[10px] text-gray-500 border border-dashed border-white/10 px-3 py-2 rounded hover:text-acm-cyan hover:border-acm-cyan transition-all">[+] ADD_TRACK</button>
                                 </div>
                             </div>
+
+                            {/* Speakers Manager */}
+                            <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
+                                <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: EXPERT_POOL_DEPOLYMENT (Speakers & Judges)</p>
+                                <div className="space-y-6">
+                                    {(newEvent.speakers || []).map((s, idx) => (
+                                        <div key={idx} className="p-4 bg-white/2 border border-white/5 rounded-lg relative space-y-4">
+                                            <button type="button" onClick={() => setNewEvent({ ...newEvent, speakers: newEvent.speakers.filter((_, i) => i !== idx) })} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-lg z-10">✕</button>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <label className="text-[8px] text-gray-500 font-mono">EXPERT_NAME</label>
+                                                    <input placeholder="e.g. Satoshi Nakamoto" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.name} onChange={e => {
+                                                        const ns = [...newEvent.speakers]; ns[idx].name = e.target.value; setNewEvent({ ...newEvent, speakers: ns });
+                                                    }} />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[8px] text-gray-500 font-mono">PRIMARY_ROLE</label>
+                                                    <input placeholder="e.g. Lead Dev @ Google" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.role} onChange={e => {
+                                                        const ns = [...newEvent.speakers]; ns[idx].role = e.target.value; setNewEvent({ ...newEvent, speakers: ns });
+                                                    }} />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="space-y-1">
+                                                    <label className="text-[8px] text-gray-500 font-mono">ASSIGN_ROLE</label>
+                                                    <select className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white"
+                                                        value={['SPEAKER', 'JUDGE', 'MENTOR', 'GUEST'].includes(s.type?.toUpperCase()) ? s.type : 'OTHER_CUSTOM'}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            const ns = [...newEvent.speakers];
+                                                            if (val === 'OTHER_CUSTOM') {
+                                                                ns[idx].isCustomType = true;
+                                                                ns[idx].type = ''; // Reset for custom entry
+                                                            } else {
+                                                                ns[idx].isCustomType = false;
+                                                                ns[idx].type = val;
+                                                            }
+                                                            setNewEvent({ ...newEvent, speakers: ns });
+                                                        }}>
+                                                        <option value="SPEAKER">SPEAKER</option>
+                                                        <option value="JUDGE">JUDGE</option>
+                                                        <option value="MENTOR">MENTOR</option>
+                                                        <option value="GUEST">GUEST</option>
+                                                        <option value="OTHER_CUSTOM">++ OTHER_CUSTOM ++</option>
+                                                    </select>
+                                                    {s.isCustomType && (
+                                                        <input
+                                                            placeholder="Enter Custom Type"
+                                                            className="w-full mt-1 bg-black border border-acm-cyan/30 p-2 rounded text-[9px] text-acm-cyan animate-pulse focus:animate-none"
+                                                            value={s.type}
+                                                            onChange={e => {
+                                                                const ns = [...newEvent.speakers];
+                                                                ns[idx].type = e.target.value.toUpperCase();
+                                                                setNewEvent({ ...newEvent, speakers: ns });
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className="md:col-span-2 space-y-1">
+                                                    <label className="text-[8px] text-gray-500 font-mono">NEURAL_LINK (LinkedIn / Portfolio)</label>
+                                                    <input placeholder="https://linkedin.com/in/..." className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={s.link || ''} onChange={e => {
+                                                        const ns = [...newEvent.speakers]; ns[idx].link = e.target.value; setNewEvent({ ...newEvent, speakers: ns });
+                                                    }} />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] text-gray-500 font-mono">VISUAL_ASSET_URL</label>
+                                                <input placeholder="Image URL (Direct Link)" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white font-mono" value={s.image} onChange={e => {
+                                                    const ns = [...newEvent.speakers]; ns[idx].image = e.target.value; setNewEvent({ ...newEvent, speakers: ns });
+                                                }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={() => setNewEvent({ ...newEvent, speakers: [...(newEvent.speakers || []), { name: '', role: '', image: '', type: 'SPEAKER', link: '' }] })} className="w-full py-3 border border-dashed border-white/10 text-[10px] text-gray-500 hover:text-acm-cyan hover:border-acm-cyan transition-all font-mono">
+                                        [+] INITIALIZE_NEW_EXPERT_PROFILE
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* FAQ Manager */}
+                            <div className="space-y-4 mb-8 p-6 bg-black/40 border border-white/5 rounded-xl">
+                                <p className="text-[10px] text-acm-cyan font-mono tracking-widest uppercase">:: KNOWLEDGE_RECON_FAQS</p>
+                                <div className="space-y-4">
+                                    {(newEvent.faqs || []).map((f, idx) => (
+                                        <div key={idx} className="space-y-2 p-4 bg-white/2 border border-white/5 rounded-lg relative">
+                                            <button type="button" onClick={() => setNewEvent({ ...newEvent, faqs: newEvent.faqs.filter((_, i) => i !== idx) })} className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-lg">✕</button>
+                                            <input placeholder="Question" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={f.question} onChange={e => {
+                                                const nf = [...newEvent.faqs]; nf[idx].question = e.target.value; setNewEvent({ ...newEvent, faqs: nf });
+                                            }} />
+                                            <textarea placeholder="Response" rows="2" className="w-full bg-black border border-white/10 p-2 rounded text-[10px] text-white" value={f.answer} onChange={e => {
+                                                const nf = [...newEvent.faqs]; nf[idx].answer = e.target.value; setNewEvent({ ...newEvent, faqs: nf });
+                                            }} />
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={() => setNewEvent({ ...newEvent, faqs: [...(newEvent.faqs || []), { question: '', answer: '' }] })} className="w-full py-2 border border-dashed border-white/10 text-[10px] text-gray-500 hover:text-acm-cyan hover:border-acm-cyan transition-all font-mono">[+] GENERATE_FAQ</button>
+                                </div>
+                            </div>
+                        </div>
                         <button type="submit" className="w-full py-4 bg-acm-cyan text-black font-bold uppercase tracking-widest hover:bg-white transition-all">
                             {editingEventId ? "OVERWRITE_SIGNAL" : "INITIALIZE_UPLINK"}
                         </button>
@@ -3239,11 +3284,11 @@ const Management = () => {
                         <div className="space-y-3">
                             <label className="text-[10px] text-gray-500 font-mono block mb-1">IMAGE_SOURCE (Google Drive Link Recommended):</label>
                             <div className="flex gap-2">
-                                <input 
-                                    placeholder="Paste GDrive or Image URL" 
+                                <input
+                                    placeholder="Paste GDrive or Image URL"
                                     className="flex-1 bg-black border border-white/10 p-3 rounded text-xs font-mono text-white"
-                                    value={newGalleryItem.src} 
-                                    onChange={e => setNewGalleryItem({...newGalleryItem, src: e.target.value})}
+                                    value={newGalleryItem.src}
+                                    onChange={e => setNewGalleryItem({ ...newGalleryItem, src: e.target.value })}
                                 />
                                 {newGalleryItem.src && (
                                     <button
@@ -3264,15 +3309,15 @@ const Management = () => {
                         </div>
                         {newGalleryItem.src && (
                             <div className="h-40 rounded-xl overflow-hidden border border-white/10 bg-black/40">
-                                <img src={getDirectDriveUrl(newGalleryItem.src)} className="w-full h-full object-contain"/>
+                                <img src={getDirectDriveUrl(newGalleryItem.src)} className="w-full h-full object-contain" />
                             </div>
                         )}
                         <input placeholder="Short Caption" className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white"
-                            value={newGalleryItem.caption} onChange={e => setNewGalleryItem({...newGalleryItem, caption: e.target.value})}/>
+                            value={newGalleryItem.caption} onChange={e => setNewGalleryItem({ ...newGalleryItem, caption: e.target.value })} />
                         <div>
                             <label className="text-[10px] text-gray-500 font-mono block mb-1">ASSOCIATED_EVENT:</label>
                             <select className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white"
-                                value={newGalleryItem.eventSlug} onChange={e => setNewGalleryItem({...newGalleryItem, eventSlug: e.target.value})}>
+                                value={newGalleryItem.eventSlug} onChange={e => setNewGalleryItem({ ...newGalleryItem, eventSlug: e.target.value })}>
                                 <option value="">-- NO_LINK --</option>
                                 {events.map(ev => <option key={ev.slug} value={ev.slug}>{ev.title}</option>)}
                             </select>
@@ -3286,7 +3331,7 @@ const Management = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {gallery.map((g, i) => (
                             <div key={g.id} className="group relative aspect-video rounded-xl overflow-hidden border border-white/10">
-                                <img src={getDirectDriveUrl(g.src)} className="w-full h-full object-cover"/>
+                                <img src={getDirectDriveUrl(g.src)} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
                                     {g.caption && <p className="text-[10px] text-white text-center">{g.caption}</p>}
                                     {g.eventSlug && <p className="text-[8px] text-acm-cyan font-mono">{g.eventSlug}</p>}
@@ -3306,16 +3351,16 @@ const Management = () => {
             {activeTab === 'team' && (
                 <div className="space-y-10">
                     <form onSubmit={addMember} className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-4 max-w-2xl relative">
-                        {editingMemberId && <button onClick={() => {setEditingMemberId(null); setNewMember({ name: '', role: '', desc: '', image: '', category: 'CORE_COMMITTEE', linkedin: '' });}} className="absolute top-4 right-4 text-[10px] text-gray-500 hover:text-white underline">CANCEL_EDIT</button>}
+                        {editingMemberId && <button onClick={() => { setEditingMemberId(null); setNewMember({ name: '', role: '', desc: '', image: '', category: 'CORE_COMMITTEE', linkedin: '' }); }} className="absolute top-4 right-4 text-[10px] text-gray-500 hover:text-white underline">CANCEL_EDIT</button>}
                         <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan">
                             {editingMemberId ? "// RE_SYNC_MEMBER" : "// BOARD_NEW_MEMBER"}
                         </h2>
                         <div className="grid grid-cols-2 gap-4 text-xs">
-                            <input required placeholder="Name" className="bg-black border border-white/10 p-3 rounded" value={newMember.name} onChange={e => setNewMember({...newMember, name: e.target.value})}/>
-                            <input required placeholder="Role" className="bg-black border border-white/10 p-3 rounded" value={newMember.role} onChange={e => setNewMember({...newMember, role: e.target.value})}/>
+                            <input required placeholder="Name" className="bg-black border border-white/10 p-3 rounded" value={newMember.name} onChange={e => setNewMember({ ...newMember, name: e.target.value })} />
+                            <input required placeholder="Role" className="bg-black border border-white/10 p-3 rounded" value={newMember.role} onChange={e => setNewMember({ ...newMember, role: e.target.value })} />
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-xs">
-                             <select className="bg-black border border-white/10 p-3 rounded text-white" value={newMember.category} onChange={e => setNewMember({...newMember, category: e.target.value})}>
+                            <select className="bg-black border border-white/10 p-3 rounded text-white" value={newMember.category} onChange={e => setNewMember({ ...newMember, category: e.target.value })}>
                                 <option value="FACULTY_SPONSORS">FACULTY_SPONSORS</option>
                                 <option value="CORE_COMMITTEE">CORE_COMMITTEE</option>
                                 <option value="TECHNICAL_FORCE">TECHNICAL_FORCE</option>
@@ -3325,7 +3370,7 @@ const Management = () => {
                                 <option value="MEDIA_TEAM">MEDIA_TEAM</option>
                                 <option value="MANAGEMENT_CREW">MANAGEMENT_CREW</option>
                             </select>
-                            <input placeholder="LinkedIn URL" className="bg-black border border-white/10 p-3 rounded" value={newMember.linkedin} onChange={e => setNewMember({...newMember, linkedin: e.target.value})}/>
+                            <input placeholder="LinkedIn URL" className="bg-black border border-white/10 p-3 rounded" value={newMember.linkedin} onChange={e => setNewMember({ ...newMember, linkedin: e.target.value })} />
                         </div>
                         <div className="space-y-2">
                             <div className="flex gap-2">
@@ -3333,7 +3378,7 @@ const Management = () => {
                                     placeholder="Image URL (Google Drive or Direct)"
                                     className="flex-1 bg-black border border-white/10 p-3 rounded text-xs"
                                     value={newMember.image}
-                                    onChange={e => setNewMember({...newMember, image: e.target.value})}
+                                    onChange={e => setNewMember({ ...newMember, image: e.target.value })}
                                 />
                                 {newMember.image && (
                                     <button
@@ -3360,8 +3405,8 @@ const Management = () => {
                                     />
                                 </div>
                             )}
-                         </div>
-                        <textarea required placeholder="Brief Bio (will show on card)" className="w-full bg-black border border-white/10 p-3 rounded h-24 text-xs" value={newMember.desc} onChange={e => setNewMember({...newMember, desc: e.target.value})}/>
+                        </div>
+                        <textarea required placeholder="Brief Bio (will show on card)" className="w-full bg-black border border-white/10 p-3 rounded h-24 text-xs" value={newMember.desc} onChange={e => setNewMember({ ...newMember, desc: e.target.value })} />
                         <button type="submit" className="w-full py-4 bg-acm-cyan text-black font-bold uppercase tracking-widest hover:bg-white transition-all">
                             {editingMemberId ? "SYNC_UPLINK" : "JOIN_FORCE"}
                         </button>
@@ -3383,10 +3428,10 @@ const Management = () => {
                                                 <button type="button" onClick={() => deleteMember(cat, m.id)} className="p-1.5 bg-black/80 rounded-full hover:text-red-500">✕</button>
                                             </div>
                                             <div className="w-16 h-16 rounded-full overflow-hidden mb-2 bg-black border border-white/10">
-                                                <img 
-                                                    src={getDirectDriveUrl(m.image)} 
+                                                <img
+                                                    src={getDirectDriveUrl(m.image)}
                                                     style={getImageStyle(m.image)}
-                                                    className="w-full h-full object-cover" 
+                                                    className="w-full h-full object-cover"
                                                 />
                                             </div>
                                             <p className="text-[10px] font-bold text-center truncate w-full">{m.name}</p>
@@ -3404,30 +3449,30 @@ const Management = () => {
                 <div className="space-y-10 pb-20">
                     <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
                         <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan uppercase">// CORE_BRANDING_IDENTITY</h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-1">
                                 <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Heading_Line_1</label>
-                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading1 || ''} onChange={e => setEditAbout({...editAbout, homeHeading1: e.target.value.toUpperCase()})}/>
+                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading1 || ''} onChange={e => setEditAbout({ ...editAbout, homeHeading1: e.target.value.toUpperCase() })} />
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Heading_Line_2</label>
-                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading2 || ''} onChange={e => setEditAbout({...editAbout, homeHeading2: e.target.value.toUpperCase()})}/>
+                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading2 || ''} onChange={e => setEditAbout({ ...editAbout, homeHeading2: e.target.value.toUpperCase() })} />
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Heading_Line_3</label>
-                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading3 || ''} onChange={e => setEditAbout({...editAbout, homeHeading3: e.target.value.toUpperCase()})}/>
+                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={editAbout.homeHeading3 || ''} onChange={e => setEditAbout({ ...editAbout, homeHeading3: e.target.value.toUpperCase() })} />
                             </div>
                         </div>
 
                         <div className="space-y-1">
                             <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Home_Main_Tagline</label>
-                            <textarea className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-20" value={editAbout.homeDesc || ''} onChange={e => setEditAbout({...editAbout, homeDesc: e.target.value})}/>
+                            <textarea className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-20" value={editAbout.homeDesc || ''} onChange={e => setEditAbout({ ...editAbout, homeDesc: e.target.value })} />
                         </div>
 
                         <div className="space-y-1">
                             <label className="text-[9px] text-gray-500 font-mono uppercase tracking-widest">Mission_Statement</label>
-                            <textarea className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-24 font-light text-lg italic" value={editAbout.mission || ''} onChange={e => setEditAbout({...editAbout, mission: e.target.value})}/>
+                            <textarea className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white h-24 font-light text-lg italic" value={editAbout.mission || ''} onChange={e => setEditAbout({ ...editAbout, mission: e.target.value })} />
                         </div>
                     </section>
 
@@ -3437,11 +3482,11 @@ const Management = () => {
                             {(editAbout.stats || []).map((stat, i) => (
                                 <div key={i} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3">
                                     <input className="w-full bg-transparent border-b border-white/10 py-1 text-xs text-acm-cyan font-bold" value={stat.label} onChange={e => {
-                                        const n = [...editAbout.stats]; n[i].label = e.target.value.toUpperCase(); setEditAbout({...editAbout, stats: n});
-                                    }}/>
+                                        const n = [...editAbout.stats]; n[i].label = e.target.value.toUpperCase(); setEditAbout({ ...editAbout, stats: n });
+                                    }} />
                                     <input type="number" className="w-full bg-transparent text-2xl font-bold" value={stat.value} onChange={e => {
-                                        const n = [...editAbout.stats]; n[i].value = parseInt(e.target.value)||0; setEditAbout({...editAbout, stats: n});
-                                    }}/>
+                                        const n = [...editAbout.stats]; n[i].value = parseInt(e.target.value) || 0; setEditAbout({ ...editAbout, stats: n });
+                                    }} />
                                 </div>
                             ))}
                         </div>
@@ -3450,17 +3495,17 @@ const Management = () => {
                     <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold font-mono tracking-widest text-acm-cyan uppercase">// LEGACY_ARCHIVE</h2>
-                            <button onClick={() => setEditAbout({...editAbout, legacyLogs: [...(editAbout.legacyLogs||[]), {year:'', title:'', desc:''}]})} className="text-[10px] bg-white/10 px-4 py-2 hover:bg-white/20 transition-all font-mono uppercase tracking-widest">++ APPEND_LOG</button>
+                            <button onClick={() => setEditAbout({ ...editAbout, legacyLogs: [...(editAbout.legacyLogs || []), { year: '', title: '', desc: '' }] })} className="text-[10px] bg-white/10 px-4 py-2 hover:bg-white/20 transition-all font-mono uppercase tracking-widest">++ APPEND_LOG</button>
                         </div>
                         <div className="space-y-4">
                             {(editAbout.legacyLogs || []).map((log, i) => (
                                 <div key={i} className="p-6 bg-black/40 border border-white/10 rounded-xl relative group">
-                                    <button onClick={() => { const n = editAbout.legacyLogs.filter((_, idx)=>idx!==i); setEditAbout({...editAbout, legacyLogs: n}); }} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                    <button onClick={() => { const n = editAbout.legacyLogs.filter((_, idx) => idx !== i); setEditAbout({ ...editAbout, legacyLogs: n }); }} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                                     <div className="grid grid-cols-4 gap-4 mb-3">
-                                        <input placeholder="Year" className="bg-transparent border-b border-white/10 text-xl font-bold text-acm-cyan" value={log.year} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].year = e.target.value; setEditAbout({...editAbout, legacyLogs: n}); }}/>
-                                        <input placeholder="Headline" className="col-span-3 bg-transparent border-b border-white/10 text-xl font-bold" value={log.title} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].title = e.target.value; setEditAbout({...editAbout, legacyLogs: n}); }}/>
+                                        <input placeholder="Year" className="bg-transparent border-b border-white/10 text-xl font-bold text-acm-cyan" value={log.year} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].year = e.target.value; setEditAbout({ ...editAbout, legacyLogs: n }); }} />
+                                        <input placeholder="Headline" className="col-span-3 bg-transparent border-b border-white/10 text-xl font-bold" value={log.title} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].title = e.target.value; setEditAbout({ ...editAbout, legacyLogs: n }); }} />
                                     </div>
-                                    <textarea placeholder="Event Description/Impact..." className="w-full bg-transparent text-xs text-gray-400 h-16 resize-none" value={log.desc} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].desc = e.target.value; setEditAbout({...editAbout, legacyLogs: n}); }}/>
+                                    <textarea placeholder="Event Description/Impact..." className="w-full bg-transparent text-xs text-gray-400 h-16 resize-none" value={log.desc} onChange={e => { const n = [...editAbout.legacyLogs]; n[i].desc = e.target.value; setEditAbout({ ...editAbout, legacyLogs: n }); }} />
                                 </div>
                             ))}
                         </div>
@@ -3511,12 +3556,12 @@ const Management = () => {
                             // CONNECT: Use Google Sheets as your global database via Apps Script.
                             This allows updates from any phone to sync across all visitor devices instantly.
                         </p>
-                        
+
                         <div className="space-y-5 mb-8">
                             <div className="space-y-1">
                                 <div className="flex justify-between items-end mb-1">
                                     <label className="text-[9px] text-acm-cyan font-mono uppercase">Apps_Script_Deployment_URL</label>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             localStorage.setItem('acm_gas_url', ACM_MASTER_GAS_URL);
                                             document.getElementById('gasUrlInput').value = ACM_MASTER_GAS_URL;
@@ -3525,12 +3570,12 @@ const Management = () => {
                                         className="text-[7px] text-gray-500 hover:text-white underline font-mono uppercase"
                                     >Reset_to_Master</button>
                                 </div>
-                                <input 
+                                <input
                                     id="gasUrlInput"
-                                    className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white font-mono" 
-                                    defaultValue={localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL} 
-                                    onChange={e => { localStorage.setItem('acm_gas_url', e.target.value); }} 
-                                    placeholder="https://script.google.com/macros/s/.../exec" 
+                                    className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white font-mono"
+                                    defaultValue={localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL}
+                                    onChange={e => { localStorage.setItem('acm_gas_url', e.target.value); }}
+                                    placeholder="https://script.google.com/macros/s/.../exec"
                                 />
                                 <p className="text-[7px] text-gray-600 uppercase mt-1 italic">// LINKED_SHEET: <a href="https://docs.google.com/spreadsheets/d/1ywPsh_TLHx6sEhWstvEFcID7JUpZIzlQ4r9og9Ew6C0/edit" target="_blank" className="underline text-acm-cyan">1ywPsh...og9Ew6C0</a></p>
                                 <p className="text-[7px] text-gray-600 uppercase mt-1 italic">// SETUP_PROTOCOL: 1. Paste script in Sheet &gt; 2. Deploy as Web App &gt; 3. Anyone access &gt; 4. Paste URL above.</p>
@@ -3539,13 +3584,13 @@ const Management = () => {
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <button 
+                            <button
                                 onClick={async (e) => {
                                     const currentGasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
-                                    if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+                                    if (!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
                                     const btn = e.currentTarget;
                                     btn.innerText = "UPLOADING...";
-                                    
+
                                     try {
                                         const events = JSON.parse(localStorage.getItem('acm_events') || '[]');
                                         const team = JSON.parse(localStorage.getItem('acm_team') || '{}');
@@ -3554,7 +3599,7 @@ const Management = () => {
                                         const registrations = JSON.parse(localStorage.getItem('acm_registrations') || '[]');
                                         const messages = JSON.parse(localStorage.getItem('acm_messages') || '[]');
 
-                                        const payload = { 
+                                        const payload = {
                                             action: 'save',
                                             data: { events, team, gallery, about, registrations, messages, timestamp: new Date().toISOString() }
                                         };
@@ -3565,27 +3610,27 @@ const Management = () => {
                                             body: JSON.stringify(payload)
                                         });
                                         alert('UPLINK_INITIALIZED :: INFRASTRUCTURE_SYNCED\n(Cloud Database Generated Successfully)');
-                                    } catch(err) { 
+                                    } catch (err) {
                                         console.error("Broadcast Error:", err);
-                                        alert(`BROADCAST_FAILURE: ${err.message}`); 
+                                        alert(`BROADCAST_FAILURE: ${err.message}`);
                                     }
                                     btn.innerText = "Broadcast_Push_Sync ↑";
                                 }}
                                 className="flex-1 py-4 bg-acm-cyan text-black font-black text-xs uppercase hover:bg-white transition-all shadow-[0_0_30px_rgba(100,255,218,0.3)]"
                             >Broadcast_Push_Sync ↑</button>
-                            
-                            <button 
+
+                            <button
                                 onClick={async (e) => {
                                     const currentGasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
-                                    if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+                                    if (!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
                                     const btn = e.currentTarget;
                                     btn.innerText = "DOWNLOADING...";
                                     try {
                                         const response = await fetch(`${currentGasUrl}?action=get`);
                                         const result = await response.json();
                                         // V4 Response structure: { version: x, data: { ... } }
-                                        const finalData = result.data || result; 
-                                        if(finalData && finalData.events) {
+                                        const finalData = result.data || result;
+                                        if (finalData && finalData.events) {
                                             localStorage.setItem('acm_events', JSON.stringify(finalData.events));
                                             localStorage.setItem('acm_team', JSON.stringify(finalData.team));
                                             localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery));
@@ -3597,18 +3642,18 @@ const Management = () => {
                                         } else {
                                             alert('EMPTY_BUFFER_RECEIVED :: CHECK_SHEET_DATA');
                                         }
-                                    } catch(err) { alert(`DOWNLINK_FAILURE: ${err.message}`); }
-                                btn.innerText = "Fetch_Pull ↓";
+                                    } catch (err) { alert(`DOWNLINK_FAILURE: ${err.message}`); }
+                                    btn.innerText = "Fetch_Pull ↓";
                                 }}
                                 className="flex-1 py-4 border border-acm-cyan text-acm-cyan font-black text-xs uppercase hover:bg-acm-cyan/10 transition-all"
                             >Fetch_Pull ↓</button>
                         </div>
-                        
+
                         <div className="mt-4">
-                            <button 
+                            <button
                                 onClick={async (e) => {
                                     const currentGasUrl = localStorage.getItem('acm_gas_url') || ACM_MASTER_GAS_URL;
-                                    if(!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
+                                    if (!currentGasUrl) return alert('DOWNLINK_OFFLINE :: ENTER_APPS_SCRIPT_URL');
                                     const btn = e.currentTarget;
                                     btn.innerText = "REBUILDING_INDEX...";
                                     try {
@@ -3618,7 +3663,7 @@ const Management = () => {
                                             body: JSON.stringify({ action: 'rebuild' })
                                         });
                                         alert('REBUILD_SIGNAL_SENT :: Cloud reflects Sheet edits now.\n(Recommended: Click Fetch_Pull to see changes)');
-                                    } catch(err) { alert(`REBUILD_FAILURE: ${err.message}`); }
+                                    } catch (err) { alert(`REBUILD_FAILURE: ${err.message}`); }
                                     btn.innerText = "Rebuild_Cloud_Index ⟲";
                                 }}
                                 className="w-full py-4 border border-white/10 text-gray-500 font-mono text-[10px] uppercase hover:text-white hover:bg-white/5 transition-all"
@@ -3627,8 +3672,8 @@ const Management = () => {
                         </div>
                         <div className="mt-8 p-4 bg-black/40 border border-white/5 rounded-lg overflow-x-auto">
                             <p className="text-[7px] font-mono text-gray-500 leading-relaxed uppercase whitespace-pre">
-                                // ELITE_SHEET_ENGINE_V4_2_GOLD (PASTE IN EXTENSIONS &gt; APPS SCRIPT)<br/>
-                                                                {`
+                                // ELITE_SHEET_ENGINE_V4_2_GOLD (PASTE IN EXTENSIONS &gt; APPS SCRIPT)<br />
+                                {`
 /**
  * ELITE_SHEET_ENGINE_V4_2_GOLD
  * Google Sheets Live Database Engine :: RESILIENT EDITION
@@ -4037,64 +4082,64 @@ function jsonResponse(obj) {
                     </section>
 
                     <div className="space-y-8">
-                     <section className="p-8 bg-white/5 border border-white/10 rounded-2xl">
-                        <div className="flex justify-between items-start mb-6">
-                            <h2 className="text-xl font-bold font-heading tracking-tighter uppercase">Security_Access_Log</h2>
-                            <button onClick={() => { localStorage.removeItem('acm_access_log'); alert('LOG_WIPED'); }} className="text-[8px] text-red-500 font-mono underline">WIPE_LOGS</button>
-                        </div>
-                        <div className="max-h-40 overflow-y-auto space-y-2 pr-4 scrollbar-hide">
-                            {(JSON.parse(localStorage.getItem('acm_access_log') || '[]')).length === 0 ? (
-                                <p className="text-gray-600 font-mono text-[10px]">No unauthorized attempts detected.</p>
-                            ) : (
-                                (JSON.parse(localStorage.getItem('acm_access_log') || '[]')).reverse().map((l, idx) => (
-                                    <div key={idx} className="flex justify-between text-[8px] font-mono border-b border-white/5 pb-1">
-                                        <span className="text-red-400">{l.time}</span>
-                                        <span className="text-gray-500">{l.attempt}</span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
+                        <section className="p-8 bg-white/5 border border-white/10 rounded-2xl">
+                            <div className="flex justify-between items-start mb-6">
+                                <h2 className="text-xl font-bold font-heading tracking-tighter uppercase">Security_Access_Log</h2>
+                                <button onClick={() => { localStorage.removeItem('acm_access_log'); alert('LOG_WIPED'); }} className="text-[8px] text-red-500 font-mono underline">WIPE_LOGS</button>
+                            </div>
+                            <div className="max-h-40 overflow-y-auto space-y-2 pr-4 scrollbar-hide">
+                                {(JSON.parse(localStorage.getItem('acm_access_log') || '[]')).length === 0 ? (
+                                    <p className="text-gray-600 font-mono text-[10px]">No unauthorized attempts detected.</p>
+                                ) : (
+                                    (JSON.parse(localStorage.getItem('acm_access_log') || '[]')).reverse().map((l, idx) => (
+                                        <div key={idx} className="flex justify-between text-[8px] font-mono border-b border-white/5 pb-1">
+                                            <span className="text-red-400">{l.time}</span>
+                                            <span className="text-gray-500">{l.attempt}</span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </section>
 
-                    <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
-                        <h2 className="text-xl font-bold font-heading mb-2 tracking-tighter uppercase">Admin_Handshake_Shield</h2>
-                        <p className="text-[10px] text-gray-500 font-mono leading-relaxed">// Modify the required identity for Contact form login.</p>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-[9px] text-acm-cyan font-mono uppercase mb-1 block">Handshake UserID</label>
-                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={adminCreds.userId} onChange={e => setAdminCreds({...adminCreds, userId: e.target.value})}/>
-                            </div>
-                            <div>
-                                <label className="text-[9px] text-acm-cyan font-mono uppercase mb-1 block">Handshake Email</label>
-                                <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={adminCreds.email} onChange={e => setAdminCreds({...adminCreds, email: e.target.value})}/>
-                            </div>
-                            <div>
-                                <label className="text-[9px] text-acm-cyan font-mono uppercase mb-1 block">Secret Handshake Code</label>
-                                <div className="relative">
-                                    <input 
-                                        type={showPass ? "text" : "password"} 
-                                        className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white pr-12 font-mono" 
-                                        value={adminCreds.pass} 
-                                        onChange={e => setAdminCreds({...adminCreds, pass: e.target.value})}
-                                    />
-                                    <button 
-                                        onClick={() => setShowPass(!showPass)} 
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-                                    >
-                                        {showPass ? "HID" : "VIS"}
-                                    </button>
+                        <section className="p-8 bg-white/5 border border-white/10 rounded-2xl space-y-6">
+                            <h2 className="text-xl font-bold font-heading mb-2 tracking-tighter uppercase">Admin_Handshake_Shield</h2>
+                            <p className="text-[10px] text-gray-500 font-mono leading-relaxed">// Modify the required identity for Contact form login.</p>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-[9px] text-acm-cyan font-mono uppercase mb-1 block">Handshake UserID</label>
+                                    <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={adminCreds.userId} onChange={e => setAdminCreds({ ...adminCreds, userId: e.target.value })} />
                                 </div>
-                                <p className="text-[8px] text-gray-600 mt-2 italic font-mono">:: This is also the PIN required for the emergency lock page.</p>
+                                <div>
+                                    <label className="text-[9px] text-acm-cyan font-mono uppercase mb-1 block">Handshake Email</label>
+                                    <input className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white" value={adminCreds.email} onChange={e => setAdminCreds({ ...adminCreds, email: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-acm-cyan font-mono uppercase mb-1 block">Secret Handshake Code</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPass ? "text" : "password"}
+                                            className="w-full bg-black border border-white/10 p-3 rounded text-xs text-white pr-12 font-mono"
+                                            value={adminCreds.pass}
+                                            onChange={e => setAdminCreds({ ...adminCreds, pass: e.target.value })}
+                                        />
+                                        <button
+                                            onClick={() => setShowPass(!showPass)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                                        >
+                                            {showPass ? "HID" : "VIS"}
+                                        </button>
+                                    </div>
+                                    <p className="text-[8px] text-gray-600 mt-2 italic font-mono">:: This is also the PIN required for the emergency lock page.</p>
+                                </div>
+                                <button
+                                    onClick={() => { localStorage.setItem('acm_admin_creds', JSON.stringify(adminCreds)); alert('SECURITY_SIGNAL_ENCRYPTED_AND_SAVED'); }}
+                                    className="w-full py-4 border border-acm-cyan/30 text-acm-cyan font-bold uppercase tracking-widest text-[10px] hover:bg-acm-cyan hover:text-black transition-all"
+                                >
+                                    UPDATE_ENCRYPTION_KEY
+                                </button>
                             </div>
-                            <button 
-                                onClick={() => { localStorage.setItem('acm_admin_creds', JSON.stringify(adminCreds)); alert('SECURITY_SIGNAL_ENCRYPTED_AND_SAVED'); }} 
-                                className="w-full py-4 border border-acm-cyan/30 text-acm-cyan font-bold uppercase tracking-widest text-[10px] hover:bg-acm-cyan hover:text-black transition-all"
-                            >
-                                UPDATE_ENCRYPTION_KEY
-                            </button>
-                        </div>
-                    </section>
+                        </section>
                     </div>
                 </div>
             )}
@@ -4108,23 +4153,23 @@ const App = () => {
     // --- GLOBAL DATA SEEDER (Seeds defaults if localStorage is empty) ---
     useEffect(() => {
         const checkEvents = JSON.parse(localStorage.getItem('acm_events') || '[]');
-        const needsEventReset = checkEvents.length > 0 && 
-            (!checkEvents.find(e => e.slug === 'internship-gap') || 
-             !checkEvents.find(e => e.slug === 'ai-tools-quiz')?.images.includes('assets/events/ai-quiz-2.jpg') ||
-             checkEvents.find(e => e.slug === 'ai-tools-quiz')?.images.includes('assets/events/ai-quiz-1.jpg') ||
-             !checkEvents.find(e => e.slug === 'ai-tools-workshop')?.images.includes('assets/events/ai-workshop-1.jpg'));
-             
+        const needsEventReset = checkEvents.length > 0 &&
+            (!checkEvents.find(e => e.slug === 'internship-gap') ||
+                !checkEvents.find(e => e.slug === 'ai-tools-quiz')?.images.includes('assets/events/ai-quiz-2.jpg') ||
+                checkEvents.find(e => e.slug === 'ai-tools-quiz')?.images.includes('assets/events/ai-quiz-1.jpg') ||
+                !checkEvents.find(e => e.slug === 'ai-tools-workshop')?.images.includes('assets/events/ai-workshop-1.jpg'));
+
         if (needsEventReset) {
             localStorage.removeItem('acm_events');
             localStorage.setItem('acm_is_dirty', 'true');
         }
-        
+
         const checkGallery = JSON.parse(localStorage.getItem('acm_gallery') || '[]');
-        const needsGalleryReset = checkGallery.length > 0 && 
+        const needsGalleryReset = checkGallery.length > 0 &&
             (!checkGallery.find(img => img.src === 'assets/events/ai-quiz-2.jpg') ||
-             checkGallery.find(img => img.src === 'assets/events/ai-quiz-1.jpg') ||
-             !checkGallery.find(img => img.src === 'assets/events/ai-workshop-1.jpg'));
-            
+                checkGallery.find(img => img.src === 'assets/events/ai-quiz-1.jpg') ||
+                !checkGallery.find(img => img.src === 'assets/events/ai-workshop-1.jpg'));
+
         if (needsGalleryReset) {
             localStorage.removeItem('acm_gallery');
             localStorage.setItem('acm_is_dirty', 'true');
@@ -4132,181 +4177,181 @@ const App = () => {
 
         if (!localStorage.getItem('acm_events')) {
             const defaults = [
-    {
-        id: 5, 
-        slug: 'internship-gap', 
-        title: "Internship Gap Seminar",
-        tagline: "Why Good Students Still Don't Get Selected",
-        dateText: "9 JUL 2026   ONLINE",
-        eventDate: "2026-07-09T10:00:00",
-        venue: "Online",
-        category: 'SEMINAR',
-        desc: "TSEC ACM Student Chapter conducted the online seminar 'Internship Gap: Why Good Students Still Don't Get Selected' led by Ms. Deepti K S (Vendavo). The session offered practical insights into internship recruitment, resume building, LinkedIn optimization, interview preparation, and professional branding.",
-        images: ["assets/events/internship-gap-1.jpeg", "assets/events/internship-gap-2.jpeg", "assets/events/internship-gap-3.jpeg", "assets/events/internship-gap-4.jpeg"],
-        statistics: { participants: 80, duration: "Online" },
-        highlights: [
-            { icon: "generic", title: "Recruitment Insights", desc: "Practical insights into internship recruitment." },
-            { icon: "generic", title: "Resume & LinkedIn", desc: "Resume building and LinkedIn optimization." },
-            { icon: "generic", title: "Interview Prep", desc: "Interview preparation and professional branding." }
-        ],
-        speakers: [
-            { name: "Ms. Deepti K S", role: "Speaker", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400" }
-        ],
-        outcomes: [
-            "Students became more industry-ready",
-            "Better prepared for future career opportunities"
-        ],
-        organizers: ["TSEC ACM Student Chapter"]
-    },
-    {
-        id: 1, 
-        slug: 'ai-tools-workshop', 
-        title: "AI Tools Workshop",
-        tagline: "Accelerate your development with AI",
-        dateText: "27 MAR 2026   2 HOURS   CC1 & CC2",
-        eventDate: "2026-03-27T09:30:00",
-        venue: "2nd Floor, CC1 & CC2",
-        category: 'WORKSHOP',
-        desc: "The AI Tools Workshop 2026 was organized with the objective of introducing students to the rapidly evolving ecosystem of Artificial Intelligence-powered development tools. The workshop aimed to bridge the gap between theoretical knowledge and practical implementation by providing participants with hands-on exposure to modern AI-assisted workflows.",
-        images: ["assets/events/ai-workshop-1.jpg", "assets/events/ai-workshop-2.jpg", "assets/events/ai-workshop-3.jpg"],
-        statistics: { participants: 66, duration: "2 Hours" },
-        highlights: [
-            { icon: "generic", title: "AI-Assisted Workflows", desc: "Hands-on demonstration of modern AI-assisted software development workflows." },
-            { icon: "generic", title: "Gemini", desc: "Practical use of Gemini for idea generation, logic development, and architectural planning." },
-            { icon: "generic", title: "Claude", desc: "Introduction to Claude for writing, debugging, and refining application code." },
-            { icon: "generic", title: "Figma", desc: "UI/UX design using Figma before beginning application development." },
-            { icon: "generic", title: "Stitch AI & Supabase", desc: "Integration of Stitch AI and Supabase for backend services and database management." }
-        ],
-        tracks: [
-            { title: "Prompt Engineering", desc: "Familiarize students with prompt engineering and effective interaction with LLMs.", tech: ["Gemini", "Claude"] },
-            { title: "Web Development", desc: "Enable participants to transform ideas into functional web applications.", tech: ["Supabase", "Figma", "Stitch AI"] }
-        ],
-        timeline: [
-            { title: "Registration", time: "9:00 AM" },
-            { title: "Introduction", time: "9:30 AM" },
-            { title: "Hands-on AI Tools", time: "10:00 AM" },
-            { title: "UI/UX Generation", time: "11:00 AM" }
-        ],
-        speakers: [
-            { name: "Mr. Divij Shah", role: "Speaker", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400" }
-        ],
-        outcomes: [
-            "Practical experience using AI tools",
-            "Developed functional web application prototypes",
-            "Improved understanding of prompt engineering",
-            "Enhanced exposure to modern software development practices"
-        ],
-        organizers: ["TSEC ACM Student Chapter", "Coding Club"],
-        winners: [
-            { name: "Samiksha Naik", title: "Quiz Winner", prize: null },
-            { name: "Yashvi Shukla", title: "Quiz Runner-Up", prize: null }
-        ]
-    },
-    {
-        id: 2, 
-        slug: 'ai-tools-quiz', 
-        title: "AI Tools Quiz",
-        tagline: "Test your AI knowledge",
-        dateText: "27 MAR 2026   1 HOUR   CC1 & CC2",
-        eventDate: "2026-03-27T11:45:00",
-        venue: "2nd Floor, CC1 & CC2",
-        category: 'QUIZ',
-        desc: "The AI Tools Quiz 2026 was organized as the concluding activity of the AI Tools Workshop. The quiz was designed to evaluate participants' understanding of the concepts, tools, and workflows introduced during the workshop. Through an engaging format, students tested their knowledge of modern AI technologies while reinforcing their practical skills.",
-        images: ["assets/events/ai-quiz-2.jpg", "assets/events/ai-quiz-3.jpg", "assets/events/ai-quiz-4.jpg"],
-        statistics: { participants: 66, duration: "45 Mins", prizePool: "₹3300", certificates: "100%" },
-        highlights: [
-            { icon: "generic", title: "Knowledge Assessment", desc: "Questions were based on concepts and AI tools demonstrated during the workshop." },
-            { icon: "generic", title: "Competitive Spirit", desc: "Participants showcased excellent enthusiasm and competitive spirit." },
-            { icon: "generic", title: "Cash Prizes", desc: "Cash prizes were awarded to the top two performers." }
-        ],
-        outcomes: [
-            "Strengthened understanding of AI tools and concepts",
-            "Active recall and practical application of workshop learnings",
-            "Gained confidence in emerging AI technologies",
-            "Promoted collaborative learning and healthy competition"
-        ],
-        organizers: ["TSEC ACM Student Chapter", "Coding Club"],
-        winners: [
-            { name: "Quiz Winner", title: "1st Place", prize: "₹1800" },
-            { name: "Quiz Runner-Up", title: "2nd Place", prize: "₹1500" }
-        ]
-    },
-    {
-        id: 3, 
-        slug: 'devsprint', 
-        title: "DEVSPRINT 2K26",
-        tagline: "Innovate. Code. Conquer.",
-        dateText: "27 MAR 2026   8.5 HOURS   LAB 12 & 13",
-        eventDate: "2026-03-27T08:30:00",
-        venue: "4th Floor, Lab 12 & 13",
-        category: 'HACKATHON',
-        desc: "DevSprint Mini Hackathon was organized by ACM Students Chapter and CodeCrafters with the aim of encouraging innovation, creativity, and practical learning among students. This event provided a platform for participants to think critically, work collaboratively, and develop solutions within a limited time frame addressing real-life issues related to leftover food.",
-        images: ["https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200", "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1200", "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200"],
-        statistics: { participants: 53, duration: "8.5 Hours" },
-        highlights: [
-            { icon: "generic", title: "On-the-spot Problem", desc: "The problem domain (leftover food redistribution) was revealed on the spot." },
-            { icon: "generic", title: "5-Hour Sprint", desc: "Participants worked continuously for five hours to develop web applications." },
-            { icon: "generic", title: "Live Evaluation", desc: "Judges evaluated projects interactively based on innovation and usability." }
-        ],
-        tracks: [
-            { title: "Web Development", desc: "Develop functional applications to redistribute leftover food.", tech: ["React", "Node.js", "Python"] }
-        ],
-        timeline: [
-            { title: "Hackathon Starts", time: "8:30 AM" },
-            { title: "Problem Reveal", time: "9:00 AM" },
-            { title: "Development Phase", time: "9:30 AM" },
-            { title: "Evaluation & Judging", time: "2:30 PM" },
-            { title: "Prize Distribution", time: "4:00 PM" }
-        ],
-        speakers: [
-            { name: "Mrs. Bhagyashri Kakirde", role: "Judge", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400" },
-            { name: "Mr. Mayur Mehta", role: "Judge", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400" }
-        ],
-        outcomes: [
-            "Enhanced problem-solving and coding skills",
-            "Exposure to competitive environments",
-            "Strengthened debugging and optimization techniques",
-            "Encouragement of discipline and teamwork"
-        ],
-        organizers: ["TSEC ACM Student Chapter", "CodeCrafters"],
-        winners: [
-            { name: "Team Elites", title: "Winner", prize: null },
-            { name: "Team Skillissue", title: "Runner Up", prize: null }
-        ]
-    },
-    {
-        id: 4, 
-        slug: 'inauguration', 
-        title: "Inauguration Ceremony",
-        tagline: "The beginning of a dynamic community",
-        dateText: "6 MAR 2026   1.5 HOURS   3D THEATRE",
-        eventDate: "2026-03-06T10:00:00",
-        venue: "3D Theatre",
-        category: 'CEREMONY',
-        desc: "The Department of Computer Engineering successfully organized the Inauguration Ceremony of the TSEC ACM Student Chapter at the 3D Theatre, marking the beginning of a dynamic and innovation-driven student community.",
-        images: ["https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=1200", "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1200", "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200"],
-        statistics: { participants: "Students & Faculty", duration: "1.5 Hours" },
-        highlights: [
-            { icon: "generic", title: "Global Impact", desc: "Introduction to ACM and its global impact in computing." },
-            { icon: "generic", title: "Logo Reveal", desc: "Creative and symbolic ACM logo reveal featuring a neon-blue theme." },
-            { icon: "generic", title: "Badge Distribution", desc: "Core Committee announcement and badge distribution by the Principal." }
-        ],
-        timeline: [
-            { title: "Welcome & Invocation", time: "10:00 AM" },
-            { title: "Introduction to ACM", time: "10:15 AM" },
-            { title: "Official Logo Reveal", time: "10:30 AM" },
-            { title: "Badge Distribution", time: "10:45 AM" },
-            { title: "Vote of Thanks", time: "11:15 AM" }
-        ],
-        outcomes: [
-            "Established the foundation of the chapter",
-            "Motivated students to engage in technical activities",
-            "Encouraged a culture of innovation and leadership",
-            "Introduced a new platform for technical growth"
-        ],
-        organizers: ["Department of Computer Engineering", "ACM"]
-    }
-];
+                {
+                    id: 5,
+                    slug: 'internship-gap',
+                    title: "Internship Gap Seminar",
+                    tagline: "Why Good Students Still Don't Get Selected",
+                    dateText: "9 JUL 2026   ONLINE",
+                    eventDate: "2026-07-09T10:00:00",
+                    venue: "Online",
+                    category: 'SEMINAR',
+                    desc: "TSEC ACM Student Chapter conducted the online seminar 'Internship Gap: Why Good Students Still Don't Get Selected' led by Ms. Deepti K S (Vendavo). The session offered practical insights into internship recruitment, resume building, LinkedIn optimization, interview preparation, and professional branding.",
+                    images: ["assets/events/internship-gap-1.jpeg", "assets/events/internship-gap-2.jpeg", "assets/events/internship-gap-3.jpeg", "assets/events/internship-gap-4.jpeg"],
+                    statistics: { participants: 80, duration: "Online" },
+                    highlights: [
+                        { icon: "generic", title: "Recruitment Insights", desc: "Practical insights into internship recruitment." },
+                        { icon: "generic", title: "Resume & LinkedIn", desc: "Resume building and LinkedIn optimization." },
+                        { icon: "generic", title: "Interview Prep", desc: "Interview preparation and professional branding." }
+                    ],
+                    speakers: [
+                        { name: "Ms. Deepti K S", role: "Speaker", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400" }
+                    ],
+                    outcomes: [
+                        "Students became more industry-ready",
+                        "Better prepared for future career opportunities"
+                    ],
+                    organizers: ["TSEC ACM Student Chapter"]
+                },
+                {
+                    id: 1,
+                    slug: 'ai-tools-workshop',
+                    title: "AI Tools Workshop",
+                    tagline: "Accelerate your development with AI",
+                    dateText: "27 MAR 2026   2 HOURS   CC1 & CC2",
+                    eventDate: "2026-03-27T09:30:00",
+                    venue: "2nd Floor, CC1 & CC2",
+                    category: 'WORKSHOP',
+                    desc: "The AI Tools Workshop 2026 was organized with the objective of introducing students to the rapidly evolving ecosystem of Artificial Intelligence-powered development tools. The workshop aimed to bridge the gap between theoretical knowledge and practical implementation by providing participants with hands-on exposure to modern AI-assisted workflows.",
+                    images: ["assets/events/ai-workshop-1.jpg", "assets/events/ai-workshop-2.jpg", "assets/events/ai-workshop-3.jpg"],
+                    statistics: { participants: 66, duration: "2 Hours" },
+                    highlights: [
+                        { icon: "generic", title: "AI-Assisted Workflows", desc: "Hands-on demonstration of modern AI-assisted software development workflows." },
+                        { icon: "generic", title: "Gemini", desc: "Practical use of Gemini for idea generation, logic development, and architectural planning." },
+                        { icon: "generic", title: "Claude", desc: "Introduction to Claude for writing, debugging, and refining application code." },
+                        { icon: "generic", title: "Figma", desc: "UI/UX design using Figma before beginning application development." },
+                        { icon: "generic", title: "Stitch AI & Supabase", desc: "Integration of Stitch AI and Supabase for backend services and database management." }
+                    ],
+                    tracks: [
+                        { title: "Prompt Engineering", desc: "Familiarize students with prompt engineering and effective interaction with LLMs.", tech: ["Gemini", "Claude"] },
+                        { title: "Web Development", desc: "Enable participants to transform ideas into functional web applications.", tech: ["Supabase", "Figma", "Stitch AI"] }
+                    ],
+                    timeline: [
+                        { title: "Registration", time: "9:00 AM" },
+                        { title: "Introduction", time: "9:30 AM" },
+                        { title: "Hands-on AI Tools", time: "10:00 AM" },
+                        { title: "UI/UX Generation", time: "11:00 AM" }
+                    ],
+                    speakers: [
+                        { name: "Mr. Divij Shah", role: "Speaker", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400" }
+                    ],
+                    outcomes: [
+                        "Practical experience using AI tools",
+                        "Developed functional web application prototypes",
+                        "Improved understanding of prompt engineering",
+                        "Enhanced exposure to modern software development practices"
+                    ],
+                    organizers: ["TSEC ACM Student Chapter", "Coding Club"],
+                    winners: [
+                        { name: "Samiksha Naik", title: "Quiz Winner", prize: null },
+                        { name: "Yashvi Shukla", title: "Quiz Runner-Up", prize: null }
+                    ]
+                },
+                {
+                    id: 2,
+                    slug: 'ai-tools-quiz',
+                    title: "AI Tools Quiz",
+                    tagline: "Test your AI knowledge",
+                    dateText: "27 MAR 2026   1 HOUR   CC1 & CC2",
+                    eventDate: "2026-03-27T11:45:00",
+                    venue: "2nd Floor, CC1 & CC2",
+                    category: 'QUIZ',
+                    desc: "The AI Tools Quiz 2026 was organized as the concluding activity of the AI Tools Workshop. The quiz was designed to evaluate participants' understanding of the concepts, tools, and workflows introduced during the workshop. Through an engaging format, students tested their knowledge of modern AI technologies while reinforcing their practical skills.",
+                    images: ["assets/events/ai-quiz-2.jpg", "assets/events/ai-quiz-3.jpg", "assets/events/ai-quiz-4.jpg"],
+                    statistics: { participants: 66, duration: "45 Mins", prizePool: "₹3300", certificates: "100%" },
+                    highlights: [
+                        { icon: "generic", title: "Knowledge Assessment", desc: "Questions were based on concepts and AI tools demonstrated during the workshop." },
+                        { icon: "generic", title: "Competitive Spirit", desc: "Participants showcased excellent enthusiasm and competitive spirit." },
+                        { icon: "generic", title: "Cash Prizes", desc: "Cash prizes were awarded to the top two performers." }
+                    ],
+                    outcomes: [
+                        "Strengthened understanding of AI tools and concepts",
+                        "Active recall and practical application of workshop learnings",
+                        "Gained confidence in emerging AI technologies",
+                        "Promoted collaborative learning and healthy competition"
+                    ],
+                    organizers: ["TSEC ACM Student Chapter", "Coding Club"],
+                    winners: [
+                        { name: "Quiz Winner", title: "1st Place", prize: "₹1800" },
+                        { name: "Quiz Runner-Up", title: "2nd Place", prize: "₹1500" }
+                    ]
+                },
+                {
+                    id: 3,
+                    slug: 'devsprint',
+                    title: "DEVSPRINT 2K26",
+                    tagline: "Innovate. Code. Conquer.",
+                    dateText: "27 MAR 2026   8.5 HOURS   LAB 12 & 13",
+                    eventDate: "2026-03-27T08:30:00",
+                    venue: "4th Floor, Lab 12 & 13",
+                    category: 'HACKATHON',
+                    desc: "DevSprint Mini Hackathon was organized by ACM Students Chapter and CodeCrafters with the aim of encouraging innovation, creativity, and practical learning among students. This event provided a platform for participants to think critically, work collaboratively, and develop solutions within a limited time frame addressing real-life issues related to leftover food.",
+                    images: ["https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200", "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1200", "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200"],
+                    statistics: { participants: 53, duration: "8.5 Hours" },
+                    highlights: [
+                        { icon: "generic", title: "On-the-spot Problem", desc: "The problem domain (leftover food redistribution) was revealed on the spot." },
+                        { icon: "generic", title: "5-Hour Sprint", desc: "Participants worked continuously for five hours to develop web applications." },
+                        { icon: "generic", title: "Live Evaluation", desc: "Judges evaluated projects interactively based on innovation and usability." }
+                    ],
+                    tracks: [
+                        { title: "Web Development", desc: "Develop functional applications to redistribute leftover food.", tech: ["React", "Node.js", "Python"] }
+                    ],
+                    timeline: [
+                        { title: "Hackathon Starts", time: "8:30 AM" },
+                        { title: "Problem Reveal", time: "9:00 AM" },
+                        { title: "Development Phase", time: "9:30 AM" },
+                        { title: "Evaluation & Judging", time: "2:30 PM" },
+                        { title: "Prize Distribution", time: "4:00 PM" }
+                    ],
+                    speakers: [
+                        { name: "Mrs. Bhagyashri Kakirde", role: "Judge", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400" },
+                        { name: "Mr. Mayur Mehta", role: "Judge", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=400" }
+                    ],
+                    outcomes: [
+                        "Enhanced problem-solving and coding skills",
+                        "Exposure to competitive environments",
+                        "Strengthened debugging and optimization techniques",
+                        "Encouragement of discipline and teamwork"
+                    ],
+                    organizers: ["TSEC ACM Student Chapter", "CodeCrafters"],
+                    winners: [
+                        { name: "Team Elites", title: "Winner", prize: null },
+                        { name: "Team Skillissue", title: "Runner Up", prize: null }
+                    ]
+                },
+                {
+                    id: 4,
+                    slug: 'inauguration',
+                    title: "Inauguration Ceremony",
+                    tagline: "The beginning of a dynamic community",
+                    dateText: "6 MAR 2026   1.5 HOURS   3D THEATRE",
+                    eventDate: "2026-03-06T10:00:00",
+                    venue: "3D Theatre",
+                    category: 'CEREMONY',
+                    desc: "The Department of Computer Engineering successfully organized the Inauguration Ceremony of the TSEC ACM Student Chapter at the 3D Theatre, marking the beginning of a dynamic and innovation-driven student community.",
+                    images: ["https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=1200", "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1200", "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200"],
+                    statistics: { participants: "Students & Faculty", duration: "1.5 Hours" },
+                    highlights: [
+                        { icon: "generic", title: "Global Impact", desc: "Introduction to ACM and its global impact in computing." },
+                        { icon: "generic", title: "Logo Reveal", desc: "Creative and symbolic ACM logo reveal featuring a neon-blue theme." },
+                        { icon: "generic", title: "Badge Distribution", desc: "Core Committee announcement and badge distribution by the Principal." }
+                    ],
+                    timeline: [
+                        { title: "Welcome & Invocation", time: "10:00 AM" },
+                        { title: "Introduction to ACM", time: "10:15 AM" },
+                        { title: "Official Logo Reveal", time: "10:30 AM" },
+                        { title: "Badge Distribution", time: "10:45 AM" },
+                        { title: "Vote of Thanks", time: "11:15 AM" }
+                    ],
+                    outcomes: [
+                        "Established the foundation of the chapter",
+                        "Motivated students to engage in technical activities",
+                        "Encouraged a culture of innovation and leadership",
+                        "Introduced a new platform for technical growth"
+                    ],
+                    organizers: ["Department of Computer Engineering", "ACM"]
+                }
+            ];
 
             localStorage.setItem('acm_events', JSON.stringify(defaults));
         }
@@ -4339,7 +4384,7 @@ const App = () => {
             localStorage.setItem('acm_team', JSON.stringify(defaults));
         }
         if (!localStorage.getItem('acm_admin_creds')) {
-             localStorage.setItem('acm_admin_creds', JSON.stringify({userId:"admin", email:"acmco@tsecmumbai.in", pass:"ACM_SECURE_2026"}));
+            localStorage.setItem('acm_admin_creds', JSON.stringify({ userId: "admin", email: "acmco@tsecmumbai.in", pass: "ACM_SECURE_2026" }));
         }
 
         if (!localStorage.getItem('acm_gas_url')) {
@@ -4365,6 +4410,43 @@ const App = () => {
             localStorage.setItem('acm_about', JSON.stringify(defaults));
         }
 
+        // Force inject TechForge event so EventDetail pages work regardless of Google Sheets sync status
+        {
+            const currentEvents = JSON.parse(localStorage.getItem('acm_events') || '[]');
+            const techForgeData = {
+                id: 999,
+                slug: 'techforge',
+                title: "TechForge 2026",
+                tagline: "The Transformation Begins",
+                dateText: "2ND & 3RD OCT 2026   24 HRS HYBRID   TSEC",
+                eventDate: "2026-10-02T08:00:00",
+                venue: "Thakur Shyamnarayan Engineering College",
+                category: 'HACKATHON',
+                desc: "TECHFORGE is a high-energy 24-hour hybrid technology competition merging online development with offline presentation. Organized by the TSEC ACM Student Chapter and CodeCrafters, it challenges 60 teams under the 'Transformers' theme to solve real-world problems.",
+                images: ["assets/events/techforde.jpeg"],
+                statistics: { participants: "60 Teams", duration: "24 Hours Hybrid" },
+                highlights: [
+                    { icon: "generic", title: "18-Hour Online Phase", desc: "Teams develop their solutions remotely within the 18-hour timeframe." },
+                    { icon: "generic", title: "6-Hour Offline Finale", desc: "Teams come together at TSEC for the final pitch and industry judging." }
+                ],
+                timeline: [
+                    { title: "Online Hackathon Begins", time: "2nd Oct" },
+                    { title: "Solution Submission", time: "After 18 Hours" },
+                    { title: "Offline Final Pitch", time: "3rd Oct, 6 Hours" }
+                ],
+                outcomes: ["Build impactful solutions", "Industry interaction", "Earn internship opportunities"],
+                organizers: ["TSEC ACM", "CodeCrafters"],
+                winners: []
+            };
+            const existingIndex = currentEvents.findIndex(e => e.slug === 'techforge');
+            if (existingIndex !== -1) {
+                currentEvents[existingIndex] = techForgeData;
+            } else {
+                currentEvents.unshift(techForgeData);
+            }
+            localStorage.setItem('acm_events', JSON.stringify(currentEvents));
+        }
+
         // Live Sync: Version-Based Backend Sync Engine
         const syncData = async () => {
             // Prevent sync if we have unsaved local changes to avoid overwriting work
@@ -4380,20 +4462,20 @@ const App = () => {
                 const currentVersion = localStorage.getItem('acm_version') || '0';
                 const response = await fetch(`${gasUrl}?action=get&version=${currentVersion}`);
                 if (!response.ok) throw new Error(`HTTP_${response.status}`);
-                
+
                 const result = await response.json();
-                
+
                 if (result.status === "NO_UPDATE") return;
 
                 const finalData = result.data;
                 const newVersion = result.version;
-                
+
                 if (finalData && finalData.events) {
                     console.log(`[SYNC] Updating to version ${newVersion}...`);
-                    
+
                     const newAbout = JSON.stringify(finalData.about || {});
                     const oldAbout = localStorage.getItem('acm_about');
-                    
+
                     localStorage.setItem('acm_events', JSON.stringify(finalData.events || []));
                     localStorage.setItem('acm_team', JSON.stringify(finalData.team || {}));
                     localStorage.setItem('acm_gallery', JSON.stringify(finalData.gallery || []));
@@ -4401,10 +4483,10 @@ const App = () => {
                     localStorage.setItem('acm_registrations', JSON.stringify(finalData.registrations || []));
                     localStorage.setItem('acm_messages', JSON.stringify(finalData.messages || []));
                     localStorage.setItem('acm_version', newVersion);
-                    
+
                     // If this was a fresh device (v0), reload to update the whole UI with new data
                     if (currentVersion === '0' || (oldAbout && newAbout !== oldAbout)) {
-                         setTimeout(() => window.location.reload(), 300);
+                        setTimeout(() => window.location.reload(), 300);
                     }
                 }
             } catch (err) {
@@ -4419,7 +4501,8 @@ const App = () => {
 
     return (
         <HashRouter>
-            {/* <CustomCursor /> */}
+            <CustomCursor />
+            <div className="pointer-events-none fixed inset-0 z-[9998] opacity-5 mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
             <NeuralFlow />
             <Navbar />
             <Routes>
@@ -4438,4 +4521,9 @@ const App = () => {
 };
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+    <>
+        <LenisSetup />
+        <App />
+    </>
+);

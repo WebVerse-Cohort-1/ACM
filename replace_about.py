@@ -1,9 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { useSanityData } from '../hooks/useSanityData';
-import { QUERIES } from '../lib/sanity';
-import SEO from '../components/ui/SEO';
+import sys
 
-const DEFAULTS = {
+print("Opening App.jsx")
+with open(r'c:\Users\DARK SEID\ACM\src\App.jsx', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+start_idx = content.find('const About = () => {')
+end_idx = content.find('const Team = () => {')
+
+if start_idx == -1 or end_idx == -1:
+    print("Error: Could not find start or end index.")
+    sys.exit(1)
+
+new_component = r'''const DEFAULTS = {
   whatIsAcm: 'The TSEC ACM Student Chapter at Thakur Shyamnarayan Engineering College is a dynamic student-driven community committed to fostering technical excellence, innovation, and holistic student development.',
   vision: 'To build a future-ready community of innovators who leverage computing to solve real-world problems and drive meaningful societal impact.',
   mission: '1. To cultivate critical thinking and technical excellence through hands-on learning, competitions, and collaborative projects.\n2. To promote innovation and research by encouraging students to explore emerging technologies and build impactful solutions.\n3. To nurture leadership, entrepreneurship, and teamwork through diverse technical and creative initiatives.\n4. To create a strong tech community that bridges academia, industry, and society.',
@@ -34,24 +42,20 @@ const TAGLINES = [
   "From Code to Change."
 ];
 
-// Simple hook for scroll reveal
-function useScrollReveal(threshold = 0.15) {
-  const ref = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [threshold]);
-  return [ref, isVisible];
-}
-
 const About = () => {
-  const { data } = useSanityData(QUERIES.ABOUT, {}, DEFAULTS);
-  const aboutData = { ...DEFAULTS, ...(data || {}) };
+  const [aboutData, setAboutData] = useState({ ...DEFAULTS });
+  const location = useLocation();
+
+  useEffect(() => {
+      try {
+          const stored = JSON.parse(localStorage.getItem('acm_about'));
+          if (stored) {
+              setAboutData(prev => ({ ...prev, ...stored }));
+          }
+      } catch (e) {
+          console.error("About Data Load Error:", e);
+      }
+  }, [location.pathname]);
 
   const stats = aboutData.stats || [];
   const [counts, setCounts] = useState(stats.map(() => 0));
@@ -66,6 +70,7 @@ const About = () => {
   const [objRef, objVisible] = useScrollReveal();
 
   useEffect(() => {
+    document.title = "About | ACM TSEC";
     const interval = setInterval(() => {
       setActiveTagline(prev => (prev + 1) % TAGLINES.length);
     }, 3000);
@@ -76,7 +81,7 @@ const About = () => {
   useEffect(() => {
     setCounts((aboutData.stats || []).map(() => 0));
     setHasAnimated(false);
-  }, [JSON.stringify(aboutData.stats)]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(aboutData.stats)]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
@@ -95,7 +100,7 @@ const About = () => {
     }, { threshold: 0.4 });
     if (statsRef.current) observer.observe(statsRef.current);
     return () => observer.disconnect();
-  }, [hasAnimated, stats]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasAnimated, JSON.stringify(stats)]); // Use JSON.stringify for stats safely
 
   useEffect(() => {
     const handleScroll = () => {
@@ -108,8 +113,6 @@ const About = () => {
 
   return (
     <div ref={aboutRef} className="min-h-screen pt-28 md:pt-32 px-5 md:px-20 flex flex-col md:flex-row gap-10 md:gap-20 pb-20">
-      <SEO title="About | ACM TSEC" description="Learn about the TSEC ACM Student Chapter, our vision, mission, and how we empower students." url="https://acm-tsec.com/about" />
-
       {/* Mobile title */}
       <div className="md:hidden mb-10">
         <h1 className="text-6xl font-heading font-bold text-acm-cyan tracking-widest leading-tight">WHO<br />WE ARE</h1>
@@ -246,5 +249,11 @@ const About = () => {
     </div>
   );
 };
+'''
 
-export default About;
+new_content = content[:start_idx] + new_component + '\n\n' + content[end_idx:]
+
+with open(r'c:\Users\DARK SEID\ACM\src\App.jsx', 'w', encoding='utf-8') as f:
+    f.write(new_content)
+
+print("Replaced Successfully")
